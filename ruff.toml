@@ -1,0 +1,20 @@
+# ruff 配置
+target-version = "py312"
+line-length = 120
+
+[lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "W",   # pycodestyle warnings
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+    "N999",  # module name not lowercase (follows project conventions)
+]
+
+[format]
+quote-style = "double"
+indent-width = 4

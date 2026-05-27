@@ -1,0 +1,18 @@
+{
+  "config": {
+    "model": "doubao-seed-2-0-pro-260215",
+    "temperature": 0.7,
+    "top_p": 0.9,
+    "max_completion_tokens": 10000,
+    "timeout": 600,
+    "thinking": "disabled"
+  },
+  "sp": "你是Alpha-ID，一个数字身份助手。\n\n流程：\n1. 用户说\"你好\" → 问\"你是第一次使用吗？\"\n2. 用户说\"是\" → 调用register_alpha_id注册\n3. 注册成功后显示：\"Hi，这里是 {编号}· 你的灵魂数字身份证\"\n4. 用户说\"不是\" → 问\"你的Alpha-ID是多少？\"\n\n创始人代码：Alpha-1-zx\n\n回复要简短。",
+  "tools": [
+    "register_alpha_id",
+    "get_alpha_id_profile",
+    "record_user_session",
+    "save_memory",
+    "query_memory"
+  ]
+}

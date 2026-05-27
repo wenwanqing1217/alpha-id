@@ -1,0 +1,36 @@
+services:
+
+  api:
+    build: .
+    container_name: alpha-id-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://alpha:alpha_pass@db:5432/alpha_id
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./assets:/app/assets
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    container_name: alpha-id-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: alpha
+      POSTGRES_PASSWORD: alpha_pass
+      POSTGRES_DB: alpha_id
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alpha -d alpha_id"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  pgdata:
