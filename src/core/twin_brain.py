@@ -305,7 +305,7 @@ class TwinBrain:
 
         # 检查是否有未处理的好友请求
         if self._social:
-            requests = self.social.get_pending_requests(self.alpha_id)
+            requests = self.social.get_pending_friend_requests(self.alpha_id)
             results["pending_requests"] = len(requests)
 
         # 检查并执行待处理的自动行动
@@ -345,10 +345,8 @@ class TwinBrain:
     def _handle_chat(self, message) -> "Response":
         from core.message import Response
 
-        if not self._social:
-            return Response.fail("社交模块未初始化")
-
-        result = self.social.send_message(
+        social = self.social  # 触发惰性加载
+        result = social.send_message(
             from_alpha_id=message.sender,
             to_alpha_id=self.alpha_id,
             content=message.payload.get("text", ""),
@@ -360,10 +358,8 @@ class TwinBrain:
     def _handle_friend_request(self, message) -> "Response":
         from core.message import Response
 
-        if not self._social:
-            return Response.fail("社交模块未初始化")
-
-        result = self.social.send_friend_request(
+        social = self.social  # 触发惰性加载
+        result = social.send_friend_request(
             from_alpha_id=message.sender,
             to_alpha_id=self.alpha_id,
             message=message.payload.get("note", ""),
@@ -375,12 +371,13 @@ class TwinBrain:
     def _handle_friend_response(self, message) -> "Response":
         from core.message import Response
 
+        social = self.social  # 触发惰性加载
         request_id = message.payload.get("request_id", "")
         action = message.payload.get("action", "")
         if action not in ("accept", "reject"):
             return Response.fail("操作必须是 accept 或 reject")
 
-        result = self.social.respond_friend_request(request_id, action)
+        result = social.respond_friend_request(request_id, action)
         if result.get("success"):
             return Response.ok(data=result)
         return Response.fail(result.get("message", "操作失败"))
@@ -447,7 +444,7 @@ class TwinBrain:
         is_close = False
         if self._social:
             friends = self.social.get_friends(self.alpha_id)
-            is_friend = any(f.get("alpha_id") == requester for f in friends)
+            is_friend = requester in friends
             # 密友检查（未来实现）
 
         if layer == "friends" and is_friend:
