@@ -9,7 +9,8 @@ from datetime import datetime
 from typing import Dict, List, Optional
 from dataclasses import dataclass, asdict
 
-from core.storage import JsonStorage, StorageBackend
+from core.storage import StorageBackend
+from core.storage_sqlite import SqliteStorage
 
 
 @dataclass
@@ -33,14 +34,14 @@ class UserIdentityManager:
     FOUNDER_DEVICE_FINGERPRINT = "FOUNDER_DEVICE_20250618"
 
     def __init__(self, storage: Optional[StorageBackend] = None):
-        # 默认使用 JSON 文件存储（向后兼容）
+        # 默认使用 SQLite 存储
         if storage is None:
             db_path = os.path.join(
                 os.getenv("COZE_WORKSPACE_PATH", os.getcwd()),
                 "assets",
-                "alpha_id_users.json"
+                "alpha_id.db",
             )
-            storage = JsonStorage(db_path)
+            storage = SqliteStorage(db_path)
 
         self._storage = storage
 

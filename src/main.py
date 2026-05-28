@@ -10,13 +10,17 @@ from api.identity import router as identity_router
 from api.social import router as social_router
 from api.risk import router as risk_router
 
+from alpha_id.container import Container
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator:
     """服务生命周期管理"""
-    # 启动：可在此初始化数据库连接池等
+    # 启动：容器自动 lazy init
+    container = Container.instance()
     yield
-    # 关闭：可在此清理资源
+    # 关闭：释放资源
+    container.close()
 
 
 app = FastAPI(
@@ -26,6 +30,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

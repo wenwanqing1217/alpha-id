@@ -7,7 +7,7 @@
 
 Auth / 401 / 404 边界也在覆盖范围内。
 
-注意：每次测试会重置 JSON 存储文件，保证完全隔离。
+注意：每次测试会重置 Container + 注入临时 SQLite 数据库，完全隔离。
 """
 
 import os
@@ -19,35 +19,21 @@ from fastapi.testclient import TestClient
 from main import app
 from auth.jwt import create_access_token
 
-# 存储文件路径（与 core 模块中默认路径一致）
-_USERS_FILE = os.path.join(os.getcwd(), "assets", "alpha_id_users.json")
-_SOCIAL_FILE = os.path.join(os.getcwd(), "assets", "alpha_id_social.json")
-
 _fixture_counter = [0]  # mutable counter for unique device fingerprints
-
-
-def _clear_storage():
-    """清空 JSON 存储文件，保证测试隔离"""
-    for fp in (_USERS_FILE, _SOCIAL_FILE):
-        os.makedirs(os.path.dirname(fp), exist_ok=True)
-        with open(fp, "w", encoding="utf-8") as f:
-            json.dump({}, f)
 
 
 # ── Fixtures ──
 
 
 @pytest.fixture(autouse=True)
-def reset_all():
-    """每次测试前：重置全局单例 + 清空存储文件"""
-    import api.identity as id_mod
-    import api.social as soc_mod
-    import api.risk as risk_mod
+def reset_all(tmp_path):
+    """每次测试前：重置容器 + 注入临时 SQLite 数据库"""
+    from alpha_id.container import Container
+    from core.storage_sqlite import SqliteStorage
 
-    id_mod._manager = None  # type: ignore[attr-defined]
-    soc_mod._manager = None  # type: ignore[attr-defined]
-    risk_mod._engine = None  # type: ignore[attr-defined]
-    _clear_storage()
+    container = Container.instance()
+    container.reset()
+    container.storage = SqliteStorage(str(tmp_path / "e2e_test.db"))
     yield
 
 

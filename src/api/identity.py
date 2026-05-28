@@ -8,17 +8,13 @@ from .models import DeviceBindRequest, LoginRequest, RefreshRequest, RegisterReq
 from auth.middleware import require_user
 from auth.jwt import create_access_token, create_refresh_token, verify_token
 
-router = APIRouter(prefix="/api/v1/identity", tags=["身份"])
+from alpha_id.container import Container
 
-# 全局管理器（生产环境使用依赖注入）
-_manager: UserIdentityManager = None  # type: ignore
+router = APIRouter(prefix="/api/v1/identity", tags=["身份"])
 
 
 def get_manager() -> UserIdentityManager:
-    global _manager
-    if _manager is None:
-        _manager = UserIdentityManager()
-    return _manager
+    return Container.instance().identity
 
 
 # ── 认证端点（无需令牌） ──
@@ -49,9 +45,7 @@ def login(body: LoginRequest):
     if not devices:
         raise HTTPException(status_code=403, detail="该用户尚未绑定设备")
     if body.device_fingerprint not in devices:
-        # 对于已有设备的用户，允许绑定新设备后登录
-        # 更严格的策略可以在生产环境启用
-        pass
+        pass  # 允许新设备绑定后登录
 
     token = create_access_token(body.alpha_id)
     refresh = create_refresh_token(body.alpha_id)
@@ -86,16 +80,18 @@ def refresh_token(body: RefreshRequest):
 
 @router.get("/me")
 def get_current_user(alpha_id: str = Depends(require_user)):
-    """获取当前登录用户信息"""
+    """获取当前用户信息（需认证）"""
     profile = get_manager().get_user_profile(alpha_id)
     if not profile:
         raise HTTPException(status_code=404, detail="用户不存在")
-    return profile
+    # 脱敏：不暴露 device_fingerprint
+    safe = {k: v for k, v in profile.items() if k != "device_fingerprint"}
+    return safe
 
 
 @router.get("/{alpha_id}")
-def get_profile(alpha_id: str, _: str = Depends(require_user)):
-    """获取用户档案（需认证）"""
+def get_user_profile(alpha_id: str, _: str = Depends(require_user)):
+    """获取指定用户档案（需认证）"""
     profile = get_manager().get_user_profile(alpha_id)
     if not profile:
         raise HTTPException(status_code=404, detail="用户不存在")

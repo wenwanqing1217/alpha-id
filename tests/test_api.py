@@ -33,62 +33,31 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-# ── 工厂：从路由模块内部替换管理器 ──
-
-
-def _reset_identity_manager(db_path: str):
-    """替换 identity 模块的全局管理器"""
-    from core.storage import JsonStorage
-    from core.user_identity import UserIdentityManager
-    import api.identity as mod
-    mod._manager = UserIdentityManager(storage=JsonStorage(db_path))
-
-
-def _reset_social_manager(db_path: str):
-    """替换 social 模块的全局管理器"""
-    from core.storage import JsonStorage
-    from core.alpha_social import AlphaSocialManager
-    import api.social as mod
-    mod._manager = AlphaSocialManager(storage=JsonStorage(db_path))
-
-
-def _reset_risk_engine():
-    """替换 risk 模块的全局引擎"""
-    from core.risk_engine import RiskAssessmentEngine
-    import api.risk as mod
-    mod._engine = RiskAssessmentEngine()
-
-
-# ── 临时 JSON 数据库 fixture ──
-
-
-@pytest.fixture
-def identity_db(tmp_path):
-    db = tmp_path / "test_users.json"
-    db.write_text(
-        json.dumps({"users": {}, "counter": 0, "founder_registered": False}, indent=2),
-        encoding="utf-8",
-    )
-    _reset_identity_manager(str(db))
-    return str(db)
-
-
-@pytest.fixture
-def social_db(tmp_path):
-    db = tmp_path / "test_social.json"
-    db.write_text(
-        json.dumps({"friends": {}, "friend_requests": {}, "messages": {}}, indent=2),
-        encoding="utf-8",
-    )
-    _reset_social_manager(str(db))
-    return str(db)
+# ── 工厂：通过容器注入临时存储 ──
 
 
 @pytest.fixture(autouse=True)
-def _reset_all(identity_db, social_db):
-    """每个测试前重置所有管理器"""
-    _reset_risk_engine()
+def _reset_all(tmp_path):
+    """每个测试前：重置容器 + 注入临时 SQLite 数据库"""
+    from alpha_id.container import Container
+    from core.storage_sqlite import SqliteStorage
+
+    container = Container.instance()
+    container.reset()
+    container.storage = SqliteStorage(str(tmp_path / "test.db"))
     yield
+
+
+@pytest.fixture
+def identity_db(_reset_all):
+    """兼容旧测试签名：返回临时数据库路径"""
+    return _reset_all  # 实际状态由 _reset_all 管理
+
+
+@pytest.fixture
+def social_db(_reset_all):
+    """兼容旧测试签名"""
+    return _reset_all
 
 
 @pytest.fixture
@@ -159,18 +128,17 @@ class TestAuthAPI:
 
     def test_login_no_devices(self, client, identity_db):
         """注册无设备用户后登录应失败（无权）"""
-        from core.user_identity import UserIdentityManager
-        mgr = UserIdentityManager()
+        from alpha_id.container import Container
         # 直接创建无设备的用户
         resp = client.post("/api/v1/identity/register", json={
             "device_fingerprint": "fp-nod",
         })
         alpha_id = resp.json()["alpha_id"]
         # 把设备列表清空
-        import api.identity as mod
-        users = mod._manager._storage.load("users")
+        container = Container.instance()
+        users = container.storage.load("users")
         users[alpha_id]["devices"] = []
-        mod._manager._storage.save("users", users)
+        container.storage.save("users", users)
         resp2 = client.post("/api/v1/identity/login", json={
             "alpha_id": alpha_id,
             "device_fingerprint": "fp-nod",

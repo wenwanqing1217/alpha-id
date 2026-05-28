@@ -11,7 +11,8 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from core.storage import JsonStorage, StorageBackend
+from core.storage import StorageBackend
+from core.storage_sqlite import SqliteStorage
 
 
 @dataclass
@@ -46,9 +47,9 @@ class AlphaSocialManager:
             db_path = os.path.join(
                 os.getenv("COZE_WORKSPACE_PATH", os.getcwd()),
                 "assets",
-                "alpha_id_social.json"
+                "alpha_id.db"
             )
-            self._storage = JsonStorage(db_path)
+            storage = SqliteStorage(db_path)
         else:
             self._storage = storage
 

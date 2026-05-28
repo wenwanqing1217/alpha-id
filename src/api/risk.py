@@ -9,19 +9,15 @@ from core.risk_engine import (
 
 from .models import RiskEvaluateRequest, VoiceVerifyRequest, VoiceVerifyResponse
 
+from alpha_id.container import Container
 
-# ── 共享风控引擎实例 ──
 
 router = APIRouter(prefix="/api/v1/risk", tags=["风控"])
 
-_engine: RiskAssessmentEngine = None  # type: ignore
-
 
 def get_engine() -> RiskAssessmentEngine:
-    global _engine
-    if _engine is None:
-        _engine = RiskAssessmentEngine()
-    return _engine
+    """风控引擎不需要存储，直接返回单例"""
+    return Container.instance().risk
 
 
 @router.post("/evaluate")
@@ -81,10 +77,7 @@ def evaluate(body: RiskEvaluateRequest):
 
 @router.post("/voice-verify")
 def voice_verify(body: VoiceVerifyRequest):
-    """声纹验证专用接口 — 根据声音样本返回匹配度和综合风险"""
-
-    # 此接口可以作为独立验证流程调用，不依赖完整的设备/行为上下文。
-    # 实际集成声纹识别模型时，替换 voice_match 为模型推理结果即可。
+    """声纹验证专用接口"""
 
     voice_data = {
         "voice_match": body.voice_match,
@@ -95,8 +88,6 @@ def voice_verify(body: VoiceVerifyRequest):
 
     engine = get_engine()
     voice_score = engine.calculate_voice_score(voice_data)
-
-    # 仅用声纹一个维度计算简易风险
     risk_score = 100.0 - voice_score
     risk_level = engine.determine_risk_level(risk_score)
     action = engine.get_action_required(risk_level, risk_score)

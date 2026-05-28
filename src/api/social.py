@@ -5,16 +5,13 @@ from core.alpha_social import AlphaSocialManager
 
 from .models import FriendRequestRespond, FriendRequestSend, MessageSend
 
-router = APIRouter(prefix="/api/v1/social", tags=["社交"])
+from alpha_id.container import Container
 
-_manager: AlphaSocialManager = None  # type: ignore
+router = APIRouter(prefix="/api/v1/social", tags=["社交"])
 
 
 def get_manager() -> AlphaSocialManager:
-    global _manager
-    if _manager is None:
-        _manager = AlphaSocialManager()
-    return _manager
+    return Container.instance().social
 
 
 @router.post("/friend-request")
