@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master, main, develop]
   pull_request:
-    branches: [main]
+    branches: [master, main]
 
 jobs:
   test:
@@ -27,7 +27,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: uv sync --frozen
+        run: uv sync --frozen --group test
 
       - name: Lint (ruff check)
         run: uv run ruff check src/ tests/
@@ -38,8 +38,6 @@ jobs:
 
       - name: Test core modules
         run: uv run pytest tests/ -v --tb=short --no-header -q
-        env:
-          PYTHONPATH: ${{ github.workspace }}/src
 
       - name: Test with PostgreSQL (if secrets set)
         if: ${{ secrets.DATABASE_URL != '' }}
@@ -59,10 +57,12 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: uv sync --frozen
+        run: uv sync --frozen --group test
 
       - name: Coverage report
         run: uv run pytest tests/ --cov=src/core --cov-report=term --cov-report=xml --no-header -q
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
