@@ -246,3 +246,221 @@ typer>=0.12
 - [ ] `numpy` 在 `risk_engine.py` 中是运行时导入（应移到文件头）
 - [ ] `memory_store.py` 默认路径是 JSON 文件，混合存储架构需统一
 - [ ] `TwinBrain` 的 `_memory` 用 `JsonStorage`，与 SQLite 不一致
+
+---
+
+## 📚 前沿调研 & 关键洞察（2025年6月）
+
+### 资料来源
+
+| 来源 | 核心领域 | 价值 |
+|------|---------|------|
+| Anthropic: Building Effective Agents | Agent 架构最佳实践 | ⭐⭐⭐⭐⭐ |
+| LangGraph 文档 | Agent 编排框架 | ⭐⭐⭐⭐ |
+| AT Protocol (Bluesky) | 去中心化社交身份 | ⭐⭐⭐⭐⭐ |
+| W3C DID Core 1.0 | 去中心化身份标准 | ⭐⭐⭐⭐⭐ |
+| CrewAI | 多 Agent 协作 | ⭐⭐⭐ |
+| Veramo | DID/VC 框架 | ⭐⭐⭐⭐ |
+| Farcaster | 去中心化社交 | ⭐⭐⭐⭐ |
+
+### 🔑 关键洞察 & 对我们的路线图的修正
+
+#### 洞察 1：Agent 要简单，不要框架
+
+**来源：** Anthropic, LangGraph
+
+**原文：**
+> "The most successful implementations use simple, composable patterns rather than complex frameworks."
+
+**对路线图的修正：**
+
+原计划写一个复杂的 ReActEngine → **改**：直接用 `LLM + tools + loop` 模式，< 200 行代码。
+
+```python
+# 这不是伪代码，这是最终实现的架构
+class Agent:
+    def __init__(self, llm, tools, memory):
+        self.llm = llm       # 直接调用 OpenAI/API
+        self.tools = tools   # Dict[str, Tool]
+        self.memory = memory # 向量记忆
+
+    def run(self, task):
+        while steps < max_steps:
+            context = self.memory.search(task)   # 召回
+            thought = self.llm.call(task, context, self.tools.describe())
+            if thought.action == "final_answer":
+                return thought.answer
+            result = self.tools[thought.action].run(thought.args)
+            self.memory.save(result)
+            steps += 1
+```
+
+**去掉了什么：**
+- ❌ 不依赖 LangChain
+- ❌ 不依赖任何 Agent 框架
+- ❌ 不引入复杂的状态图（已有 TwinBrain 状态机就够了）
+
+**保留了：**
+- ✅ 直接 LLM API 调用
+- ✅ 清晰可调的 prompt
+- ✅ 每一步都可 trace
+
+---
+
+#### 洞察 2：Agent 的核心是 Tool Design，不是 Prompt
+
+**来源：** Anthropic
+
+> "Agents are typically just LLMs using tools based on environmental feedback in a loop. It is therefore crucial to design toolsets and their documentation clearly."
+
+**对路线图的修正：**
+
+原计划把重心放在 `think()` 逻辑上 → **改**：重心放在 Tool API 设计上。
+
+**新原则：**
+- 每个 Tool 必须有：name, description, parameters (JSON Schema), returns
+- Tool 的 description 要写得像 API 文档（LLM 靠它理解工具）
+- Tool 的返回值要结构化，不要返回原始字符串
+
+**Alpha-ID Agent 的 Tool 清单（重构后）：**
+
+| Tool | Description | 使 Agent 能做什么 |
+|------|-------------|------------------|
+| `search_memory(query)` | 搜索相关记忆 | 记住过去的事情 |
+| `save_memory(content, tags)` | 保存新记忆 | 学习新知识 |
+| `query_identity(alpha_id)` | 查询身份档案 | 认识其他人 |
+| `send_message(to, content)` | 发送消息 | 社交互动 |
+| `evaluate_risk(action_desc)` | 评估风险 | 自我保护 |
+| `get_time()` | 获取当前时间 | 时间感知 |
+| `execute_action(action_id)` | 执行审批中的行动 | 自主行动 |
+
+---
+
+#### 洞察 3：DID 实现可以很轻——不需要完整 W3C 栈
+
+**来源：** AT Protocol, W3C DID Core
+
+**核心理解：**
+- DID 的核心就是一个 `DID Document`（JSON），包含公钥 + 服务地址
+- `did:alpha:` 方法的复杂度取决于我们定义多少功能
+- AT Protocol 的 PLC DID 只有 2 种 key：signing key + rotation key
+
+**对路线图的修正：**
+
+原计划 Phase 2 完整实现 DID Core → **改**：Phase 1 就做最小 DID 实现。
+
+```python
+# 最小的 DID Document
+{
+    "@context": "https://www.w3.org/ns/did/v1",
+    "id": "did:alpha:Alpha-042",
+    "verificationMethod": [{
+        "id": "did:alpha:Alpha-042#signing-key",
+        "type": "JsonWebKey2020",
+        "publicKeyJwk": { ... }  # Ed25519
+    }],
+    "authentication": ["did:alpha:Alpha-042#signing-key"],
+    "service": [{
+        "id": "did:alpha:Alpha-042#pds",
+        "type": "AlphaPersonalDataServer",
+        "serviceEndpoint": "https://pds.alpha-id.io/Alpha-042"
+    }]
+}
+```
+
+**这是在 Phase 1 做的原因：**
+- DID 本身就是个 JSON 文档——写起来 50 行代码
+- 生成 Ed25519 密钥对用 `cryptography`（已有依赖）
+- 有 DID Document 之后，身份就从「一个数据库条目」变成了「一个可验证的加密身份」
+- 这是通向去中心化的第一步，但对 Agent 立即可用
+
+---
+
+#### 洞察 4：联邦社交可以借鉴 AT Protocol 的三层架构
+
+**来源：** AT Protocol
+
+**AT Protocol 架构：**
+```
+PDS (Personal Data Server)   → 你的数据你的服务器
+       ↓
+Relay                        → 汇总全局数据流
+       ↓
+App View                     → 检索和展示层
+```
+
+**对路线图的修正：**
+
+原计划 Phase 2 做联邦社交 → **改**：Phase 1 做「可移植身份」的第一步——让 Alpha-ID 可以导出/导入。
+
+具体来说 Phase 1 加一个 `export_identity(alpha_id)` 方法：
+```python
+# 导出 = DID Document + 签名后的社交数据
+identity_bundle = agent.export()
+# 导入 = 验证签名 + 恢复
+agent2.import_(identity_bundle)
+```
+
+这不需要服务器，不需要联邦协议，但为 Phase 2 的联邦社交奠定了基础。
+
+---
+
+#### 洞察 5：Memory 分两层——工作记忆 + 长期记忆
+
+**来源：** LangGraph, Anthropic
+
+**LangGraph 的区分：**
+- Short-term working memory: 当前对话上下文（消息列表）
+- Long-term memory: 跨会话的知识（向量数据库）
+
+**对路线图的修正：**
+
+原计划只做向量记忆 → **改**：两种记忆分开，TwinBrain 已有 `receive()` 消息列表做工作记忆，向量记忆做长期记忆。
+
+```python
+class TwinBrainMemory:
+    """统一记忆接口"""
+    
+    def working_memory(self) -> List[Message]:
+        """当前会话消息列表（短期）"""
+        return self._recent_messages[-20:]
+    
+    def long_term_memory(self, query: str) -> List[Dict]:
+        """向量语义搜索（长期）"""
+        return self._vector_store.search(query)
+    
+    def save_to_long_term(self, content: str, importance: float):
+        """只有重要内容存长期"""
+        if importance > 0.3:
+            self._vector_store.add(content)
+```
+
+这简化了 Phase 1 的实现——向量记忆只存「重要的事」，不存所有历史。
+
+---
+
+#### 洞察 6：现有代码的几个「可立即优化」点
+
+来自代码审查 + 前沿对比：
+
+| 问题 | 建议 | 优先级 |
+|------|------|--------|
+| `TwinBrain._handle_chat` 调用 `social.send_message` 但硬编码 sender | 改为从 message.sender 读取 | P0 |
+| `think()` 是空方法 | Phase 1 核心修复 | P0 |
+| `RiskAssessmentEngine` 有 `numpy` 运行时 import | 移到文件头 | P0 |
+| `get_statistics()` 返回字典没有 JSON Schema | 加 Pydantic model | P1 |
+| `register_user()` 直接传 founder_code 明文 | 改传哈希比对 | P1 |
+| 没有版本号暴露给 SDK 用户 | `alpha_id.__version__` | P1 |
+
+---
+
+### 路线图优化总结
+
+| 原计划 | 优化后 | 原因 |
+|--------|--------|------|
+| 复杂 ReAct 引擎 | 简单 LLM + tools + loop | Anthropic: 简单 = 有效 |
+| Phase 2 才做 DID | Phase 1 做最小 DID | 50 行代码，立即可用 |
+| Agent 重心在 think 逻辑 | Agent 重心在 Tool API 设计 | Anthropic: 工具接口决定 Agent 质量 |
+| 只做向量记忆 | 工作记忆 + 长期记忆分层 | LangGraph 模式 |
+| 联邦社交 Phase 2 | Phase 1 加导出/导入可移植性 | AT Protocol 启发 |
+| 完整 W3C DID | 最小 DID: `did:alpha` | 标准里只取 20% 就得 80% 效果 |
