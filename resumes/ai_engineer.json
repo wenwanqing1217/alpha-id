@@ -1,0 +1,16 @@
+{
+  "name": "张三",
+  "years_exp": 5,
+  "skills": ["Python", "PyTorch", "TensorFlow", "RAG", "LLM Fine-tuning", "FastAPI", "PostgreSQL", "Redis", "Docker", "NLP"],
+  "target_positions": ["AI应用开发工程师", "大模型应用工程师", "后端工程师(AI方向)", "算法工程师"],
+  "target_cities": ["北京", "上海", "杭州"],
+  "current_salary": "27K/月",
+  "expected_salary": "32K-40K/月",
+  "education": "硕士 - 人工智能",
+  "tags": ["AI", "大模型", "Python", "RAG", "算法"],
+  "highlights": [
+    "主导企业内部知识库 RAG 系统开发，召回率 92%，支持 10 万+ 文档检索",
+    "开源贡献：LangChain 中文文档翻译 + 2 个社区组件",
+    "使用 LoRA 微调 7B 模型用于代码生成，准确率提升 18%"
+  ]
+}

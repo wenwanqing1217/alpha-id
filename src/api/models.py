@@ -69,15 +69,20 @@ class DeviceFingerprintModel(BaseModel):
     ip_address: str
     location: str
     browser_info: str
+    screen_resolution: str
     first_access_time: str
 
 
 class BehaviorFingerprintModel(BaseModel):
     typing_speed: float = 0.0
-    mouse_movement: str = ""
-    session_time: float = 0.0
+    session_time: str = "00:00"
+    common_words: List[str] = []
+    error_rate: float = 0.0
+    word_count: int = 0
+    emoji_count: int = 0
+    mouse_movement: int = 0
     input_pattern: str = ""
-    language: str = ""
+    language: str = "zh"
 
 
 class VoiceDataModel(BaseModel):
@@ -85,6 +90,26 @@ class VoiceDataModel(BaseModel):
     habit_match: float = 0.0
     noise_level: float = 0.0
     audio_quality: float = 0.0
+
+
+class VoiceVerifyRequest(BaseModel):
+    """声纹验证请求"""
+    user_id: str
+    voice_sample_id: str = ""
+    device_fingerprint: str = ""
+    voice_match: float = Field(default=0.0, ge=0.0, le=1.0, description="声纹匹配度")
+    habit_match: float = Field(default=0.0, ge=0.0, le=1.0, description="语音习惯匹配度")
+    noise_level: float = Field(default=0.0, ge=0.0, le=1.0, description="环境噪声等级")
+    audio_quality: float = Field(default=0.0, ge=0.0, le=1.0, description="音频质量")
+
+
+class VoiceVerifyResponse(BaseModel):
+    """声纹验证响应"""
+    voice_score: float
+    risk_score: float
+    risk_level: str
+    action_required: str
+    recommended_verification: str
 
 
 class RiskEvaluateRequest(BaseModel):

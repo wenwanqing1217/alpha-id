@@ -96,6 +96,13 @@ class UserIdentityManager:
         counter = db["counter"]
         founder_registered = db["founder_registered"]
 
+        # 检查设备指纹是否已注册
+        for existing_user in users.values():
+            if existing_user.get("device_fingerprint") == device_fingerprint:
+                return {"success": False, "message": "该设备已注册"}
+            if device_fingerprint in existing_user.get("devices", []):
+                return {"success": False, "message": "该设备已注册"}
+
         # 创始人注册逻辑
         if is_founder:
             if founder_code != "Alpha-1-zx":

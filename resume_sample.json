@@ -1,0 +1,15 @@
+{
+  "name": "张三",
+  "years_exp": 5,
+  "skills": ["Python", "Go", "Kubernetes", "Docker", "PostgreSQL", "Redis", "微服务架构"],
+  "target_positions": ["后端开发工程师", "云原生开发工程师", "SRE"],
+  "target_cities": ["北京", "上海", "杭州"],
+  "current_salary": "25K/月",
+  "expected_salary": "30K-35K/月",
+  "education": "本科 - 计算机科学与技术",
+  "highlights": [
+    "主导过日活千万级后端服务从单体到微服务的拆分",
+    "精通 Kubernetes 集群治理，管理过 500+ 节点",
+    "开源项目 contributor（Apache APISIX）"
+  ]
+}

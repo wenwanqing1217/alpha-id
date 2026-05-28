@@ -25,12 +25,15 @@ class DeviceFingerprint:
 @dataclass
 class BehaviorFingerprint:
     """行为指纹"""
-    typing_speed: float  # 字符/秒
-    common_words: List[str]
-    error_rate: float  # 错误率
-    session_time: str  # 活跃时间段
-    word_count: int  # 平均每句话的字数
-    emoji_count: int  # 平均每句话的表情符号数
+    typing_speed: float = 0.0  # 字符/秒
+    common_words: List[str] = None  # 常用词列表
+    error_rate: float = 0.0  # 错误率
+    session_time: str = "00:00"  # 活跃时间段
+    word_count: int = 0  # 平均每句话的字数
+    emoji_count: int = 0  # 平均每句话的表情符号数
+    mouse_movement: int = 0
+    input_pattern: str = ""
+    language: str = "zh"
 
 
 @dataclass

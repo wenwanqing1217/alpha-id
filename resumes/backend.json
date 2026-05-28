@@ -1,0 +1,16 @@
+{
+  "name": "张三",
+  "years_exp": 5,
+  "skills": ["Go", "Kubernetes", "Docker", "gRPC", "微服务架构", "分布式系统", "Redis", "Kafka", "Prometheus"],
+  "target_positions": ["后端开发工程师", "Go开发工程师", "云原生开发工程师"],
+  "target_cities": ["北京", "上海"],
+  "current_salary": "28K/月",
+  "expected_salary": "32K-38K/月",
+  "education": "本科 - 计算机科学与技术",
+  "tags": ["后端", "Go", "云原生", "微服务"],
+  "highlights": [
+    "主导过日活千万级后端服务从单体到微服务的拆分，QPS 提升 4 倍",
+    "精通 Kubernetes 集群治理，管理过 500+ 节点，保障 99.99% 可用性",
+    "开源项目 contributor（Apache APISIX），贡献了 3 个核心插件"
+  ]
+}
