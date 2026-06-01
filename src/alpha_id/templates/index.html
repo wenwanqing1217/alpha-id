@@ -22,7 +22,7 @@
 <div id="app" class="h-full flex flex-col max-w-3xl mx-auto px-4 py-4" v-cloak>
 
 <!-- Header -->
-<div class="flex items-center justify-between mb-4">
+<div class="flex items-center justify-between mb-1">
 <div>
   <h1 class="text-xl font-bold text-indigo-700 dark:text-indigo-300">🧠 数字灵魂</h1>
   <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -45,7 +45,14 @@
 </div>
 </div>
 
-<!-- Chat Box -->
+<!-- Tab Bar -->
+<div class="flex gap-4 mb-3 border-b border-slate-200 dark:border-slate-700 text-sm">
+  <button @click="activeTab='chat'" :class="activeTab==='chat' ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500 font-medium' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'" class="pb-2 px-1 transition-colors">💬 聊天</button>
+  <button @click="activeTab='network'; fetchNetwork()" :class="activeTab==='network' ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500 font-medium' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'" class="pb-2 px-1 transition-colors">🌐 网络</button>
+</div>
+
+<!-- Chat Tab -->
+<template v-if="activeTab === 'chat'">
 <div id="chat-box" class="flex-1 overflow-y-auto space-y-3 pr-1 mb-3 min-h-0" ref="chatBox">
 <div v-for="(msg, i) in messages" :key="i" class="message-enter" :class="msg.role==='user' ? 'flex justify-end' : 'flex justify-start'">
   <div class="max-w-[80%] space-y-1">
@@ -117,9 +124,33 @@
       <button @click="showIdentity=false" class="mt-4 w-full px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium transition-colors">关闭</button>
     </div>
   </div>
+</template>
+
+<!-- Network Tab -->
+<template v-if="activeTab === 'network'">
+  <div class="flex-1 flex flex-col min-h-0">
+    <!-- Stats bar -->
+    <div class="flex gap-3 mb-2 text-xs text-slate-500 dark:text-slate-400">
+      <span>🤖 对等节点: <strong class="text-indigo-600 dark:text-indigo-400">{{ networkStats.peers }}</strong></span>
+      <span>📜 调用链: <strong class="text-emerald-600 dark:text-emerald-400">{{ networkStats.chains }}</strong></span>
+    </div>
+    <!-- Graph container -->
+    <div ref="networkContainer" class="flex-1 bg-white/60 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden min-h-0" style="min-height:400px"></div>
+    <!-- Legend -->
+    <div class="flex gap-4 mt-2 text-xs text-slate-500 dark:text-slate-400">
+      <span><span class="inline-block w-3 h-3 rounded-full bg-indigo-400 mr-1"></span> 自己</span>
+      <span><span class="inline-block w-3 h-3 rounded-full bg-violet-400 mr-1"></span> 对等节点</span>
+      <span><span class="inline-block w-3 h-3 rounded-full bg-emerald-400 mr-1"></span> PoE 证明</span>
+    </div>
+    <p v-if="!networkLoaded" class="text-xs text-slate-400 text-center mt-4">💡 加载网络数据…</p>
+    <p v-else-if="networkStats.peers === 0 && networkStats.chains === 0" class="text-xs text-slate-400 text-center mt-4">📭 还没有对等节点。用 <code class="text-indigo-500">aid network peer add</code> 注册一个试试</p>
+  </div>
+</template>
+
 </div>
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
 <script>
 const { createApp, ref, computed, nextTick, onMounted } = Vue;
 
@@ -137,6 +168,11 @@ createApp({
     const identityJson = ref('');
     const chatBox = ref(null);
     const brainState = ref('sleep');
+    const activeTab = ref('chat');
+    const networkStats = ref({ peers: 0, chains: 0 });
+    const networkLoaded = ref(false);
+    const networkContainer = ref(null);
+    let networkInstance = null;
 
     const stateLabels = { sleep: '休眠', awake: '活跃', idle: '空闲', error: '故障', thinking: '思考' };
     const stateColors = { sleep: 'text-slate-400', awake: 'text-green-500', idle: 'text-amber-500', error: 'text-red-500', thinking: 'text-purple-500' };
@@ -283,6 +319,85 @@ createApp({
       }
     }
 
+    async function fetchNetwork() {
+      try {
+        const resp = await fetch('/network/topology');
+        const data = await resp.json();
+        networkStats.value = data.stats || { peers: 0, chains: 0 };
+        networkLoaded.value = true;
+
+        // 等 DOM 渲染
+        await nextTick();
+        const container = networkContainer.value;
+        if (!container) return;
+
+        // 销毁旧实例
+        if (networkInstance) {
+          networkInstance.destroy();
+          networkInstance = null;
+        }
+
+        // vis-network 节点样式
+        const colors = { self: '#6366f1', peer: '#8b5cf6', poe: '#34d399' };
+        const shapes = { self: 'star', peer: 'dot', poe: 'diamond' };
+        const sizes = { self: 30, peer: 25, poe: 20 };
+
+        const nodes = new vis.DataSet(
+          (data.nodes || []).map(n => ({
+            id: n.id,
+            label: n.label,
+            group: n.group,
+            color: colors[n.group] || '#94a3b8',
+            shape: shapes[n.group] || 'dot',
+            size: sizes[n.group] || 20,
+            font: { color: document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#334155', size: 12 },
+            borderWidth: n.group === 'self' ? 3 : 2,
+            title: `<div style="font-size:12px">${n.did || n.poe_id || ''}<br>${n.alias ? '别名: '+n.alias : ''}</div>`,
+          }))
+        );
+
+        const edges = new vis.DataSet(
+          (data.edges || []).map(e => ({
+            from: e.from,
+            to: e.to,
+            label: e.label || '',
+            color: e.color || { color: '#94a3b8' },
+            font: { size: 10, color: '#94a3b8' },
+            arrows: 'to',
+            smooth: { type: 'curvedCW', roundness: 0.15 },
+            title: e.title || '',
+          }))
+        );
+
+        const options = {
+          physics: {
+            solver: 'forceAtlas2Based',
+            forceAtlas2Based: { gravitationalConstant: -40, centralGravity: 0.005, springLength: 150, springConstant: 0.08 },
+            stabilization: { iterations: 100 },
+          },
+          interaction: {
+            hover: true,
+            tooltipDelay: 200,
+            navigationButtons: true,
+            keyboard: true,
+          },
+          edges: {
+            smooth: { type: 'continuous' },
+          },
+          groups: {
+            self: { color: { background: '#6366f1', border: '#4338ca' } },
+            peer: { color: { background: '#8b5cf6', border: '#7c3aed' } },
+            poe: { color: { background: '#34d399', border: '#10b981' } },
+          },
+        };
+
+        networkInstance = new vis.Network(container, { nodes, edges }, options);
+      } catch (e) {
+        console.error('Network topology error:', e);
+        networkLoaded.value = true;
+      }
+    }
+
     function toggleDark() {
       document.documentElement.classList.toggle('dark');
     }
@@ -298,7 +413,9 @@ createApp({
       agent, messages, input, loading, showLogin, showIdentity,
       deviceFp, existingAlphaId, loginError, identityJson, chatBox,
       brainState, brainStateText, brainStateClass, isAwake,
-      send, login, fetchIdentity, brainSleep, brainThink, toggleDark, autoResize, scrollToBottom,
+      activeTab, networkStats, networkLoaded, networkContainer,
+      send, login, fetchIdentity, brainSleep, brainThink,
+      fetchNetwork, toggleDark, autoResize, scrollToBottom,
     };
   }
 }).mount('#app');

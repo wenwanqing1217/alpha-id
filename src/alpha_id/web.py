@@ -1,15 +1,41 @@
 """Alpha-ID 演示 Web 应用"""
 
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 
 from alpha_id.container import Container
+from alpha_id.poe import PoEStore
+from alpha_id.signer import AIDSigner
+from alpha_id.skill_signer import SkillRegistry
 from core.message import Message
 from core.twin_brain import BrainRegistry
+
+
+# ── 全局缓存 ──
+
+_network_cache: Dict[str, Any] = {}
+
+
+def _get_network() -> Optional[Any]:
+    """创建 AgentNetwork 实例（带缓存）"""
+    if "network" in _network_cache:
+        return _network_cache["network"]
+    try:
+        signer = AIDSigner()
+        signer.load_from_aid_dir()
+        registry = SkillRegistry(storage_dir=str(Path.home() / ".aid" / "skills"))
+        poe_store = PoEStore(storage_dir=str(Path.home() / ".aid" / "poes"))
+        from alpha_id.agent_network import AgentNetwork
+
+        net = AgentNetwork(signer, registry=registry, poe_store=poe_store)
+        _network_cache["network"] = net
+        return net
+    except Exception:
+        return None
 
 # ── 数据模型 ──
 
@@ -249,4 +275,87 @@ async def brain_think(req: BrainActionRequest):
         "success": True,
         "state": brain.state.value,
         "agent_thought": result.get("agent_thought", ""),
+    }
+
+
+# ── 网络拓扑 ──
+
+
+@app.get("/network/topology")
+async def network_topology():
+    """返回 Agent 网络拓扑数据（节点 + 边），用于前端可视化"""
+    network = _get_network()
+    if network is None:
+        return {
+            "my_did": "",
+            "nodes": [],
+            "edges": [],
+            "stats": {"peers": 0, "chains": 0},
+        }
+
+    peers = network.list_peers()
+    my_did = network.my_did
+
+    # ── 构建节点 ──
+    nodes: List[dict] = []
+    # 自己永远是中心节点
+    my_label = my_did[-12:] if len(my_did) > 12 else my_did
+    nodes.append({"id": "self", "label": f"🧠 我\n{my_label}", "group": "self", "did": my_did})
+
+    for p in peers:
+        nid = p.did[-20:]  # 短的节点 ID
+        label = p.alias or p.did[-12:]
+        nodes.append({
+            "id": nid,
+            "label": f"🤖 {label}\n信任:{p.trust_level}",
+            "group": "peer",
+            "did": p.did,
+            "alias": p.alias or "",
+            "trust_level": p.trust_level,
+        })
+
+    # ── 构建边 ──
+    edges: List[dict] = []
+    # 自己到每个对等节点的连接
+    for p in peers:
+        nid = p.did[-20:]
+        edges.append({
+            "from": "self",
+            "to": nid,
+            "label": "🔗",
+            "title": f"信任: {p.trust_level}",
+            "color": {"color": "#818cf8", "opacity": 0.6},
+        })
+
+    # 尝试加载最近的 PoE 调用链
+    chains_found = 0
+    try:
+        poe_store = PoEStore(storage_dir=str(Path.home() / ".aid" / "poes"))
+        for poe in poe_store.list_all():
+            if chains_found >= 10:
+                break
+            nodes.append({
+                "id": f"poe-{poe.poe_id[-12:]}",
+                "label": f"📜 {poe.skill_name}",
+                "group": "poe",
+                "poe_id": poe.poe_id,
+            })
+            # 谁执行的这个 PoE
+            executor_short = poe.executor_did[-20:] if len(poe.executor_did) > 20 else poe.executor_did
+            edges.append({
+                "from": executor_short if any(n["id"] == executor_short for n in nodes) else "self",
+                "to": f"poe-{poe.poe_id[-12:]}",
+                "label": poe.skill_name[:10],
+                "color": {"color": "#34d399"},
+                "title": f"技能: {poe.skill_name}\n成功: {poe.success}",
+            })
+            chains_found += 1
+    except Exception:
+        pass
+
+    return {
+        "my_did": my_did,
+        "nodes": nodes,
+        "edges": edges,
+        "stats": {"peers": len(peers), "chains": chains_found},
     }
