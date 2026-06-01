@@ -50,6 +50,10 @@ except ImportError as e:
     HAS_SCREEN_CAPTURE = False
     _screen_import_error = str(e)
 
+# 即使导入成功也确保 _screen_import_error 有默认值
+if HAS_SCREEN_CAPTURE:
+    _screen_import_error = ""
+
 # OCR 工具
 try:
     from tools.ocr import (
@@ -63,6 +67,9 @@ try:
 except ImportError as e:
     HAS_OCR = False
     _ocr_import_error = str(e)
+
+if HAS_OCR:
+    _ocr_import_error = ""
 
 # 窗口控制
 try:
@@ -92,6 +99,9 @@ try:
 except ImportError as e:
     HAS_WINDOW_CONTROL = False
     _window_import_error = str(e)
+
+if HAS_WINDOW_CONTROL:
+    _window_import_error = ""
 
 # 身份
 try:
