@@ -19,7 +19,8 @@ dependencies = [
 [project.scripts]
 aid = "alpha_id.cli:app"
 aid-mcp = "aid_mcp_server:main"
-aid-fairy = "aid_daemon:main"
+aid-daemon = "aid_daemon:main"
+aid-api = "aid_api:main"
 
 [project.optional-dependencies]
 fairy = [
@@ -125,9 +126,9 @@ line-ending = "auto"
 
 [tool.taskipy.tasks]
 # 开发
-dev = "python src/aid_daemon.py"
-dev-mcp = "python src/aid_mcp_server.py --transport sse --port 8100"
-web = "python src/alpha_id/web.py"
+dev = "aid-daemon"
+dev-mcp = "aid-mcp"
+web = "aid-api --reload"
 
 # 测试
 test = "python -m pytest tests/ -q --tb=short"
