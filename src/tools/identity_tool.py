@@ -1,13 +1,9 @@
-from langchain.tools import tool
-from langchain.tools import ToolRuntime
-from coze_coding_dev_sdk import LLMClient
-from coze_coding_utils.runtime_ctx.context import new_context
-from langchain_core.messages import HumanMessage, SystemMessage
-from datetime import datetime, timedelta
-from typing import Any, Dict, List
 import hashlib
-import json
 import re
+from datetime import datetime
+from typing import Any, Dict, List
+
+from langchain.tools import ToolRuntime, tool
 
 
 def _safe_str(value: Any) -> str:
@@ -23,7 +19,7 @@ def initialize_security_profile(
     voice_print: str = None,
     biometric_data: str = None,
     security_questions: List[Dict[str, str]] = None,
-    runtime: ToolRuntime = None
+    runtime: ToolRuntime = None,
 ) -> str:
     """
     初始化用户安全档案（首次配置）。
@@ -46,7 +42,7 @@ def initialize_security_profile(
             "security_level": "medium",
             "verification_methods": [],
             "failed_attempts": 0,
-            "locked_until": None
+            "locked_until": None,
         }
 
         # 添加验证方式
@@ -68,9 +64,9 @@ def initialize_security_profile(
         summary = f"""✅ 安全档案初始化完成
 
 Alpha-ID: {user_id}
-创建时间: {security_profile['created_at']}
-安全级别: {security_profile['security_level']}
-已启用验证方式: {', '.join(security_profile['verification_methods']) if security_profile['verification_methods'] else '待配置'}
+创建时间: {security_profile["created_at"]}
+安全级别: {security_profile["security_level"]}
+已启用验证方式: {", ".join(security_profile["verification_methods"]) if security_profile["verification_methods"] else "待配置"}
 设备指纹: {device_fingerprint[:16]}...
 
 ⚠️ 重要提醒：
@@ -86,12 +82,7 @@ Alpha-ID: {user_id}
 
 
 @tool
-def verify_voice(
-    user_id: str,
-    audio_input: str,
-    threshold: float = 0.90,
-    runtime: ToolRuntime = None
-) -> str:
+def verify_voice(user_id: str, audio_input: str, threshold: float = 0.90, runtime: ToolRuntime = None) -> str:
     """
     声纹校验。
 
@@ -116,18 +107,18 @@ def verify_voice(
             return f"""✅ 声纹校验通过
 
 Alpha-ID: {user_id}
-匹配度: {base_match*100:.1f}%
-校验阈值: {threshold*100:.0f}%
-校验时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+匹配度: {base_match * 100:.1f}%
+校验阈值: {threshold * 100:.0f}%
+校验时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
 身份确认：本人"""
         else:
             return f"""❌ 声纹校验失败
 
 Alpha-ID: {user_id}
-匹配度: {base_match*100:.1f}%
-校验阈值: {threshold*100:.0f}%
-校验时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+匹配度: {base_match * 100:.1f}%
+校验阈值: {threshold * 100:.0f}%
+校验时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
 身份确认：非本人或匹配度不足
 ⚠️ 已记录本次失败尝试"""
@@ -137,12 +128,7 @@ Alpha-ID: {user_id}
 
 
 @tool
-def verify_input_behavior(
-    user_id: str,
-    text_input: str,
-    threshold: float = 0.85,
-    runtime: ToolRuntime = None
-) -> str:
+def verify_input_behavior(user_id: str, text_input: str, threshold: float = 0.85, runtime: ToolRuntime = None) -> str:
     """
     输入行为校验（打字节奏、常用语、标点习惯）。
 
@@ -158,7 +144,7 @@ def verify_input_behavior(
         # 分析输入行为特征
         text_length = len(text_input)
         word_count = len(text_input.split())
-        punctuation_count = len(re.findall(r'[^\w\s]', text_input))
+        punctuation_count = len(re.findall(r"[^\w\s]", text_input))
 
         # 计算特征指标
         avg_word_length = text_length / word_count if word_count > 0 else 0
@@ -172,14 +158,14 @@ def verify_input_behavior(
             return f"""✅ 输入行为校验通过
 
 Alpha-ID: {user_id}
-匹配度: {base_match*100:.1f}%
-校验阈值: {threshold*100:.0f}%
+匹配度: {base_match * 100:.1f}%
+校验阈值: {threshold * 100:.0f}%
 分析特征:
 - 文本长度: {text_length} 字符
 - 词汇数量: {word_count} 个
 - 标点符号: {punctuation_count} 个
 - 平均词长: {avg_word_length:.1f} 字符
-- 标点占比: {punctuation_ratio*100:.1f}%
+- 标点占比: {punctuation_ratio * 100:.1f}%
 
 身份确认：本人"""
         else:
@@ -187,8 +173,8 @@ Alpha-ID: {user_id}
             return f"""⚠️ 输入行为校验异常，触发二次验证
 
 Alpha-ID: {user_id}
-匹配度: {base_match*100:.1f}%
-校验阈值: {threshold*100:.0f}%
+匹配度: {base_match * 100:.1f}%
+校验阈值: {threshold * 100:.0f}%
 分析特征:
 - 文本长度: {text_length} 字符
 - 词汇数量: {word_count} 个
@@ -205,11 +191,7 @@ Alpha-ID: {user_id}
 
 @tool
 def verify_security_question(
-    user_id: str,
-    question: str,
-    answer: str,
-    max_attempts: int = 3,
-    runtime: ToolRuntime = None
+    user_id: str, question: str, answer: str, max_attempts: int = 3, runtime: ToolRuntime = None
 ) -> str:
     """
     安全问题校验。
@@ -233,7 +215,7 @@ def verify_security_question(
 
 Alpha-ID: {user_id}
 问题: {question}
-验证时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+验证时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
 身份确认：本人"""
         else:
@@ -241,9 +223,9 @@ Alpha-ID: {user_id}
 
 Alpha-ID: {user_id}
 问题: {question}
-验证时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+验证时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
-⚠️ 答案不正确，请重试（剩余尝试次数: {max_attempts-1}）"""
+⚠️ 答案不正确，请重试（剩余尝试次数: {max_attempts - 1}）"""
 
     except Exception as e:
         return f"❌ 安全问题验证失败: {str(e)}"
@@ -251,10 +233,7 @@ Alpha-ID: {user_id}
 
 @tool
 def verify_biometric(
-    user_id: str,
-    biometric_data: str,
-    biometric_type: str = "fingerprint",
-    runtime: ToolRuntime = None
+    user_id: str, biometric_data: str, biometric_type: str = "fingerprint", runtime: ToolRuntime = None
 ) -> str:
     """
     生物特征校验（指纹/面部识别）。
@@ -271,11 +250,7 @@ def verify_biometric(
         # 模拟生物特征匹配
         # 实际应该调用设备生物识别API
 
-        type_mapping = {
-            "fingerprint": "指纹",
-            "face": "面部识别",
-            "iris": "虹膜"
-        }
+        type_mapping = {"fingerprint": "指纹", "face": "面部识别", "iris": "虹膜"}
 
         biometric_name = type_mapping.get(biometric_type, "生物特征")
 
@@ -287,7 +262,7 @@ def verify_biometric(
 
 Alpha-ID: {user_id}
 验证类型: {biometric_name}
-验证时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+验证时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
 身份确认：本人"""
         else:
@@ -295,7 +270,7 @@ Alpha-ID: {user_id}
 
 Alpha-ID: {user_id}
 验证类型: {biometric_name}
-验证时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+验证时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
 ⚠️ 生物特征不匹配，请重试或使用其他验证方式"""
 
@@ -305,10 +280,7 @@ Alpha-ID: {user_id}
 
 @tool
 def multi_factor_auth(
-    user_id: str,
-    factors: List[str],
-    required_level: str = "high",
-    runtime: ToolRuntime = None
+    user_id: str, factors: List[str], required_level: str = "high", runtime: ToolRuntime = None
 ) -> str:
     """
     多因子身份认证（综合多种验证方式）。
@@ -322,12 +294,7 @@ def multi_factor_auth(
         综合认证结果
     """
     try:
-        level_requirements = {
-            "low": 1,
-            "medium": 2,
-            "high": 3,
-            "ultra": 4
-        }
+        level_requirements = {"low": 1, "medium": 2, "high": 3, "ultra": 4}
 
         required_factors = level_requirements.get(required_level, 2)
         provided_factors = len(factors)
@@ -342,9 +309,9 @@ Alpha-ID: {user_id}
 安全级别: {required_level.upper()}
 提供因子数: {provided_factors}
 要求因子数: {required_factors}
-验证因子: {', '.join(factors)}
-综合匹配度: {avg_score*100:.1f}%
-认证时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+验证因子: {", ".join(factors)}
+综合匹配度: {avg_score * 100:.1f}%
+认证时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
 身份确认：本人
 系统权限: 完全访问"""
@@ -356,7 +323,7 @@ Alpha-ID: {user_id}
 安全级别: {required_level.upper()}
 提供因子数: {provided_factors}
 要求因子数: {required_factors}
-验证因子: {', '.join(factors)}
+验证因子: {", ".join(factors)}
 
 ⚠️ 验证因子不足，请补充至少 {required_factors - provided_factors} 个验证方式"""
 

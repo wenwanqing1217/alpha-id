@@ -47,16 +47,22 @@ def registered_user(client: TestClient):
     """注册一个测试用户，每次调用用唯一设备指纹"""
     _fixture_counter[0] += 1
     fp = f"e2e-device-{_fixture_counter[0]:03d}"
-    resp = client.post("/api/v1/identity/register", json={
-        "device_fingerprint": fp,
-    })
+    resp = client.post(
+        "/api/v1/identity/register",
+        json={
+            "device_fingerprint": fp,
+        },
+    )
     assert resp.status_code == 200
     alpha_id = resp.json()["alpha_id"]
 
-    login_resp = client.post("/api/v1/identity/login", json={
-        "alpha_id": alpha_id,
-        "device_fingerprint": fp,
-    })
+    login_resp = client.post(
+        "/api/v1/identity/login",
+        json={
+            "alpha_id": alpha_id,
+            "device_fingerprint": fp,
+        },
+    )
     assert login_resp.status_code == 200
     token = login_resp.json()["access_token"]
     return alpha_id, token
@@ -72,19 +78,25 @@ class TestIdentityE2E:
 
     def test_register_and_login(self, client: TestClient):
         """注册 → 登录 → 获取令牌"""
-        resp = client.post("/api/v1/identity/register", json={
-            "device_fingerprint": "dev-fp-abc",
-        })
+        resp = client.post(
+            "/api/v1/identity/register",
+            json={
+                "device_fingerprint": "dev-fp-abc",
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["success"] is True
         assert data["alpha_id"].startswith("Alpha-")
         alpha_id = data["alpha_id"]
 
-        login_resp = client.post("/api/v1/identity/login", json={
-            "alpha_id": alpha_id,
-            "device_fingerprint": "dev-fp-abc",
-        })
+        login_resp = client.post(
+            "/api/v1/identity/login",
+            json={
+                "alpha_id": alpha_id,
+                "device_fingerprint": "dev-fp-abc",
+            },
+        )
         assert login_resp.status_code == 200
         tokens = login_resp.json()
         assert "access_token" in tokens
@@ -92,24 +104,33 @@ class TestIdentityE2E:
         assert tokens["token_type"] == "bearer"
 
     def test_login_nonexistent_user_returns_404(self, client: TestClient):
-        resp = client.post("/api/v1/identity/login", json={
-            "alpha_id": "Alpha-Nobody",
-            "device_fingerprint": "whatever",
-        })
+        resp = client.post(
+            "/api/v1/identity/login",
+            json={
+                "alpha_id": "Alpha-Nobody",
+                "device_fingerprint": "whatever",
+            },
+        )
         assert resp.status_code == 404
 
     def test_login_with_empty_device_fp_registered(self, client: TestClient):
         """空 device_fingerprint 注册 → 仍会被存入 devices=[""] → login 成功"""
-        resp = client.post("/api/v1/identity/register", json={
-            "device_fingerprint": "",
-        })
+        resp = client.post(
+            "/api/v1/identity/register",
+            json={
+                "device_fingerprint": "",
+            },
+        )
         assert resp.status_code == 200
         alpha_id = resp.json()["alpha_id"]
 
-        login_resp = client.post("/api/v1/identity/login", json={
-            "alpha_id": alpha_id,
-            "device_fingerprint": "",
-        })
+        login_resp = client.post(
+            "/api/v1/identity/login",
+            json={
+                "alpha_id": alpha_id,
+                "device_fingerprint": "",
+            },
+        )
         # devices=[ "" ]，非空列表 → login 成功
         assert login_resp.status_code == 200
 
@@ -159,19 +180,28 @@ class TestIdentityE2E:
     def test_refresh_token(self, client: TestClient):
         """注册 → 登录 → refresh → 新令牌可用"""
         fp = "refresh-device"
-        client.post("/api/v1/identity/register", json={
-            "device_fingerprint": fp,
-        })
-        login_resp = client.post("/api/v1/identity/login", json={
-            "alpha_id": "Alpha-001",
-            "device_fingerprint": fp,
-        })
+        client.post(
+            "/api/v1/identity/register",
+            json={
+                "device_fingerprint": fp,
+            },
+        )
+        login_resp = client.post(
+            "/api/v1/identity/login",
+            json={
+                "alpha_id": "Alpha-001",
+                "device_fingerprint": fp,
+            },
+        )
         assert login_resp.status_code == 200
         refresh_token = login_resp.json()["refresh_token"]
 
-        refresh_resp = client.post("/api/v1/identity/refresh", json={
-            "refresh_token": refresh_token,
-        })
+        refresh_resp = client.post(
+            "/api/v1/identity/refresh",
+            json={
+                "refresh_token": refresh_token,
+            },
+        )
         assert refresh_resp.status_code == 200
         new_token = refresh_resp.json()["access_token"]
 
@@ -183,9 +213,12 @@ class TestIdentityE2E:
         assert me.status_code == 200
 
     def test_bad_refresh_token_returns_401(self, client: TestClient):
-        resp = client.post("/api/v1/identity/refresh", json={
-            "refresh_token": "totally.fake.token",
-        })
+        resp = client.post(
+            "/api/v1/identity/refresh",
+            json={
+                "refresh_token": "totally.fake.token",
+            },
+        )
         assert resp.status_code == 401
 
     def test_bind_device(self, client: TestClient, registered_user):
@@ -227,24 +260,38 @@ class TestSocialE2E:
     def two_users(self, client: TestClient):
         """注册两个用户，设备指纹唯一"""
         fp_a = "social-a"
-        r1 = client.post("/api/v1/identity/register", json={
-            "device_fingerprint": fp_a,
-        })
+        r1 = client.post(
+            "/api/v1/identity/register",
+            json={
+                "device_fingerprint": fp_a,
+            },
+        )
         assert r1.status_code == 200
         a_id = r1.json()["alpha_id"]
-        t1 = client.post("/api/v1/identity/login", json={
-            "alpha_id": a_id, "device_fingerprint": fp_a,
-        }).json()["access_token"]
+        t1 = client.post(
+            "/api/v1/identity/login",
+            json={
+                "alpha_id": a_id,
+                "device_fingerprint": fp_a,
+            },
+        ).json()["access_token"]
 
         fp_b = "social-b"
-        r2 = client.post("/api/v1/identity/register", json={
-            "device_fingerprint": fp_b,
-        })
+        r2 = client.post(
+            "/api/v1/identity/register",
+            json={
+                "device_fingerprint": fp_b,
+            },
+        )
         assert r2.status_code == 200
         b_id = r2.json()["alpha_id"]
-        t2 = client.post("/api/v1/identity/login", json={
-            "alpha_id": b_id, "device_fingerprint": fp_b,
-        }).json()["access_token"]
+        t2 = client.post(
+            "/api/v1/identity/login",
+            json={
+                "alpha_id": b_id,
+                "device_fingerprint": fp_b,
+            },
+        ).json()["access_token"]
 
         return (a_id, t1), (b_id, t2)
 
@@ -252,11 +299,14 @@ class TestSocialE2E:
         (a_id, _), (b_id, _) = two_users
 
         # A 向 B 发送好友请求
-        send = client.post("/api/v1/social/friend-request", json={
-            "from_alpha_id": a_id,
-            "to_alpha_id": b_id,
-            "message": "你好，做个朋友吧",
-        })
+        send = client.post(
+            "/api/v1/social/friend-request",
+            json={
+                "from_alpha_id": a_id,
+                "to_alpha_id": b_id,
+                "message": "你好，做个朋友吧",
+            },
+        )
         assert send.status_code == 200
         request_id = send.json()["request_id"]
 
@@ -283,9 +333,13 @@ class TestSocialE2E:
     def test_reject_friend_request(self, client: TestClient, two_users):
         (a_id, _), (b_id, _) = two_users
 
-        send = client.post("/api/v1/social/friend-request", json={
-            "from_alpha_id": a_id, "to_alpha_id": b_id,
-        })
+        send = client.post(
+            "/api/v1/social/friend-request",
+            json={
+                "from_alpha_id": a_id,
+                "to_alpha_id": b_id,
+            },
+        )
         request_id = send.json()["request_id"]
 
         reject = client.put(
@@ -303,19 +357,26 @@ class TestSocialE2E:
         (a_id, _), (b_id, _) = two_users
 
         # 成为好友
-        send = client.post("/api/v1/social/friend-request", json={
-            "from_alpha_id": a_id, "to_alpha_id": b_id,
-        })
+        send = client.post(
+            "/api/v1/social/friend-request",
+            json={
+                "from_alpha_id": a_id,
+                "to_alpha_id": b_id,
+            },
+        )
         req_id = send.json()["request_id"]
         client.put(f"/api/v1/social/friend-request/{req_id}", json={"response": "accept"})
 
         # A 发消息给 B
-        msg = client.post("/api/v1/social/message", json={
-            "from_alpha_id": a_id,
-            "to_alpha_id": b_id,
-            "content": "你好，这是测试消息",
-            "message_type": "text",
-        })
+        msg = client.post(
+            "/api/v1/social/message",
+            json={
+                "from_alpha_id": a_id,
+                "to_alpha_id": b_id,
+                "content": "你好，这是测试消息",
+                "message_type": "text",
+            },
+        )
         assert msg.status_code == 200
         assert msg.json()["success"] is True
 
@@ -328,21 +389,32 @@ class TestSocialE2E:
 
     def test_send_message_to_non_friend_fails(self, client: TestClient, two_users):
         (a_id, _), (b_id, _) = two_users
-        resp = client.post("/api/v1/social/message", json={
-            "from_alpha_id": a_id,
-            "to_alpha_id": b_id,
-            "content": "hello",
-        })
+        resp = client.post(
+            "/api/v1/social/message",
+            json={
+                "from_alpha_id": a_id,
+                "to_alpha_id": b_id,
+                "content": "hello",
+            },
+        )
         assert resp.status_code == 400
 
     def test_friend_request_duplicate(self, client: TestClient, two_users):
         (a_id, _), (b_id, _) = two_users
-        client.post("/api/v1/social/friend-request", json={
-            "from_alpha_id": a_id, "to_alpha_id": b_id,
-        })
-        resp = client.post("/api/v1/social/friend-request", json={
-            "from_alpha_id": a_id, "to_alpha_id": b_id,
-        })
+        client.post(
+            "/api/v1/social/friend-request",
+            json={
+                "from_alpha_id": a_id,
+                "to_alpha_id": b_id,
+            },
+        )
+        resp = client.post(
+            "/api/v1/social/friend-request",
+            json={
+                "from_alpha_id": a_id,
+                "to_alpha_id": b_id,
+            },
+        )
         assert resp.status_code == 400
 
 
@@ -356,33 +428,36 @@ class TestRiskE2E:
 
     def test_evaluate_full(self, client: TestClient):
         """全量风控评估 — 设备 + 行为 + 声纹"""
-        resp = client.post("/api/v1/risk/evaluate", json={
-            "device_current": {
-                "hardware_id": "hw-mbp-2024",
-                "ip_address": "192.168.1.100",
-                "location": "北京",
-                "browser_info": "Chrome/120",
-                "screen_resolution": "2560x1600",
-                "first_access_time": "2024-01-01T00:00:00",
+        resp = client.post(
+            "/api/v1/risk/evaluate",
+            json={
+                "device_current": {
+                    "hardware_id": "hw-mbp-2024",
+                    "ip_address": "192.168.1.100",
+                    "location": "北京",
+                    "browser_info": "Chrome/120",
+                    "screen_resolution": "2560x1600",
+                    "first_access_time": "2024-01-01T00:00:00",
+                },
+                "behavior_current": {
+                    "typing_speed": 5.2,
+                    "session_time": "00:15:30",
+                    "common_words": ["你好", "谢谢"],
+                    "error_rate": 0.02,
+                    "word_count": 120,
+                    "emoji_count": 3,
+                    "mouse_movement": 450,
+                    "input_pattern": "touch",
+                    "language": "zh",
+                },
+                "voice_data": {
+                    "voice_match": 0.92,
+                    "habit_match": 0.88,
+                    "noise_level": 0.05,
+                    "audio_quality": 0.95,
+                },
             },
-            "behavior_current": {
-                "typing_speed": 5.2,
-                "session_time": "00:15:30",
-                "common_words": ["你好", "谢谢"],
-                "error_rate": 0.02,
-                "word_count": 120,
-                "emoji_count": 3,
-                "mouse_movement": 450,
-                "input_pattern": "touch",
-                "language": "zh",
-            },
-            "voice_data": {
-                "voice_match": 0.92,
-                "habit_match": 0.88,
-                "noise_level": 0.05,
-                "audio_quality": 0.95,
-            },
-        })
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert "risk_score" in data
@@ -394,16 +469,19 @@ class TestRiskE2E:
 
     def test_evaluate_device_only(self, client: TestClient):
         """仅设备指纹 → 行为评分 50 默认，声纹评分 0（无声纹数据）"""
-        resp = client.post("/api/v1/risk/evaluate", json={
-            "device_current": {
-                "hardware_id": "hw-unknown",
-                "ip_address": "10.0.0.1",
-                "location": "未知",
-                "browser_info": "Firefox/120",
-                "screen_resolution": "1920x1080",
-                "first_access_time": "2024-06-01T00:00:00",
+        resp = client.post(
+            "/api/v1/risk/evaluate",
+            json={
+                "device_current": {
+                    "hardware_id": "hw-unknown",
+                    "ip_address": "10.0.0.1",
+                    "location": "未知",
+                    "browser_info": "Firefox/120",
+                    "screen_resolution": "1920x1080",
+                    "first_access_time": "2024-06-01T00:00:00",
+                },
             },
-        })
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["behavior_score"] == 50.0
@@ -420,13 +498,16 @@ class TestRiskE2E:
 
     def test_voice_verify(self, client: TestClient):
         """独立声纹验证 — 高匹配 → 低声纹分 (有风险)"""
-        resp = client.post("/api/v1/risk/voice-verify", json={
-            "user_id": "Alpha-Test",
-            "voice_match": 0.95,
-            "habit_match": 0.90,
-            "noise_level": 0.02,
-            "audio_quality": 0.98,
-        })
+        resp = client.post(
+            "/api/v1/risk/voice-verify",
+            json={
+                "user_id": "Alpha-Test",
+                "voice_match": 0.95,
+                "habit_match": 0.90,
+                "noise_level": 0.02,
+                "audio_quality": 0.98,
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert "voice_score" in data
@@ -439,13 +520,16 @@ class TestRiskE2E:
 
     def test_low_voice_match_high_risk(self, client: TestClient):
         """低声纹匹配 → 各项扣分 → voice_score 低"""
-        resp = client.post("/api/v1/risk/voice-verify", json={
-            "user_id": "Alpha-Intruder",
-            "voice_match": 0.15,    # < 0.9 → -60
-            "habit_match": 0.20,    # < 0.8 → -20
-            "noise_level": 0.80,    # > 0.3 → -10
-            "audio_quality": 0.30,  # < 0.7 → -10
-        })
+        resp = client.post(
+            "/api/v1/risk/voice-verify",
+            json={
+                "user_id": "Alpha-Intruder",
+                "voice_match": 0.15,  # < 0.9 → -60
+                "habit_match": 0.20,  # < 0.8 → -20
+                "noise_level": 0.80,  # > 0.3 → -10
+                "audio_quality": 0.30,  # < 0.7 → -10
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["voice_score"] == 0.0  # 扣光

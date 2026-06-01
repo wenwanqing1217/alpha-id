@@ -2,6 +2,7 @@
 TwinBrain + AlphaSocialManager 集成测试
 使用真实存储，模拟多 Alpha-ID 之间的社交交互全流程。
 """
+
 import pytest
 from core.storage import JsonStorage
 from core.twin_brain import TwinBrain, BrainSettings
@@ -72,7 +73,8 @@ class TestFriendRequestFlow:
         request_id = pending[0]["request_id"]
 
         reject_msg = Message(
-            sender="Alpha-Bob-001", recipient="Alpha-Alice-001",
+            sender="Alpha-Bob-001",
+            recipient="Alpha-Alice-001",
             msg_type=MessageType.FRIEND_RESPONSE,
             payload={"request_id": request_id, "action": "reject"},
         )
@@ -86,7 +88,8 @@ class TestFriendRequestFlow:
         pending = bob.social.get_pending_friend_requests("Alpha-Bob-001")
 
         bad_msg = Message(
-            sender="Alpha-Bob-001", recipient="Alpha-Alice-001",
+            sender="Alpha-Bob-001",
+            recipient="Alpha-Alice-001",
             msg_type=MessageType.FRIEND_RESPONSE,
             payload={"request_id": pending[0]["request_id"], "action": "ban"},
         )
@@ -95,12 +98,14 @@ class TestFriendRequestFlow:
         assert "accept 或 reject" in resp.message
 
     def test_chat_between_friends(self, alice, bob):
+        bob.settings.use_agent_chat = False
         # 先加好友
         req = Message.create_friend_request(sender="Alpha-Alice-001", recipient="Alpha-Bob-001", note="Hi")
         bob.receive(req)
         pending = bob.social.get_pending_friend_requests("Alpha-Bob-001")
         accept_msg = Message(
-            sender="Alpha-Bob-001", recipient="Alpha-Alice-001",
+            sender="Alpha-Bob-001",
+            recipient="Alpha-Alice-001",
             msg_type=MessageType.FRIEND_RESPONSE,
             payload={"request_id": pending[0]["request_id"], "action": "accept"},
         )
@@ -110,7 +115,7 @@ class TestFriendRequestFlow:
         chat_msg = Message.create_chat(sender="Alpha-Alice-001", recipient="Alpha-Bob-001", text="你好 Bob！")
         resp = bob.receive(chat_msg)
         assert resp.success is True
-        assert "已送达" in resp.message
+        assert resp.message == "消息已收到"
 
     def test_chat_before_friend(self, alice, bob):
         """未加好友时发消息失败"""
@@ -126,6 +131,7 @@ class TestProfileVisibility:
     def founder_storage(self, tmp_path):
         """创始人专用存储（alpha_id = Alpha-1 与 register_user 匹配）"""
         from core.storage import JsonStorage
+
         return JsonStorage(str(tmp_path / "founder.json"))
 
     @pytest.fixture
@@ -166,7 +172,8 @@ class TestProfileVisibility:
         founder.receive(req)
         pending = founder.social.get_pending_friend_requests("Alpha-1")
         accept_msg = Message(
-            sender="Alpha-1", recipient="Alpha-Stranger",
+            sender="Alpha-1",
+            recipient="Alpha-Stranger",
             msg_type=MessageType.FRIEND_RESPONSE,
             payload={"request_id": pending[0]["request_id"], "action": "accept"},
         )
@@ -195,8 +202,11 @@ class TestBrainInteraction:
         assert "不在线" in resp.message
 
     def test_sleep_auto_reply(self, storage):
-        brain = TwinBrain(alpha_id="Alpha-AutoReply", storage=storage,
-                          settings=BrainSettings(auto_reply=True, auto_reply_text="我现在不在"))
+        brain = TwinBrain(
+            alpha_id="Alpha-AutoReply",
+            storage=storage,
+            settings=BrainSettings(auto_reply=True, auto_reply_text="我现在不在"),
+        )
         brain.sleep()
         msg = Message.create_chat(sender="test", recipient="Alpha-AutoReply", text="Hello")
         resp = brain.receive(msg)
@@ -211,22 +221,26 @@ class TestBrainInteraction:
         assert result["pending_requests"] == 1
 
     def test_app_action(self, alice):
-        msg = Message(sender="pet-app", recipient="Alpha-Alice-001",
-                      msg_type=MessageType.APP_ACTION,
-                      payload={"action": "say", "text": "摸摸头"})
+        msg = Message(
+            sender="pet-app",
+            recipient="Alpha-Alice-001",
+            msg_type=MessageType.APP_ACTION,
+            payload={"action": "say", "text": "摸摸头"},
+        )
         resp = alice.receive(msg)
         assert resp.success is True
         assert "摸摸头" in resp.message
 
     def test_unsupported_external_action(self, alice):
-        msg = Message(sender="test", recipient="Alpha-Alice-001",
-                      msg_type=MessageType.APP_ACTION,
-                      payload={"action": "fly"})
+        msg = Message(
+            sender="test", recipient="Alpha-Alice-001", msg_type=MessageType.APP_ACTION, payload={"action": "fly"}
+        )
         resp = alice.receive(msg)
         assert resp.success is False
 
     def test_brain_registry_broadcast(self, alice, bob):
         from core.twin_brain import BrainRegistry
+
         registry = BrainRegistry()
         registry.register(alice)
         registry.register(bob)
@@ -260,9 +274,12 @@ class TestPersistence:
         req = Message.create_friend_request(sender="Alpha-A", recipient="Alpha-B", note="hi")
         brain_b.receive(req)
         pending = brain_b.social.get_pending_friend_requests("Alpha-B")
-        accept = Message(sender="Alpha-B", recipient="Alpha-A",
-                         msg_type=MessageType.FRIEND_RESPONSE,
-                         payload={"request_id": pending[0]["request_id"], "action": "accept"})
+        accept = Message(
+            sender="Alpha-B",
+            recipient="Alpha-A",
+            msg_type=MessageType.FRIEND_RESPONSE,
+            payload={"request_id": pending[0]["request_id"], "action": "accept"},
+        )
         brain_b.receive(accept)
 
         # 重新加载
@@ -281,9 +298,12 @@ class TestPersistence:
         req = Message.create_friend_request(sender="Alpha-A", recipient="Alpha-B", note="hi")
         brain_b.receive(req)
         pending = brain_b.social.get_pending_friend_requests("Alpha-B")
-        accept = Message(sender="Alpha-B", recipient="Alpha-A",
-                         msg_type=MessageType.FRIEND_RESPONSE,
-                         payload={"request_id": pending[0]["request_id"], "action": "accept"})
+        accept = Message(
+            sender="Alpha-B",
+            recipient="Alpha-A",
+            msg_type=MessageType.FRIEND_RESPONSE,
+            payload={"request_id": pending[0]["request_id"], "action": "accept"},
+        )
         brain_b.receive(accept)
 
         # B 的存储文件可以加载

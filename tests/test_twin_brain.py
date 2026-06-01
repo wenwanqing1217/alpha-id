@@ -1,12 +1,18 @@
 """
 TwinBrain 核心单元测试 —— 状态机、消息路由、自主学习周期、BrainRegistry
 """
+
 import pytest
 import time
 from unittest.mock import MagicMock, patch
 from core.twin_brain import (
-    TwinBrain, BrainRegistry, BrainState, BrainSettings,
-    can_transition, BRAIN_TRANSITIONS, default_registry
+    TwinBrain,
+    BrainRegistry,
+    BrainState,
+    BrainSettings,
+    can_transition,
+    BRAIN_TRANSITIONS,
+    default_registry,
 )
 from core.message import Message, Response, MessageType
 
@@ -76,9 +82,9 @@ class TestBrainStateMachine:
         brain = TwinBrain(alpha_id="Alpha-Test-006")
         assert not brain.is_active()  # SLEEP 不活跃
         brain.awake()
-        assert brain.is_active()      # AWAKE 活跃
+        assert brain.is_active()  # AWAKE 活跃
         brain.idle()
-        assert brain.is_active()      # IDLE 活跃
+        assert brain.is_active()  # IDLE 活跃
         brain.sleep()
         assert not brain.is_active()  # SLEEP 不活跃
 
@@ -119,9 +125,10 @@ class TestBrainMessageRouting:
     def test_app_action_say(self):
         brain = self.setup_brain()
         msg = Message(
-            sender="PetApp", recipient="Alpha-Msg-001",
+            sender="PetApp",
+            recipient="Alpha-Msg-001",
             msg_type=MessageType.APP_ACTION,
-            payload={"action": "say", "text": "hello world"}
+            payload={"action": "say", "text": "hello world"},
         )
         resp = brain.receive(msg)
         assert resp.success is True
@@ -130,9 +137,10 @@ class TestBrainMessageRouting:
     def test_app_action_query_status(self):
         brain = self.setup_brain()
         msg = Message(
-            sender="PetApp", recipient="Alpha-Msg-001",
+            sender="PetApp",
+            recipient="Alpha-Msg-001",
             msg_type=MessageType.APP_ACTION,
-            payload={"action": "query_status"}
+            payload={"action": "query_status"},
         )
         resp = brain.receive(msg)
         assert resp.success is True
@@ -142,9 +150,7 @@ class TestBrainMessageRouting:
     def test_app_action_unknown(self):
         brain = self.setup_brain()
         msg = Message(
-            sender="PetApp", recipient="Alpha-Msg-001",
-            msg_type=MessageType.APP_ACTION,
-            payload={"action": "fly"}
+            sender="PetApp", recipient="Alpha-Msg-001", msg_type=MessageType.APP_ACTION, payload={"action": "fly"}
         )
         resp = brain.receive(msg)
         assert resp.success is False
@@ -213,6 +219,7 @@ class TestBrainThinkCycle:
         engine = brain.actions
         # 规划一个自动批准的行动
         from core.action_engine import Action, ActionType
+
         action = Action(action_type=ActionType.GET_CONTACTS, platform="console")
         engine.plan(action)
         result = brain.think()
@@ -227,9 +234,10 @@ class TestBrainActionEngine:
         brain = TwinBrain(alpha_id="Alpha-AE-001")
         brain.awake()
         msg = Message(
-            sender="User", recipient="Alpha-AE-001",
+            sender="User",
+            recipient="Alpha-AE-001",
             msg_type=MessageType.ACTION_CONFIRM,
-            payload={"action_id": "nonexistent", "approved": True}
+            payload={"action_id": "nonexistent", "approved": True},
         )
         # _actions 未初始化
         resp = brain.receive(msg)
@@ -239,11 +247,7 @@ class TestBrainActionEngine:
     def test_action_query_no_engine(self):
         brain = TwinBrain(alpha_id="Alpha-AE-002")
         brain.awake()
-        msg = Message(
-            sender="User", recipient="Alpha-AE-002",
-            msg_type=MessageType.ACTION_QUERY,
-            payload={}
-        )
+        msg = Message(sender="User", recipient="Alpha-AE-002", msg_type=MessageType.ACTION_QUERY, payload={})
         resp = brain.receive(msg)
         assert resp.success is False
         assert resp.error_code == "NO_ACTION_ENGINE"
@@ -253,11 +257,7 @@ class TestBrainActionEngine:
         brain.awake()
         # 触发行动引擎初始化
         _ = brain.actions
-        msg = Message(
-            sender="User", recipient="Alpha-AE-003",
-            msg_type=MessageType.ACTION_QUERY,
-            payload={}
-        )
+        msg = Message(sender="User", recipient="Alpha-AE-003", msg_type=MessageType.ACTION_QUERY, payload={})
         resp = brain.receive(msg)
         assert resp.success is True
         assert "stats" in resp.data
@@ -361,6 +361,7 @@ class TestBrainRegistry:
     def test_default_registry_is_global(self):
         """默认注册表是单例"""
         from core.twin_brain import default_registry
+
         assert isinstance(default_registry, BrainRegistry)
 
     def test_get_status_contains_action_engine_when_initialized(self):

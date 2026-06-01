@@ -92,15 +92,11 @@ class Agent:
 
     def accept_request(self, request_id: str) -> Dict[str, Any]:
         """接受好友请求"""
-        return self._container.social.respond_friend_request(
-            request_id=request_id, response="accept"
-        )
+        return self._container.social.respond_friend_request(request_id=request_id, response="accept")
 
     def reject_request(self, request_id: str) -> Dict[str, Any]:
         """拒绝好友请求"""
-        return self._container.social.respond_friend_request(
-            request_id=request_id, response="reject"
-        )
+        return self._container.social.respond_friend_request(request_id=request_id, response="reject")
 
     def friends(self) -> List[str]:
         """获取好友列表"""
@@ -164,18 +160,25 @@ class Agent:
 
     # ── 风控 ──
 
-    def evaluate_risk(self, device_info: Optional[Dict] = None,
-                      behavior_info: Optional[Dict] = None,
-                      voice_info: Optional[Dict] = None) -> Dict[str, Any]:
+    def evaluate_risk(
+        self,
+        device_info: Optional[Dict] = None,
+        behavior_info: Optional[Dict] = None,
+        voice_info: Optional[Dict] = None,
+    ) -> Dict[str, Any]:
         """评估当前风险"""
         engine = self._container.risk
         device_score = engine.calculate_device_score(
             self._make_device_fp(device_info) if device_info else None,
             None,
         )
-        behavior_score = engine.calculate_behavior_score(
-            self._make_behavior_fp(behavior_info),
-        ) if behavior_info else 50.0
+        behavior_score = (
+            engine.calculate_behavior_score(
+                self._make_behavior_fp(behavior_info),
+            )
+            if behavior_info
+            else 50.0
+        )
         voice_score = engine.calculate_voice_score(voice_info)
         total = engine.calculate_total_risk(device_score, behavior_score, voice_score)
         level = engine.determine_risk_level(total)
@@ -190,6 +193,7 @@ class Agent:
     @staticmethod
     def _make_device_fp(info: Dict):
         from core.risk_engine import DeviceFingerprint
+
         return DeviceFingerprint(
             hardware_id=info.get("hardware_id", ""),
             ip_address=info.get("ip_address", ""),
@@ -202,6 +206,7 @@ class Agent:
     @staticmethod
     def _make_behavior_fp(info: Dict):
         from core.risk_engine import BehaviorFingerprint
+
         return BehaviorFingerprint(
             typing_speed=info.get("typing_speed", 0.0),
             mouse_movement=info.get("mouse_movement", 0.0),

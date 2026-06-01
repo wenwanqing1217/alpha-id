@@ -7,15 +7,15 @@
 - 统一的存储后端切换点
 """
 
-import os
 import threading
 from typing import Optional
 
-from core.user_identity import UserIdentityManager
 from core.alpha_social import AlphaSocialManager
+from core.memory_store import MemoryStore
 from core.risk_engine import RiskAssessmentEngine
 from core.storage import StorageBackend
 from core.storage_sqlite import SqliteStorage
+from core.user_identity import UserIdentityManager
 
 
 class Container:
@@ -29,6 +29,7 @@ class Container:
         self._identity: Optional[UserIdentityManager] = None
         self._social: Optional[AlphaSocialManager] = None
         self._risk: Optional[RiskAssessmentEngine] = None
+        self._memory: Optional[MemoryStore] = None
 
     @classmethod
     def instance(cls) -> "Container":
@@ -74,6 +75,18 @@ class Container:
             self._risk = RiskAssessmentEngine()
         return self._risk
 
+    @property
+    def memory(self) -> MemoryStore:
+        if self._memory is None:
+            # 用第一个注册的用户的 alpha_id 初始化；没有用户时用占位符
+            try:
+                users = self.storage.load("users") or {}
+                first_id = next(iter(users), "Alpha-001")
+            except Exception:
+                first_id = "Alpha-001"
+            self._memory = MemoryStore(first_id, storage=self.storage)
+        return self._memory
+
     # ── 生命周期 ──
 
     def reset(self):
@@ -82,6 +95,7 @@ class Container:
         self._identity = None
         self._social = None
         self._risk = None
+        self._memory = None
 
     def close(self):
         """释放资源"""

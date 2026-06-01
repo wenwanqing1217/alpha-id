@@ -1,36 +1,58 @@
+# ════════════════════════════════════════════════════════════════════
+# AID — 本地全栈开发环境
+# ════════════════════════════════════════════════════════════════════
+# 使用方式:
+#   docker compose up -d          # 启动全部服务
+#   docker compose logs -f api    # 查看 API 日志
+#   docker compose down -v        # 停止并清理数据
+# ════════════════════════════════════════════════════════════════════
+
 services:
-
-  api:
-    build: .
-    container_name: alpha-id-api
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://alpha:alpha_pass@db:5432/alpha_id
-    depends_on:
-      db:
-        condition: service_healthy
-    volumes:
-      - ./assets:/app/assets
-    restart: unless-stopped
-
+  # ── PostgreSQL 数据库 ──
   db:
     image: postgres:16-alpine
-    container_name: alpha-id-db
-    ports:
-      - "5432:5432"
+    restart: unless-stopped
+    shm_size: 256mb
     environment:
-      POSTGRES_USER: alpha
-      POSTGRES_PASSWORD: alpha_pass
-      POSTGRES_DB: alpha_id
+      POSTGRES_USER: ${PGUSER:-aid}
+      POSTGRES_PASSWORD: ${PGPASSWORD:-aid_secret}
+      POSTGRES_DB: ${PGDATABASE:-alpha_id}
+    ports:
+      - "${PGPORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./sql/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U alpha -d alpha_id"]
+      test: ["CMD-SHELL", "pg_isready -U ${PGUSER:-aid} -d ${PGDATABASE:-alpha_id}"]
       interval: 5s
       timeout: 3s
       retries: 5
+      start_period: 10s
+
+  # ── API 服务 ──
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: unless-stopped
+    ports:
+      - "${API_PORT:-8000}:8000"
+    environment:
+      # --- 数据库 ---
+      DATABASE_URL: postgresql://${PGUSER:-aid}:${PGPASSWORD:-aid_secret}@db:5432/${PGDATABASE:-alpha_id}
+      # --- 日志级别 ---
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      # --- 环境标识 ---
+      AID_ENV: ${AID_ENV:-development}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
 volumes:
   pgdata:

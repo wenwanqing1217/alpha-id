@@ -6,11 +6,10 @@ from typing import AsyncGenerator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.identity import router as identity_router
-from api.social import router as social_router
-from api.risk import router as risk_router
-
 from alpha_id.container import Container
+from api.identity import router as identity_router
+from api.risk import router as risk_router
+from api.social import router as social_router
 
 
 @asynccontextmanager

@@ -1,4 +1,5 @@
 """Alpha-ID 用户身份管理单元测试"""
+
 import json
 import os
 import sys
@@ -37,54 +38,33 @@ class TestUserIdentityManager:
 
     def test_register_normal_user(self, manager):
         """普通用户注册，从 Alpha-001 开始"""
-        result = manager.register_user(
-            device_fingerprint="DEVICE-TEST-001",
-            is_founder=False
-        )
+        result = manager.register_user(device_fingerprint="DEVICE-TEST-001", is_founder=False)
         assert result["success"] is True
         assert result["alpha_id"] == "Alpha-001"
 
         # 第二次注册应为 Alpha-002
-        result2 = manager.register_user(
-            device_fingerprint="DEVICE-TEST-002",
-            is_founder=False
-        )
+        result2 = manager.register_user(device_fingerprint="DEVICE-TEST-002", is_founder=False)
         assert result2["success"] is True
         assert result2["alpha_id"] == "Alpha-002"
 
     def test_register_founder_with_wrong_code(self, manager):
         """创始人验证码错误应拒绝"""
-        result = manager.register_user(
-            device_fingerprint="FOUNDER-DEVICE",
-            is_founder=True,
-            founder_code="WRONG-CODE"
-        )
+        result = manager.register_user(device_fingerprint="FOUNDER-DEVICE", is_founder=True, founder_code="WRONG-CODE")
         assert result["success"] is False
         assert "验证码无效" in result["message"]
 
     def test_register_founder_twice(self, manager):
         """创始人只能注册一次"""
-        result1 = manager.register_user(
-            device_fingerprint="FOUNDER-DEVICE",
-            is_founder=True,
-            founder_code="Alpha-1-zx"
-        )
+        result1 = manager.register_user(device_fingerprint="FOUNDER-DEVICE", is_founder=True, founder_code="Alpha-1-zx")
         assert result1["success"] is True
         assert result1["alpha_id"] == "Alpha-1"
 
-        result2 = manager.register_user(
-            device_fingerprint="ANOTHER-DEVICE",
-            is_founder=True,
-            founder_code="Alpha-1-zx"
-        )
+        result2 = manager.register_user(device_fingerprint="ANOTHER-DEVICE", is_founder=True, founder_code="Alpha-1-zx")
         assert result2["success"] is False
 
     def test_new_user_status_is_locked(self, manager):
         """新注册用户默认锁定"""
-        result = manager.register_user(
-            device_fingerprint="DEVICE-TEST",
-            is_founder=False
-        )
+        result = manager.register_user(device_fingerprint="DEVICE-TEST", is_founder=False)
         profile = manager.get_user_profile(result["alpha_id"])
         assert profile["status"] == "locked"
 
@@ -95,10 +75,7 @@ class TestUserIdentityManager:
 
     def test_update_device_binding(self, manager):
         """设备绑定更新"""
-        result = manager.register_user(
-            device_fingerprint="DEVICE-A",
-            is_founder=False
-        )
+        result = manager.register_user(device_fingerprint="DEVICE-A", is_founder=False)
         alpha_id = result["alpha_id"]
 
         update = manager.update_device_binding(alpha_id, "DEVICE-B")
@@ -107,10 +84,7 @@ class TestUserIdentityManager:
 
     def test_sync_cross_device(self, manager):
         """跨设备同步"""
-        result = manager.register_user(
-            device_fingerprint="DEVICE-A",
-            is_founder=False
-        )
+        result = manager.register_user(device_fingerprint="DEVICE-A", is_founder=False)
         alpha_id = result["alpha_id"]
 
         sync = manager.sync_cross_device(alpha_id, "DEVICE-A", "DEVICE-C")
@@ -119,10 +93,7 @@ class TestUserIdentityManager:
 
     def test_record_session_increments(self, manager):
         """会话记录递增"""
-        result = manager.register_user(
-            device_fingerprint="DEVICE",
-            is_founder=False
-        )
+        result = manager.register_user(device_fingerprint="DEVICE", is_founder=False)
         alpha_id = result["alpha_id"]
 
         session1 = manager.record_session(alpha_id)
@@ -139,6 +110,6 @@ class TestUserIdentityManager:
         manager.register_user("DEVICE-3", is_founder=False)
 
         stats = manager.get_statistics()
-        assert stats["total_users"] == 3
-        assert stats["founder_registered"] is True
-        assert stats["founder_alpha_id"] == "Alpha-1"
+        assert stats.total_users == 3
+        assert stats.founder_registered is True
+        assert stats.founder_alpha_id == "Alpha-1"

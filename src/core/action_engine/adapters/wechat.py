@@ -25,17 +25,17 @@ WeChatAdapter 不直接操作微信协议，而是通过一个可插拔的 "后�
 ═════════════════════════════════════════
 """
 
-from typing import Any, Dict, List, Optional, Set
-from datetime import datetime
 from abc import ABC, abstractmethod
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from . import PlatformAdapter
 from ..models import Action, ActionResult, ActionType
-
+from . import PlatformAdapter
 
 # ═══════════════════════════════════════
 # 后端抽象
 # ═══════════════════════════════════════
+
 
 class WeChatBackend(ABC):
     """微信操作后端的抽象接口"""
@@ -90,6 +90,7 @@ class WeChatBackend(ABC):
 # 模拟后端（开发调试用）
 # ═══════════════════════════════════════
 
+
 class SimulationBackend(WeChatBackend):
     """模拟后端 — 不操作真实微信，只打日志"""
 
@@ -139,6 +140,7 @@ class SimulationBackend(WeChatBackend):
 # WeChatFerry 后端（真实微信）
 # ═══════════════════════════════════════
 
+
 class WcfBackend(WeChatBackend):
     """
     WeChatFerry 后端 (wcferry)
@@ -160,6 +162,7 @@ class WcfBackend(WeChatBackend):
     def _initialize(self) -> None:
         try:
             from wcferry import Wcf
+
             self._wcf = Wcf()
         except ImportError:
             print("[WeChat-Wcf] wcferry 未安装，请运行: pip install wcferry")
@@ -256,6 +259,7 @@ class WcfBackend(WeChatBackend):
 # 适配器本身
 # ═══════════════════════════════════════
 
+
 class WeChatAdapter(PlatformAdapter):
     """
     微信适配器
@@ -304,29 +308,49 @@ class WeChatAdapter(PlatformAdapter):
         try:
             if action_type == ActionType.SEND_MESSAGE:
                 success = self._backend.send_text(target, content)
-                return self._result(success, "发送文本", {
-                    "target": target, "length": len(content),
-                })
+                return self._result(
+                    success,
+                    "发送文本",
+                    {
+                        "target": target,
+                        "length": len(content),
+                    },
+                )
 
             elif action_type == ActionType.REPLY:
                 success = self._backend.send_text(target, content)
-                return self._result(success, "回复消息", {
-                    "target": target, "reply_to": payload.get("reply_to", ""),
-                })
+                return self._result(
+                    success,
+                    "回复消息",
+                    {
+                        "target": target,
+                        "reply_to": payload.get("reply_to", ""),
+                    },
+                )
 
             elif action_type == ActionType.SEND_IMAGE:
                 image_path = payload.get("image_path", content)
                 success = self._backend.send_image(target, image_path)
-                return self._result(success, "发送图片", {
-                    "target": target, "image_path": image_path,
-                })
+                return self._result(
+                    success,
+                    "发送图片",
+                    {
+                        "target": target,
+                        "image_path": image_path,
+                    },
+                )
 
             elif action_type == ActionType.SEND_FILE:
                 file_path = payload.get("file_path", content)
                 success = self._backend.send_file(target, file_path)
-                return self._result(success, "发送文件", {
-                    "target": target, "file_path": file_path,
-                })
+                return self._result(
+                    success,
+                    "发送文件",
+                    {
+                        "target": target,
+                        "file_path": file_path,
+                    },
+                )
 
             elif action_type == ActionType.SEND_LINK:
                 success = self._backend.send_link(
@@ -336,19 +360,27 @@ class WeChatAdapter(PlatformAdapter):
                     url=payload.get("url", ""),
                     cover_url=payload.get("cover_url", ""),
                 )
-                return self._result(success, "发送链接", {
-                    "target": target,
-                    "title": payload.get("title", ""),
-                })
+                return self._result(
+                    success,
+                    "发送链接",
+                    {
+                        "target": target,
+                        "title": payload.get("title", ""),
+                    },
+                )
 
             elif action_type == ActionType.ADD_FRIEND:
                 success = self._backend.add_friend(
                     wx_id=payload.get("wxid", content),
                     message=payload.get("message", "你好，我是TwinBrain"),
                 )
-                return self._result(success, "添加好友", {
-                    "wxid": payload.get("wxid", content),
-                })
+                return self._result(
+                    success,
+                    "添加好友",
+                    {
+                        "wxid": payload.get("wxid", content),
+                    },
+                )
 
             elif action_type == ActionType.CREATE_GROUP:
                 members = payload.get("members", [])
@@ -356,9 +388,13 @@ class WeChatAdapter(PlatformAdapter):
                     members=members,
                     group_name=payload.get("group_name", ""),
                 )
-                return self._result(success, "创建群聊", {
-                    "member_count": len(members),
-                })
+                return self._result(
+                    success,
+                    "创建群聊",
+                    {
+                        "member_count": len(members),
+                    },
+                )
 
             elif action_type == ActionType.GET_CONTACTS:
                 contacts = self._backend.get_contacts()

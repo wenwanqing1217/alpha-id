@@ -18,3 +18,19 @@ Thumbs.db
 
 # Local data
 data/
+
+# Environment secrets
+.env
+
+# Generated files
+htmlcov/
+*.log
+*.db
+screenshots/
+chi_sim.traineddata
+
+# Dev artifacts
+.mypy_cache/
+.ruff_cache/
+.pyright/
+*.installed.cfg

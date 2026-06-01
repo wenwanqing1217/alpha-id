@@ -1,6 +1,8 @@
 """风控引擎 API 路由"""
 
 from fastapi import APIRouter
+
+from alpha_id.container import Container
 from core.risk_engine import (
     BehaviorFingerprint,
     DeviceFingerprint,
@@ -8,9 +10,6 @@ from core.risk_engine import (
 )
 
 from .models import RiskEvaluateRequest, VoiceVerifyRequest, VoiceVerifyResponse
-
-from alpha_id.container import Container
-
 
 router = APIRouter(prefix="/api/v1/risk", tags=["风控"])
 

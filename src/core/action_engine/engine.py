@@ -2,18 +2,17 @@
 行动引擎 —— 行动的执行中枢
 """
 
-from typing import Any, Dict, List, Optional, Type
-from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from .models import Action, ActionStatus, ActionType, ActionResult
-from .approval import ApprovalGate, ApprovalPolicy
 from .adapters import PlatformAdapter
+from .approval import ApprovalGate, ApprovalPolicy
+from .models import Action, ActionResult, ActionStatus
 
 
 class ActionEngine:
     """
     行动引擎：TwinBrain 对外部世界施加影响的执行层。
-    
+
     职责：
     1. 注册平台适配器
     2. 接收行动请求 → 审批 → 执行 → 记录结果
@@ -25,8 +24,8 @@ class ActionEngine:
         self._alpha_id = alpha_id
         self._adapters: Dict[str, PlatformAdapter] = {}
         self._approval = ApprovalGate(policy=approval_policy or ApprovalPolicy())
-        self._history: List[Action] = []          # 全部行动历史
-        self._pending: Dict[str, Action] = {}      # 待执行（已批准）
+        self._history: List[Action] = []  # 全部行动历史
+        self._pending: Dict[str, Action] = {}  # 待执行（已批准）
         self._max_history = 1000
 
     # ── 适配器管理 ──
@@ -40,20 +39,17 @@ class ActionEngine:
         return self._adapters.get(platform)
 
     def list_adapters(self) -> Dict[str, Any]:
-        return {
-            name: adapter.get_capabilities()
-            for name, adapter in self._adapters.items()
-        }
+        return {name: adapter.get_capabilities() for name, adapter in self._adapters.items()}
 
     # ── 核心流程 ──
 
     def plan(self, action: Action) -> Action:
         """
         第一步：计划一个行动
-        
+
         做审批评估，如果自动通过则进入待执行队列。
         如果需要用户确认，停留在 PENDING 状态等待外部调用 confirm()。
-        
+
         Returns:
             更新了 status 和 approval_level 的 Action 对象
         """
@@ -95,7 +91,7 @@ class ActionEngine:
     def execute(self, action_id: str) -> Optional[Action]:
         """
         第二步：执行一个已批准的行动
-        
+
         Args:
             action_id: 行动 ID
         """
@@ -144,7 +140,7 @@ class ActionEngine:
     def plan_and_execute(self, action: Action) -> Action:
         """
         快捷方式：计划 + 自动执行一步完成
-        
+
         只对 AUTO / NOTIFY 级别的行动有效。
         CONFIRM / REVIEW 级别的行动需要先 plan，再通过 confirm 批准后手动 execute。
         """
@@ -158,7 +154,7 @@ class ActionEngine:
     def confirm(self, action_id: str, approved: bool, note: str = "") -> Optional[Action]:
         """
         用户回应审批请求
-        
+
         Args:
             action_id: 行动 ID
             approved: 是否批准
@@ -211,7 +207,7 @@ class ActionEngine:
     def _add_history(self, action: Action) -> None:
         self._history.append(action)
         if len(self._history) > self._max_history:
-            self._history = self._history[-self._max_history:]
+            self._history = self._history[-self._max_history :]
 
     def get_pending_actions(self) -> List[Action]:
         """获取待执行行动列表（内部用）"""

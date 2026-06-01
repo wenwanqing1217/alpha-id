@@ -1,14 +1,13 @@
 """用户身份 API 路由"""
 
 from fastapi import APIRouter, Depends, HTTPException
+
+from alpha_id.container import Container
+from auth.jwt import create_access_token, create_refresh_token, verify_token
+from auth.middleware import require_user
 from core.user_identity import UserIdentityManager
 
 from .models import DeviceBindRequest, LoginRequest, RefreshRequest, RegisterRequest, SyncRequest, TokenResponse
-
-from auth.middleware import require_user
-from auth.jwt import create_access_token, create_refresh_token, verify_token
-
-from alpha_id.container import Container
 
 router = APIRouter(prefix="/api/v1/identity", tags=["身份"])
 
@@ -101,9 +100,7 @@ def get_user_profile(alpha_id: str, _: str = Depends(require_user)):
 @router.post("/{alpha_id}/devices")
 def bind_device(alpha_id: str, body: DeviceBindRequest, _: str = Depends(require_user)):
     """绑定新设备（需认证）"""
-    result = get_manager().update_device_binding(
-        alpha_id=alpha_id, new_device=body.new_device
-    )
+    result = get_manager().update_device_binding(alpha_id=alpha_id, new_device=body.new_device)
     if not result["success"]:
         raise HTTPException(status_code=400, detail=result["message"])
     return result

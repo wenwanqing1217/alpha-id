@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alpha-ID Agent</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={darkMode:'class',theme:{extend:{colors:{primary:{50:'#eef2ff',100:'#e0e7ff',200:'#c7d2fe',300:'#a5b4fc',400:'#818cf8',500:'#6366f1',600:'#4f46e5',700:'#4338ca',800:'#3730a3',900:'#312e81',}}}}}</script>
+<style>
+#chat-box::-webkit-scrollbar { width: 6px; }
+#chat-box::-webkit-scrollbar-track { background: transparent; }
+#chat-box::-webkit-scrollbar-thumb { background: #a5b4fc; border-radius: 3px; }
+.message-enter { animation: fadeIn 0.3s ease-out; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.typing-dot { animation: pulse 1.4s infinite ease-in-out; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes pulse { 0%,80%,100%{opacity:0.3} 40%{opacity:1} }
+</style>
+</head>
+<body class="h-full bg-gradient-to-br from-slate-50 to-indigo-50 dark:from-slate-900 dark:to-indigo-950">
+<div id="app" class="h-full flex flex-col max-w-3xl mx-auto px-4 py-4" v-cloak>
+
+<!-- Header -->
+<div class="flex items-center justify-between mb-4">
+<div>
+  <h1 class="text-xl font-bold text-indigo-700 dark:text-indigo-300">🧠 数字灵魂</h1>
+  <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+    <template v-if="agent.alpha_id">
+      🆔 <span class="font-mono text-indigo-600 dark:text-indigo-400">{{ agent.alpha_id }}</span>
+      · 🧠 <span :class="brainStateClass">{{ brainStateText }}</span>
+      · 消息 <span class="font-mono">{{ agent.stats?.msg_count ?? 0 }}</span>
+      · 好友 <span class="font-mono">{{ agent.friends?.length ?? 0 }}</span>
+    </template>
+    <template v-else>
+      未登录 · <button @click="showLogin=true" class="underline text-indigo-500 hover:text-indigo-700">创建你的数字灵魂</button>
+    </template>
+  </p>
+</div>
+<div class="flex gap-2">
+  <button @click="fetchIdentity" class="text-xs px-3 py-1.5 rounded-lg bg-white/80 dark:bg-slate-800/80 border border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 transition-colors">身份</button>
+  <button @click="brainSleep" :disabled="!isAwake" class="text-xs px-3 py-1.5 rounded-lg bg-white/80 dark:bg-slate-800/80 border border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 transition-colors disabled:opacity-40">💤</button>
+  <button @click="brainThink" class="text-xs px-3 py-1.5 rounded-lg bg-white/80 dark:bg-slate-800/80 border border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 transition-colors">🧠</button>
+  <button @click="toggleDark" class="text-xs px-3 py-1.5 rounded-lg bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">🌓</button>
+</div>
+</div>
+
+<!-- Chat Box -->
+<div id="chat-box" class="flex-1 overflow-y-auto space-y-3 pr-1 mb-3 min-h-0" ref="chatBox">
+<div v-for="(msg, i) in messages" :key="i" class="message-enter" :class="msg.role==='user' ? 'flex justify-end' : 'flex justify-start'">
+  <div class="max-w-[80%] space-y-1">
+    <!-- 如果是大脑回复且有回忆到的记忆，显示记忆标签 -->
+    <div v-if="msg.role==='agent' && msg.memories && msg.memories.length" class="flex flex-wrap gap-1 mb-1">
+      <span v-for="(mem, mi) in msg.memories" :key="mi"
+            class="text-xs px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-300 border border-amber-200 dark:border-amber-700"
+            title="大脑回忆到了">
+        🧠 {{ mem.content.length > 20 ? mem.content.slice(0, 20) + '…' : mem.content }}
+      </span>
+      <span class="text-xs text-amber-400 dark:text-amber-500 self-center">· 我记得</span>
+    </div>
+    <div class="rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm"
+         :class="msg.role==='user'
+           ? 'bg-indigo-500 text-white rounded-br-md'
+           : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-bl-md'">
+      <div class="text-xs opacity-60 mb-0.5" v-if="msg.role==='agent'">
+        <template v-if="msg.is_greeting">✨ 灵魂诞生</template>
+        <template v-else>🧠 {{ agent.alpha_id }}</template>
+      </div>
+      <div class="whitespace-pre-wrap">{{ msg.content }}</div>
+    </div>
+  </div>
+</div>
+<!-- Typing indicator -->
+<div v-if="loading" class="flex justify-start message-enter">
+  <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+    <div class="flex gap-1.5">
+      <span class="typing-dot w-2 h-2 bg-indigo-400 rounded-full inline-block"></span>
+      <span class="typing-dot w-2 h-2 bg-indigo-400 rounded-full inline-block"></span>
+      <span class="typing-dot w-2 h-2 bg-indigo-400 rounded-full inline-block"></span>
+    </div>
+  </div>
+</div>
+</div>
+
+  <!-- Input -->
+  <div class="flex gap-2 items-end">
+    <textarea v-model="input" @keydown.enter.exact.prevent="send" placeholder="输入消息... (Enter 发送)"
+              class="flex-1 resize-none rounded-xl border border-indigo-200 dark:border-indigo-700 bg-white dark:bg-slate-800 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-indigo-500 focus:border-transparent transition-shadow dark:text-slate-200 dark:placeholder-slate-400"
+              rows="1" @input="autoResize"></textarea>
+    <button @click="send" :disabled="loading || !input.trim() && !agent.alpha_id"
+            class="px-5 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-600 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white text-sm font-medium transition-colors shadow-sm disabled:shadow-none">
+      {{ agent.alpha_id ? '发送' : '连接' }}
+    </button>
+  </div>
+
+  <!-- Login Modal -->
+  <div v-if="showLogin" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm" @click.self="showLogin=false">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 w-80 shadow-xl border border-slate-200 dark:border-slate-700">
+      <h2 class="text-lg font-bold text-indigo-700 dark:text-indigo-300 mb-4">✨ 创建你的数字灵魂</h2>
+      <input v-model="deviceFp" placeholder="输入任意字符串作为你的身份指纹"
+             class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400 dark:text-slate-200 mb-3">
+      <input v-model="existingAlphaId" placeholder="已有 Alpha-ID 则输入（可选）"
+             class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400 dark:text-slate-200 mb-4">
+      <div class="flex gap-2">
+        <button @click="login" class="flex-1 px-4 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium transition-colors">确定</button>
+        <button @click="showLogin=false" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">取消</button>
+      </div>
+      <p v-if="loginError" class="text-red-500 text-xs mt-2">{{ loginError }}</p>
+    </div>
+  </div>
+
+  <!-- Identity Modal -->
+  <div v-if="showIdentity" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm" @click.self="showIdentity=false">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 w-96 shadow-xl border border-slate-200 dark:border-slate-700 max-h-[80vh] overflow-y-auto">
+      <h2 class="text-lg font-bold text-indigo-700 dark:text-indigo-300 mb-4">身份信息</h2>
+      <pre class="text-xs text-slate-600 dark:text-slate-400 whitespace-pre-wrap bg-slate-50 dark:bg-slate-900 rounded-xl p-3">{{ identityJson }}</pre>
+      <button @click="showIdentity=false" class="mt-4 w-full px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium transition-colors">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script>
+const { createApp, ref, computed, nextTick, onMounted } = Vue;
+
+createApp({
+  setup() {
+    const agent = ref({ alpha_id: null, friends: [], stats: {} });
+    const messages = ref([]);
+    const input = ref('');
+    const loading = ref(false);
+    const showLogin = ref(false);
+    const showIdentity = ref(false);
+    const deviceFp = ref('');
+    const existingAlphaId = ref('');
+    const loginError = ref('');
+    const identityJson = ref('');
+    const chatBox = ref(null);
+    const brainState = ref('sleep');
+
+    const stateLabels = { sleep: '休眠', awake: '活跃', idle: '空闲', error: '故障', thinking: '思考' };
+    const stateColors = { sleep: 'text-slate-400', awake: 'text-green-500', idle: 'text-amber-500', error: 'text-red-500', thinking: 'text-purple-500' };
+
+    const brainStateText = computed(() => stateLabels[brainState.value] || brainState.value);
+    const brainStateClass = computed(() => stateColors[brainState.value] || 'text-slate-400');
+    const isAwake = computed(() => brainState.value === 'awake' || brainState.value === 'idle');
+
+    function autoResize(e) {
+      e.target.style.height = 'auto';
+      e.target.style.height = Math.min(e.target.scrollHeight, 150) + 'px';
+    }
+
+    function scrollToBottom() {
+      nextTick(() => {
+        if (chatBox.value) chatBox.value.scrollTop = chatBox.value.scrollHeight;
+      });
+    }
+
+    async function send() {
+      const text = input.value.trim();
+      if (!text && !agent.value.alpha_id) return;
+
+      if (!agent.value.alpha_id) {
+        // 未登录：先弹出登录框
+        showLogin.value = true;
+        return;
+      }
+
+      messages.value.push({ role: 'user', content: text });
+      input.value = '';
+      loading.value = true;
+      scrollToBottom();
+
+      try {
+        const resp = await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ alpha_id: agent.value.alpha_id, message: text }),
+        });
+        const data = await resp.json();
+        // 如果大脑回忆到了东西，显示在气泡上方
+        const msg = { role: 'agent', content: data.reply || data.error || '无响应' };
+        if (data.recalled_memories && data.recalled_memories.length) {
+          msg.memories = data.recalled_memories;
+        }
+        messages.value.push(msg);
+        // 更新统计数据
+        if (data.agent) {
+          Object.assign(agent.value, data.agent);
+          brainState.value = data.agent.brain_state || brainState.value;
+        }
+      } catch (e) {
+        messages.value.push({ role: 'agent', content: `[网络错误] ${e.message}` });
+      } finally {
+        loading.value = false;
+        scrollToBottom();
+      }
+    }
+
+    async function login() {
+      if (!deviceFp.value.trim()) {
+        loginError.value = '请输入设备指纹';
+        return;
+      }
+      loginError.value = '';
+      const body = { device_fingerprint: deviceFp.value.trim() };
+      if (existingAlphaId.value.trim()) {
+        body.alpha_id = existingAlphaId.value.trim();
+      }
+      try {
+        const resp = await fetch('/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await resp.json();
+        if (data.success) {
+          agent.value.alpha_id = data.alpha_id;
+          agent.value.friends = data.friends || [];
+          agent.value.stats = data.stats || {};
+          brainState.value = data.brain_state || 'awake';
+          const greeting = data.greeting || `已登录为 ${data.alpha_id}`;
+          const isNew = data.action === 'register';
+          messages.value.push({ role: 'agent', content: greeting, is_greeting: isNew });
+          showLogin.value = false;
+        } else {
+          loginError.value = data.error || '登录失败';
+        }
+      } catch (e) {
+        loginError.value = `[网络错误] ${e.message}`;
+      }
+    }
+
+    async function fetchIdentity() {
+      if (!agent.value.alpha_id) return;
+      try {
+        const resp = await fetch('/identity', {
+          headers: { 'X-Alpha-ID': agent.value.alpha_id },
+        });
+        const data = await resp.json();
+        identityJson.value = JSON.stringify(data, null, 2);
+        showIdentity.value = true;
+      } catch (e) {
+        identityJson.value = `错误: ${e.message}`;
+        showIdentity.value = true;
+      }
+    }
+
+    async function brainSleep() {
+      if (!agent.value.alpha_id) return;
+      try {
+        const resp = await fetch('/brain/sleep', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ alpha_id: agent.value.alpha_id }),
+        });
+        const data = await resp.json();
+        if (data.success) {
+          brainState.value = data.state;
+          messages.value.push({ role: 'agent', content: `💤 大脑已休眠` });
+        }
+      } catch (e) {
+        messages.value.push({ role: 'agent', content: `[错误] ${e.message}` });
+      }
+    }
+
+    async function brainThink() {
+      if (!agent.value.alpha_id) return;
+      messages.value.push({ role: 'user', content: '🧠 大脑主动思考' });
+      try {
+        const resp = await fetch('/brain/think', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ alpha_id: agent.value.alpha_id }),
+        });
+        const data = await resp.json();
+        if (data.success) {
+          brainState.value = data.state || brainState.value;
+          messages.value.push({ role: 'agent', content: `🧠 ${data.agent_thought || '思考完成'}` });
+        }
+      } catch (e) {
+        messages.value.push({ role: 'agent', content: `[错误] ${e.message}` });
+      }
+    }
+
+    function toggleDark() {
+      document.documentElement.classList.toggle('dark');
+    }
+
+    // 自动检测系统深色模式
+    onMounted(() => {
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.classList.add('dark');
+      }
+    });
+
+    return {
+      agent, messages, input, loading, showLogin, showIdentity,
+      deviceFp, existingAlphaId, loginError, identityJson, chatBox,
+      brainState, brainStateText, brainStateClass, isAwake,
+      send, login, fetchIdentity, brainSleep, brainThink, toggleDark, autoResize, scrollToBottom,
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>

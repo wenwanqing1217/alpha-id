@@ -54,20 +54,21 @@ class JsonStorage(StorageBackend):
     def __init__(self, db_path: str):
         import json
         import os
+
         self._json = json
         self._os = os
         self.db_path = db_path
 
     def _read(self) -> Dict[str, Any]:
         try:
-            with open(self.db_path, 'r', encoding='utf-8') as f:
+            with open(self.db_path, "r", encoding="utf-8") as f:
                 return self._json.load(f)
         except (FileNotFoundError, self._json.JSONDecodeError):
             return {}
 
     def _write(self, data: Dict[str, Any]):
         self._os.makedirs(self._os.path.dirname(self.db_path), exist_ok=True)
-        with open(self.db_path, 'w', encoding='utf-8') as f:
+        with open(self.db_path, "w", encoding="utf-8") as f:
             self._json.dump(data, f, ensure_ascii=False, indent=2)
 
     def load(self, key: str) -> Optional[Dict[str, Any]]:
@@ -100,10 +101,7 @@ class JsonStorage(StorageBackend):
         data = self._read()
         items = list(data.get(collection, {}).values())
         if filters:
-            items = [
-                item for item in items
-                if all(item.get(k) == v for k, v in filters.items())
-            ]
+            items = [item for item in items if all(item.get(k) == v for k, v in filters.items())]
         return items
 
     def count(self, collection: str, filters: Optional[Dict[str, Any]] = None) -> int:

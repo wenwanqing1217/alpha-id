@@ -1,70 +1,26 @@
-# Alpha-ID: 数字身份智能管理系统
+﻿# AID — Agent Identity Layer
 
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-525-passing-green.svg)](tests/)
 
-> 面向 AI Agent 的数字身份与风控系统。为每个用户生成唯一数字身份（Alpha-ID），
-> 通过多维度风险评估、跨设备同步、社交网络和 JWT 认证，构建可信的 AI 交互身份层。
-
----
-
-## 架构总览
-
-```
-┌─────────────────────────────────────────────────────┐
-│                    FastAPI Layer                     │
-│  /register  /login  /refresh  /me  /evaluate  ...   │
-│  ┌──────────────────────────────────────────────┐   │
-│  │           Auth Middleware (JWT)               │   │
-│  │  require_user() / optional_user()             │   │
-│  └──────────────────────────────────────────────┘   │
-├─────────────────────────────────────────────────────┤
-│               Core Business Logic                    │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────┐ │
-│  │ Identity │ │  Social  │ │   Risk   │ │  Auth  │ │
-│  │ Manager  │ │ Manager  │ │  Engine  │ │ (JWT)  │ │
-│  └────┬─────┘ └────┬─────┘ └────┬─────┘ └────────┘ │
-├───────┴────────────┴────────────┴───────────────────┤
-│              Storage Abstraction                     │
-│         JSON File (dev) / PostgreSQL (prod)          │
-└─────────────────────────────────────────────────────┘
-```
-
-### 设计原则
-
-| 层级 | 职责 | 外部依赖 |
-|---|---|---|
-| **FastAPI** | HTTP 路由、请求/响应序列化 | fastapi, pydantic, uvicorn |
-| **auth/** | JWT 签发、验证、中间件 | **零依赖（纯标准库）** |
-| **core/** | 身份、社交、风控业务逻辑 | **零依赖** |
-| **storage/** | JSON / PostgreSQL 存储抽象 | psycopg2 (可选) |
-
-核心设计理念：**依赖向内**。`core/` 和 `auth/` 层零外部依赖，可独立测试、可嵌入任何框架。
+> **身份优先、协议驱动的 Agent 生态层。**  
+> 任何 Agent 框架、任何模型都能接入的身份层——技能签名可验证、作者信誉可追溯、执行证明可审计。
 
 ---
 
-## 认证系统
+## 核心能力
 
-使用 **HMAC-SHA256** 自研 JWT 实现，不依赖 `PyJWT` 等第三方库。
-
-| 令牌类型 | 有效期 | 用途 |
-|---|---|---|
-| `access_token` | 30 分钟 | API 请求认证（`Authorization: Bearer <token>`）|
-| `refresh_token` | 7 天 | 换取新的 access_token |
-
-```
-POST /api/v1/identity/login    →  { access_token, refresh_token }
-POST /api/v1/identity/refresh  →  新 access_token
-GET  /api/v1/identity/me       →  当前用户信息（需 Bearer）
-```
-
-环境变量配置（可选，不设置时使用开发密钥）：
-
-```bash
-export AUTH_MASTER_KEY="your-256-bit-secret-here"
-export JWT_ACCESS_EXPIRE_MINUTES=30
-export JWT_REFRESH_EXPIRE_DAYS=7
-```
+| 能力 | 说明 |
+|------|------|
+| **DID 身份** | `did:aid:` 方法，Ed25519 密钥对，W3C DID Document 兼容 |
+| **Agent 大脑** | TwinBrain — LLM + Tools + Loop，ReAct 引擎，多状态管理 |
+| **技能 SDK** | 签名/验签、注册表管理、吊销列表、运行时执行 |
+| **信誉图谱** | Skill 归因追踪、作者信誉评分（使用量 × 成功率 × 覆盖面）|
+| **执行证明** | Ed25519 签名的 PoE 记录，链式调用追溯 |
+| **去中心化仓库** | Git-based 技能发现、自托管仓库协议 |
+| **多 Agent 协作** | DID 互认证、技能调用链、多方 PoE 聚合 |
+| **Web 演示** | FastAPI + Vue 3 前端，聊天式 Agent 交互 |
 
 ---
 
@@ -73,226 +29,236 @@ export JWT_REFRESH_EXPIRE_DAYS=7
 ### 安装
 
 ```bash
-git clone https://github.com/your-org/alpha-id.git
-cd alpha-id
+git clone https://github.com/your-org/aid.git
+cd projects
 
-# Python 3.12+ 推荐
+# 使用虚拟环境
+python -m venv .venv
+.venv\Scripts\activate   # Windows
+# source .venv/bin/activate  # Linux/macOS
+
 pip install -e ".[dev]"
-
-# 或者使用 uv（更快）
-pip install uv
-uv sync
 ```
 
 ### 运行测试
 
 ```bash
-# 全部测试（核心模块 + JWT 认证）
-pytest tests/ -v
-
-# 仅核心模块（零依赖，纯 Python）
-pytest tests/test_user_identity.py tests/test_alpha_social.py tests/test_risk_assessment.py -v
-
-# 仅 JWT 认证（零依赖）
-pytest tests/test_auth.py -v
-
-# 仅 API 集成测试（需要 FastAPI）
-pytest tests/test_api.py -v
-
-# 带覆盖率
-pytest tests/ --cov=src --cov-report=term-missing
+pytest tests/ -q
+# 525 passed ✅
 ```
 
-### 启动服务
+### CLI 快速体验
 
 ```bash
-# 开发模式（热重载）
-uvicorn src.main:app --reload --port 8000
+# 1. 创建身份
+aid identity init
 
-# 生产模式
-uvicorn src.main:app --host 0.0.0.0 --port 8000 --workers 4
-```
+# 2. 查看身份
+aid identity show
 
-### Docker 部署
+# 3. 创建并签名技能
+echo "def main(p): return f'Hello, {p.get(\"name\", \"World\")}'" > greet.py
+aid skill sign greet.py --name greet --register
 
-```bash
-# 构建并启动
-docker compose up --build
+# 4. 运行技能
+aid skill run greet '{"name": "Alice"}'
+# → Hello, Alice
 
-# 运行测试
-docker compose -f docker-compose.yml run test
+# 5. 查看归因统计
+aid skill stats leaderboard
+
+# 6. 启动 Web 演示
+uvicorn src.alpha_id.web:app --port 8000
+# → http://localhost:8000
 ```
 
 ---
 
-## API 参考
+## 桌面精灵（AID Desktop Fairy）
 
-### 公开端点（无需认证）
+> 桌面悬浮球助手 — 截图 / OCR / 窗口控制，一句指令搞定。
 
-| 方法 | 路径 | 说明 |
-|---|---|---|
-| POST | `/api/v1/identity/register` | 用户注册（设备指纹绑定） |
-| GET | `/api/v1/identity/stats/overview` | 系统统计概览 |
-| POST | `/api/v1/risk/evaluate` | 风险评估 |
+![demo](https://img.shields.io/badge/demo-Tkinter-blueviolet)
 
-### 认证端点
+```bash
+# 启动（确保装了依赖）
+pip install pyautogui pygetwindow Pillow pytesseract
+python src/aid_daemon.py
+```
 
-| 方法 | 路径 | 说明 |
-|---|---|---|
-| POST | `/api/v1/identity/login` | 登录，返回 JWT 令牌对 |
-| POST | `/api/v1/identity/refresh` | 刷新 access_token |
+**效果：** 桌面右上角暗色磨砂玻璃球。  
+**用法：** 双击输指令 · 右键菜单 · 拖拽移动
 
-### 受保护端点（需 `Authorization: Bearer <token>`）
+| 指令 | 效果 |
+|------|------|
+| `看屏幕` / `截图` | 截屏并 OCR 识别文字 |
+| `窗口列表` | 列出所有窗口标题 |
+| `鼠标位置` | 显示当前鼠标坐标 |
+| `点击 500 300` | 模拟点击指定坐标 |
+| `输入 你好世界` | 在当前窗口打字 |
 
-| 方法 | 路径 | 说明 |
-|---|---|---|
-| GET | `/api/v1/identity/me` | 当前用户信息 |
-| GET | `/api/v1/identity/{alpha_id}` | 用户档案 |
-| POST | `/api/v1/identity/{alpha_id}/devices` | 绑定新设备 |
-| POST | `/api/v1/identity/{alpha_id}/sync` | 跨设备同步 |
-| POST | `/api/v1/identity/{alpha_id}/session` | 记录会话 |
-
-### 社交网络（公开）
-
-| 方法 | 路径 | 说明 |
-|---|---|---|
-| POST | `/api/v1/social/friend-request` | 发送好友请求 |
-| PUT | `/api/v1/social/friend-request/{id}` | 接受/拒绝请求 |
-| GET | `/api/v1/social/{alpha_id}/friends` | 好友列表 |
-| GET | `/api/v1/social/{alpha_id}/requests` | 待处理请求 |
-| POST | `/api/v1/social/message` | 发送消息 |
-| GET | `/api/v1/social/{alpha_id}/messages` | 消息列表 |
+**启动脚本：** `scripts/aid_daemon.bat`（双击即可启动）
 
 ---
 
-## 项目结构
+## 架构
 
 ```
-alpha-id/
-├── src/
-│   ├── api/                    # FastAPI 路由层
-│   │   ├── identity.py         #   身份 API
-│   │   ├── social.py           #   社交 API
-│   │   ├── risk.py             #   风控 API
-│   │   └── models.py           #   Pydantic 请求/响应模型
-│   │
-│   ├── auth/                   # JWT 认证（纯标准库）
-│   │   ├── jwt.py              #   令牌签发/验证
-│   │   └── middleware.py        #   FastAPI 依赖注入
-│   │
-│   ├── core/                   # 核心业务逻辑（零外部依赖）
-│   │   ├── user_identity.py    #   用户身份管理器
-│   │   ├── alpha_social.py     #   社交网络管理器
-│   │   ├── risk_engine.py      #   风险评估引擎
-│   │   ├── storage.py          #   JSON 存储实现
-│   │   └── storage_postgres.py #   PostgreSQL 存储实现
-│   │
-│   ├── tools/                  # LangChain 工具层
-│   │   ├── agent_social_tool.py
-│   │   ├── user_identity_tool.py
-│   │   └── risk_assessment_tool.py
-│   │
-│   └── main.py                 # FastAPI 应用入口
-│
-├── tests/                      # 测试套件
-│   ├── test_user_identity.py   #   身份核心（10 ✅）
-│   ├── test_alpha_social.py    #   社交核心（14 ✅）
-│   ├── test_risk_assessment.py #   风控核心（11 ✅）
-│   ├── test_auth.py            #   JWT 认证（31 ✅）
-│   └── test_api.py             #   API 集成测试（35 ✅）
-│
-├── assets/                     # 默认 JSON 数据目录
-├── scripts/                    # 工具脚本
-├── Dockerfile                  # 生产镜像
-├── Dockerfile.test             # 测试镜像
-├── docker-compose.yml          # 容器编排
-└── .github/workflows/ci.yml    # CI 流水线
+┌────────────────────────────────────────────────────────┐
+│                    SDK (alpha_id)                       │
+│  ┌──────────┐ ┌──────────┐ ┌──────────────────────┐   │
+│  │  Agent   │ │Container │ │    DID + Signer      │   │
+│  │ (入口)   │ │ (DI容器) │ │ (身份/签名/验签)      │   │
+│  └────┬─────┘ └────┬─────┘ └──────────┬───────────┘   │
+│       │            │                  │               │
+│  ┌────┴────────────┴──────────────────┴───────────┐   │
+│  │              Core Layer (零外部依赖)             │   │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────────┐   │   │
+│  │  │ TwinBrain│ │ AgentLoop│ │ ReActEngine  │   │   │
+│  │  │ (大脑)   │ │ (LLM循环) │ │ (思考引擎)    │   │   │
+│  │  └────┬─────┘ └────┬─────┘ └──────┬───────┘   │   │
+│  │  ┌────┴────────────┴────────────────┐         │   │
+│  │  │ MemoryStore | Social | Risk      │         │   │
+│  │  └──────────────────────────────────┘         │   │
+│  └───────────────────────────────────────────────┘   │
+│                                                       │
+│  ┌───────────────────────────────────────────────┐   │
+│  │         Skill System (P2/P3)                  │   │
+│  │  sign → register → execute → attribute → PoE  │   │
+│  │  ↑ revoke ↗ reputation ↗ chain ↗ aggregate    │   │
+│  └───────────────────────────────────────────────┘   │
+│                                                       │
+│  ┌───────────────────────────────────────────────┐   │
+│  │         Decentralized Protocol (P3)           │   │
+│  │  DIDResolver → SkillRepository → AgentNetwork │   │
+│  └───────────────────────────────────────────────┘   │
+├──────────────────────────────────────────────────────┤
+│  CLI (typer)              │  Web (FastAPI + Vue 3)   │
+└──────────────────────────────────────────────────────┘
+```
+
+### 设计原则
+
+- **依赖向内**: `core/` 层零外部依赖，可嵌入任何框架
+- **身份优先**: 所有能力围绕 DID 身份层组织
+- **不造框架，只造桥**: Skill 可运行在 Claude Code / Cursor / OpenClaw 上
+- **简单 = 有效**: Agent = LLM + Tools + Loop，不要复杂框架
+
+---
+
+## CLI 命令
+
+### 身份管理
+
+| 命令 | 说明 |
+|------|------|
+| `aid identity init` | 生成 DID + Ed25519 密钥对 |
+| `aid identity show` | 查看当前 DID Document |
+| `aid identity export` | 导出加密身份 Bundle |
+| `aid identity import <file>` | 导入身份 Bundle |
+| `aid identity sign <file>` | 用身份签名文件 |
+| `aid identity verify <file>` | 验证文件签名 |
+
+### 技能管理
+
+| 命令 | 说明 |
+|------|------|
+| `aid skill sign <file> --name <name>` | 签名技能并注册 |
+| `aid skill verify <file> <package>` | 验签技能 |
+| `aid skill list` | 列出已注册技能 |
+| `aid skill info <name>` | 技能详情 |
+| `aid skill run <name> [params]` | 执行技能（自动归因）|
+| `aid skill revoke <name>` | 吊销技能 |
+| `aid skill stats leaderboard` | 作者信誉排行榜 |
+
+### 大脑控制
+
+| 命令 | 说明 |
+|------|------|
+| `aid brain awake` | 唤醒大脑 |
+| `aid brain sleep` | 休眠大脑 |
+| `aid brain think` | 主动思考 |
+| `aid brain status` | 查看大脑状态 |
+
+---
+
+## Python SDK 示例
+
+```python
+from alpha_id import Agent, AIDSigner
+from alpha_id.skill_signer import sign_skill, SkillRegistry, SkillRuntime
+
+# ── 创建 Agent ──
+agent = Agent()
+result = agent.identify("my-device-fp")
+print(f"Welcome, {result['alpha_id']}")
+
+# ── 签名并注册技能 ──
+signer = AIDSigner()
+signer.generate()
+
+pkg = sign_skill("greet.py", signer, name="greet", version="1.0.0")
+registry = SkillRegistry()
+registry.register(pkg, content=open("greet.py", "rb").read())
+
+# ── 执行技能 ──
+runtime = SkillRuntime(registry)
+result = runtime.execute("greet", '{"name": "World"}', executor_did=signer.did)
+print(result)
+
+# ── 多 Agent 协作 ──
+from alpha_id.agent_network import AgentNetwork
+
+network = AgentNetwork(local_signer, registry=registry)
+network.register_peer(peer_did, public_key_hex=peer_pk)
+result = network.call_skill(peer_did, "greet", {"name": "Alice"})
+chain = network.get_call_chain(result["poe_id"])
+print(chain.summary())
 ```
 
 ---
 
 ## 测试矩阵
 
-### 当前状态：101 个测试 ✅ 全部通过
+### 当前：525 tests ✅
 
-| 套件 | 文件 | 数量 | 依赖 | 类型 |
-|---|---|---|---|---|
-| 用户身份核心 | `test_user_identity.py` | 10 | 无 | 单元 |
-| 社交网络核心 | `test_alpha_social.py` | 14 | 无 | 单元 |
-| 风控引擎核心 | `test_risk_assessment.py` | 11 | 无 | 单元 |
-| JWT 认证 | `test_auth.py` | 31 | 无 | 单元 |
-| API 集成 | `test_api.py` | 35 | FastAPI | 集成 |
-| **合计** | | **101** | | |
+| 模块 | 测试数 | 覆盖内容 |
+|------|--------|---------|
+| 身份核心 | 10 | 注册、设备绑定、统计 |
+| 社交网络 | 14 | 好友、消息、请求 |
+| 风控引擎 | 11 | 设备/行为/声纹评分 |
+| JWT 认证 | 31 | 签发、验证、刷新 |
+| Agent / ReAct | 35 | AgentLoop、ReAct 引擎 |
+| TwinBrain | 85 | 状态机、消息路由、思考周期 |
+| DID / 签名 | 17 | 密钥生成、签名验签、Document |
+| 记忆存储 | 8 | 保存、查询、语义搜索 |
+| 信誉积分 | 8 | 评分计算、持久化 |
+| PoE 证明 | 15 | 生成、验证、存储、查询 |
+| Skill 签名 | 57 | 签名、验签、注册表、运行时 |
+| 归因追踪 | 8 | 执行记录、作者统计 |
+| CLI | 12 | identity / skill / brain 子命令 |
+| Web 演示 | 17 | 登录、聊天、大脑控制 |
+| API 集成 | 35 | 身份/社交/风控 API |
+| E2E 集成 | 60+ | Skill 生命周期、PoE、Agent 协作 |
+| **合计** | **525** | |
 
-> **核心模块（66 个测试）纯 Python 标准库即可运行，无需任何第三方依赖。**
+---
 
-### 测试覆盖率
+## 三阶段路线图
 
 ```
-Name                             Stmts   Miss  Cover
-----------------------------------------------------
-src/auth/__initutes.py              25      0   100%
-src/auth/jwt.py                    171      0   100%
-src/auth/middleware.py              36      0   100%
-src/core/user_identity.py          182      8    96%
-src/core/alpha_social.py           170     12    93%
-src/core/risk_engine.py            176     25    86%
-----------------------------------------------------
-TOTAL                              760     45    94%
+2.7 ── Phase 1 ── 3.5 ── Phase 2 ── 4.0 ── Phase 3 ── 4.5
+      (身份地基)         (信誉网络)         (身份自治)
 ```
 
----
-
-## 环境要求
-
-| 组件 | 要求 | 备注 |
-|---|---|---|
-| Python | 3.12+ | 3.14 需要 Visual C++ Redistributable |
-| FastAPI | 0.110+ | 仅 API 层需要 |
-| pydantic | 2.0+ | 仅 API 层需要 |
-| 操作系统 | Windows / macOS / Linux | 跨平台 |
-
-> **Windows 注意事项**：Python 3.14 上 `pydantic-core` 需要 Visual C++ Redistributable 2015-2022。
-> 如遇 DLL 加载问题，降级到 Python 3.12 即可解决。
+| 阶段 | 状态 | 主题 |
+|------|------|------|
+| **Phase 1: 身份地基** | ✅ 100% | DID 身份、TwinBrain、AgentLoop、Web 演示 |
+| **Phase 2: 信誉网络** | ✅ 80% | Skill 签名验证、归因追踪、信誉图谱 |
+| **Phase 3: 身份自治** | ✅ 75% | PoE 执行证明、去平台化仓库、多 Agent 协作 |
 
 ---
 
-## 存储后端切换
+## 许可证
 
-```python
-# JSON 文件（开发环境）
-from core.storage import JsonStorage
-storage = JsonStorage("assets/alpha_id_users.json")
-manager = UserIdentityManager(storage=storage)
-
-# PostgreSQL（生产环境）
-from core.storage_postgres import PostgresStorage
-storage = PostgresStorage("postgresql://user:pass@host:5432/aid")
-manager = UserIdentityManager(storage=storage)
-```
-
----
-
-## 技术亮点
-
-1. **纯标准库 JWT**：HMAC-SHA256 自实现，不依赖 `PyJWT` / `PyCryptodome`，零外部依赖
-2. **分层解耦**：`core/` 和 `auth/` 不依赖 FastAPI / pydantic，可独立运行和测试
-3. **多重风控**：设备指纹、硬件匹配、行为分析、声纹置信度加权评分
-4. **存储抽象**：`StorageBackend` 接口，JSON ↔ PostgreSQL 一键切换
-5. **防御性设计**：令牌类型分离（access vs refresh）、过期验证、异常场景全覆盖
-
----
-
-## 路线图
-
-- [x] 核心业务逻辑解耦（身份、社交、风控 → core/）
-- [x] 存储抽象层（JSON / PostgreSQL 可切换）
-- [x] bcrypt 密码加密
-- [x] **JWT 认证系统（零依赖实现）**
-- [x] **FastAPI REST API**
-- [x] **Docker 容器化部署**
-- [x] **CI 自动化流水线**
-- [ ] Graph 知识图谱可视化
-- [ ] 声纹识别集成
-- [ ] 性能基准测试
-- [ ] WebSocket 实时消息推送
+MIT

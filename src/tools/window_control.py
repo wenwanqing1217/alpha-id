@@ -12,19 +12,23 @@ from typing import Optional
 try:
     from langchain.tools import tool
 except ImportError:
+
     def tool(func=None, **kwargs):
         if func is not None:
             return func
+
         def decorator(f):
             return f
+
         return decorator
 
 
 def _import_pyautogui():
     try:
         import pyautogui
-        pyautogui.FAILSAFE = True   # 鼠标移到左上角可紧急停止
-        pyautogui.PAUSE = 0.3       # 每个操作间隔，模拟人类操作节奏
+
+        pyautogui.FAILSAFE = True  # 鼠标移到左上角可紧急停止
+        pyautogui.PAUSE = 0.3  # 每个操作间隔，模拟人类操作节奏
         return pyautogui
     except ImportError:
         raise ImportError("请安装 pyautogui：pip install pyautogui")
@@ -33,12 +37,14 @@ def _import_pyautogui():
 def _import_pygetwindow():
     try:
         import pygetwindow as gw
+
         return gw
     except ImportError:
         raise ImportError("请安装 pygetwindow：pip install pygetwindow")
 
 
 # ── 工具函数 ──
+
 
 def _find_and_focus(title_pattern: str) -> Optional[dict]:
     """查找窗口并激活，返回窗口信息或 None"""
@@ -82,10 +88,7 @@ def focus_application_window(window_title: str) -> str:
     """
     info = _find_and_focus(window_title)
     if not info:
-        return (
-            f"❌ 未找到标题包含「{window_title}」的窗口。\n"
-            "先用 list_application_windows 查看当前窗口列表。"
-        )
+        return f"❌ 未找到标题包含「{window_title}」的窗口。\n先用 list_application_windows 查看当前窗口列表。"
     return (
         f"✅ 已激活窗口: {info['title']}\n"
         f"   位置: ({info['left']}, {info['top']})  "
@@ -271,9 +274,6 @@ def get_mouse_position() -> str:
     try:
         x, y = pyautogui.position()
         screen_width, screen_height = pyautogui.size()
-        return (
-            f"🖱 当前鼠标位置: ({x}, {y})\n"
-            f"   屏幕分辨率: {screen_width}×{screen_height}"
-        )
+        return f"🖱 当前鼠标位置: ({x}, {y})\n   屏幕分辨率: {screen_width}×{screen_height}"
     except Exception as e:
         return f"❌ 获取鼠标位置失败: {str(e)}"

@@ -163,10 +163,7 @@ class SqliteStorage(StorageBackend):
             return []
         items = list(data.values())
         if filters:
-            items = [
-                item for item in items
-                if all(item.get(k) == v for k, v in filters.items())
-            ]
+            items = [item for item in items if all(item.get(k) == v for k, v in filters.items())]
         return items
 
     def count(self, collection: str, filters: Optional[Dict[str, Any]] = None) -> int:

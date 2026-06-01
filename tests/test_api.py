@@ -7,12 +7,14 @@ Alpha-ID API 集成测试
 注意：需要 pydantic/fastapi 环境（Python 3.12+ 推荐，Python 3.14
 需安装 Visual C++ Redistributable）。环境不支持时测试自动跳过。
 """
+
 import json
 
 import pytest
 
 # 必须在导入 app 前设置路径
 import sys, os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 # 修复：pydantic_core 依赖 api-ms-win-crt-*.dll，系统缺失时手动添加搜索路径
@@ -22,6 +24,7 @@ if os.path.isdir(_crt_search_path):
 
 try:
     from fastapi.testclient import TestClient
+
     _HAVE_FASTAPI = True
 except ImportError:
     TestClient = None  # type: ignore
@@ -63,6 +66,7 @@ def social_db(_reset_all):
 @pytest.fixture
 def client():
     from src.main import app
+
     return TestClient(app)
 
 
@@ -70,20 +74,26 @@ def client():
 
 
 def register_user(client, device_fp: str, **kw) -> dict:
-    resp = client.post("/api/v1/identity/register", json={
-        "device_fingerprint": device_fp,
-        **kw,
-    })
+    resp = client.post(
+        "/api/v1/identity/register",
+        json={
+            "device_fingerprint": device_fp,
+            **kw,
+        },
+    )
     assert resp.status_code == 200, resp.text
     return resp.json()
 
 
 def login_user(client, alpha_id: str, device_fp: str) -> dict:
     """注册 + 登录，返回令牌信息"""
-    resp = client.post("/api/v1/identity/login", json={
-        "alpha_id": alpha_id,
-        "device_fingerprint": device_fp,
-    })
+    resp = client.post(
+        "/api/v1/identity/login",
+        json={
+            "alpha_id": alpha_id,
+            "device_fingerprint": device_fp,
+        },
+    )
     assert resp.status_code == 200, resp.text
     return resp.json()
 
@@ -109,10 +119,13 @@ class TestAuthAPI:
 
     def test_login_success(self, client, identity_db):
         user = register_user(client, "fp-login-test")
-        resp = client.post("/api/v1/identity/login", json={
-            "alpha_id": user["alpha_id"],
-            "device_fingerprint": "fp-login-test",
-        })
+        resp = client.post(
+            "/api/v1/identity/login",
+            json={
+                "alpha_id": user["alpha_id"],
+                "device_fingerprint": "fp-login-test",
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert "access_token" in data
@@ -120,45 +133,61 @@ class TestAuthAPI:
         assert data["token_type"] == "bearer"
 
     def test_login_user_not_found(self, client):
-        resp = client.post("/api/v1/identity/login", json={
-            "alpha_id": "AID-NOONE",
-            "device_fingerprint": "fp-none",
-        })
+        resp = client.post(
+            "/api/v1/identity/login",
+            json={
+                "alpha_id": "AID-NOONE",
+                "device_fingerprint": "fp-none",
+            },
+        )
         assert resp.status_code == 404
 
     def test_login_no_devices(self, client, identity_db):
         """注册无设备用户后登录应失败（无权）"""
         from alpha_id.container import Container
+
         # 直接创建无设备的用户
-        resp = client.post("/api/v1/identity/register", json={
-            "device_fingerprint": "fp-nod",
-        })
+        resp = client.post(
+            "/api/v1/identity/register",
+            json={
+                "device_fingerprint": "fp-nod",
+            },
+        )
         alpha_id = resp.json()["alpha_id"]
         # 把设备列表清空
         container = Container.instance()
         users = container.storage.load("users")
         users[alpha_id]["devices"] = []
         container.storage.save("users", users)
-        resp2 = client.post("/api/v1/identity/login", json={
-            "alpha_id": alpha_id,
-            "device_fingerprint": "fp-nod",
-        })
+        resp2 = client.post(
+            "/api/v1/identity/login",
+            json={
+                "alpha_id": alpha_id,
+                "device_fingerprint": "fp-nod",
+            },
+        )
         assert resp2.status_code == 403
 
     def test_refresh_token(self, client, identity_db):
         user_data = register_and_login(client, "fp-refresh")
-        resp = client.post("/api/v1/identity/refresh", json={
-            "refresh_token": user_data["refresh_token"],
-        })
+        resp = client.post(
+            "/api/v1/identity/refresh",
+            json={
+                "refresh_token": user_data["refresh_token"],
+            },
+        )
         assert resp.status_code in (200, 202)
         data = resp.json()
         assert "access_token" in data
         assert data["access_token"] is not None
 
     def test_refresh_invalid_token(self, client):
-        resp = client.post("/api/v1/identity/refresh", json={
-            "refresh_token": "invalid-token",
-        })
+        resp = client.post(
+            "/api/v1/identity/refresh",
+            json={
+                "refresh_token": "invalid-token",
+            },
+        )
         assert resp.status_code == 401
 
     def test_me_endpoint(self, client, identity_db):
@@ -207,9 +236,12 @@ class TestAuthAPI:
     def test_refresh_access_denied(self, client, identity_db):
         """证明访问令牌不能用于 refresh 端点"""
         user_data = register_and_login(client, "fp-refdeny")
-        resp = client.post("/api/v1/identity/refresh", json={
-            "refresh_token": user_data["access_token"],
-        })
+        resp = client.post(
+            "/api/v1/identity/refresh",
+            json={
+                "refresh_token": user_data["access_token"],
+            },
+        )
         assert resp.status_code == 401
         assert "令牌类型不匹配" in resp.json()["detail"]
 
@@ -217,6 +249,7 @@ class TestAuthAPI:
 # ════════════════════════════════════════════════════════════
 # 身份 API 测试
 # ════════════════════════════════════════════════════════════
+
 
 class TestIdentityAPI:
     """用户身份 API 集成测试"""
@@ -234,7 +267,7 @@ class TestIdentityAPI:
         assert data["alpha_id"].startswith("Alpha-")
 
     def test_register_founder(self, client):
-        data = register_user(client, "fp-founder", is_founder=True, founder_code='Alpha-1-zx')
+        data = register_user(client, "fp-founder", is_founder=True, founder_code="Alpha-1-zx")
         assert data["success"] is True
         assert data["is_founder"] is True
 
@@ -243,9 +276,12 @@ class TestIdentityAPI:
         fp = "fp-duplicate"
         first = register_user(client, fp)
         assert first["success"] is True
-        resp = client.post("/api/v1/identity/register", json={
-            "device_fingerprint": fp,
-        })
+        resp = client.post(
+            "/api/v1/identity/register",
+            json={
+                "device_fingerprint": fp,
+            },
+        )
         assert resp.status_code == 400
         assert "已注册" in resp.json()["detail"]
 
@@ -339,6 +375,7 @@ class TestIdentityAPI:
 # 社交 API 测试
 # ════════════════════════════════════════════════════════════
 
+
 class TestSocialAPI:
     """社交网络 API 集成测试"""
 
@@ -350,62 +387,83 @@ class TestSocialAPI:
         self.bob = register_user(client, "fp-bob-soc")
 
     def test_send_friend_request(self, client):
-        resp = client.post("/api/v1/social/friend-request", json={
-            "from_alpha_id": self.alice["alpha_id"],
-            "to_alpha_id": self.bob["alpha_id"],
-            "message": "hello bob",
-        })
+        resp = client.post(
+            "/api/v1/social/friend-request",
+            json={
+                "from_alpha_id": self.alice["alpha_id"],
+                "to_alpha_id": self.bob["alpha_id"],
+                "message": "hello bob",
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["success"] is True
         assert "request_id" in data
 
     def test_send_friend_request_missing(self, client):
-        resp = client.post("/api/v1/social/friend-request", json={
-            "from_alpha_id": self.alice["alpha_id"],
-            "to_alpha_id": "AID-NOONE",
-            "message": "",
-        })
+        resp = client.post(
+            "/api/v1/social/friend-request",
+            json={
+                "from_alpha_id": self.alice["alpha_id"],
+                "to_alpha_id": "AID-NOONE",
+                "message": "",
+            },
+        )
         # social manager 不验证用户是否存在，只关心请求是否成功发送
         assert resp.status_code == 200
 
     def test_accept_friend_request(self, client):
         # 发送请求
-        req_resp = client.post("/api/v1/social/friend-request", json={
-            "from_alpha_id": self.alice["alpha_id"],
-            "to_alpha_id": self.bob["alpha_id"],
-        })
+        req_resp = client.post(
+            "/api/v1/social/friend-request",
+            json={
+                "from_alpha_id": self.alice["alpha_id"],
+                "to_alpha_id": self.bob["alpha_id"],
+            },
+        )
         request_id = req_resp.json()["request_id"]
 
         # 接受
-        resp = client.put(f"/api/v1/social/friend-request/{request_id}", json={
-            "response": "accept",
-        })
+        resp = client.put(
+            f"/api/v1/social/friend-request/{request_id}",
+            json={
+                "response": "accept",
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["success"] is True
         assert data["friend_added"] is True
 
     def test_reject_friend_request(self, client):
-        req_resp = client.post("/api/v1/social/friend-request", json={
-            "from_alpha_id": self.alice["alpha_id"],
-            "to_alpha_id": self.bob["alpha_id"],
-        })
+        req_resp = client.post(
+            "/api/v1/social/friend-request",
+            json={
+                "from_alpha_id": self.alice["alpha_id"],
+                "to_alpha_id": self.bob["alpha_id"],
+            },
+        )
         request_id = req_resp.json()["request_id"]
 
-        resp = client.put(f"/api/v1/social/friend-request/{request_id}", json={
-            "response": "reject",
-        })
+        resp = client.put(
+            f"/api/v1/social/friend-request/{request_id}",
+            json={
+                "response": "reject",
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["success"] is True
 
     def test_get_friends(self, client):
         # 先成为好友
-        req_resp = client.post("/api/v1/social/friend-request", json={
-            "from_alpha_id": self.alice["alpha_id"],
-            "to_alpha_id": self.bob["alpha_id"],
-        })
+        req_resp = client.post(
+            "/api/v1/social/friend-request",
+            json={
+                "from_alpha_id": self.alice["alpha_id"],
+                "to_alpha_id": self.bob["alpha_id"],
+            },
+        )
         rid = req_resp.json()["request_id"]
         client.put(f"/api/v1/social/friend-request/{rid}", json={"response": "accept"})
 
@@ -416,10 +474,13 @@ class TestSocialAPI:
         assert data["friends"][0] == self.bob["alpha_id"]
 
     def test_get_pending_requests(self, client):
-        client.post("/api/v1/social/friend-request", json={
-            "from_alpha_id": self.alice["alpha_id"],
-            "to_alpha_id": self.bob["alpha_id"],
-        })
+        client.post(
+            "/api/v1/social/friend-request",
+            json={
+                "from_alpha_id": self.alice["alpha_id"],
+                "to_alpha_id": self.bob["alpha_id"],
+            },
+        )
 
         resp = client.get(f"/api/v1/social/{self.bob['alpha_id']}/requests")
         assert resp.status_code == 200
@@ -428,44 +489,59 @@ class TestSocialAPI:
 
     def test_send_message(self, client):
         # 先成好友
-        req_resp = client.post("/api/v1/social/friend-request", json={
-            "from_alpha_id": self.alice["alpha_id"],
-            "to_alpha_id": self.bob["alpha_id"],
-        })
+        req_resp = client.post(
+            "/api/v1/social/friend-request",
+            json={
+                "from_alpha_id": self.alice["alpha_id"],
+                "to_alpha_id": self.bob["alpha_id"],
+            },
+        )
         rid = req_resp.json()["request_id"]
         client.put(f"/api/v1/social/friend-request/{rid}", json={"response": "accept"})
 
-        resp = client.post("/api/v1/social/message", json={
-            "from_alpha_id": self.alice["alpha_id"],
-            "to_alpha_id": self.bob["alpha_id"],
-            "content": "你好 Bob！",
-            "message_type": "text",
-        })
+        resp = client.post(
+            "/api/v1/social/message",
+            json={
+                "from_alpha_id": self.alice["alpha_id"],
+                "to_alpha_id": self.bob["alpha_id"],
+                "content": "你好 Bob！",
+                "message_type": "text",
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["success"] is True
 
     def test_send_message_not_friends(self, client):
-        resp = client.post("/api/v1/social/message", json={
-            "from_alpha_id": self.alice["alpha_id"],
-            "to_alpha_id": self.bob["alpha_id"],
-            "content": "hi",
-        })
+        resp = client.post(
+            "/api/v1/social/message",
+            json={
+                "from_alpha_id": self.alice["alpha_id"],
+                "to_alpha_id": self.bob["alpha_id"],
+                "content": "hi",
+            },
+        )
         assert resp.status_code == 400
 
     def test_get_messages(self, client):
         # 成好友+发消息
-        req_resp = client.post("/api/v1/social/friend-request", json={
-            "from_alpha_id": self.alice["alpha_id"],
-            "to_alpha_id": self.bob["alpha_id"],
-        })
+        req_resp = client.post(
+            "/api/v1/social/friend-request",
+            json={
+                "from_alpha_id": self.alice["alpha_id"],
+                "to_alpha_id": self.bob["alpha_id"],
+            },
+        )
         rid = req_resp.json()["request_id"]
         client.put(f"/api/v1/social/friend-request/{rid}", json={"response": "accept"})
-        client.post("/api/v1/social/message", json={
-            "from_alpha_id": self.alice["alpha_id"],
-            "to_alpha_id": self.bob["alpha_id"],
-            "content": "hi bob",
-        })
+        client.post(
+            "/api/v1/social/message",
+            json={
+                "from_alpha_id": self.alice["alpha_id"],
+                "to_alpha_id": self.bob["alpha_id"],
+                "content": "hi bob",
+            },
+        )
 
         resp = client.get(f"/api/v1/social/{self.bob['alpha_id']}/messages")
         assert resp.status_code == 200
@@ -474,17 +550,23 @@ class TestSocialAPI:
         assert data["messages"][0]["content"] == "hi bob"
 
     def test_get_messages_unread(self, client):
-        req_resp = client.post("/api/v1/social/friend-request", json={
-            "from_alpha_id": self.alice["alpha_id"],
-            "to_alpha_id": self.bob["alpha_id"],
-        })
+        req_resp = client.post(
+            "/api/v1/social/friend-request",
+            json={
+                "from_alpha_id": self.alice["alpha_id"],
+                "to_alpha_id": self.bob["alpha_id"],
+            },
+        )
         rid = req_resp.json()["request_id"]
         client.put(f"/api/v1/social/friend-request/{rid}", json={"response": "accept"})
-        client.post("/api/v1/social/message", json={
-            "from_alpha_id": self.alice["alpha_id"],
-            "to_alpha_id": self.bob["alpha_id"],
-            "content": "unread test",
-        })
+        client.post(
+            "/api/v1/social/message",
+            json={
+                "from_alpha_id": self.alice["alpha_id"],
+                "to_alpha_id": self.bob["alpha_id"],
+                "content": "unread test",
+            },
+        )
 
         resp = client.get(f"/api/v1/social/{self.bob['alpha_id']}/messages?unread_only=true")
         assert resp.status_code == 200
@@ -495,6 +577,7 @@ class TestSocialAPI:
 # ════════════════════════════════════════════════════════════
 # 风控 API 测试
 # ════════════════════════════════════════════════════════════
+
 
 class TestRiskAPI:
     """风控引擎 API 集成测试"""
@@ -509,13 +592,16 @@ class TestRiskAPI:
 
     def test_voice_verify_low_risk(self, client):
         """高声纹匹配 → 低风险"""
-        resp = client.post("/api/v1/risk/voice-verify", json={
-            "voice_match": 0.98,
-            "habit_match": 0.95,
-            "user_id": "test-user-001",
-            "noise_level": 0.01,
-            "audio_quality": 0.99,
-        })
+        resp = client.post(
+            "/api/v1/risk/voice-verify",
+            json={
+                "voice_match": 0.98,
+                "habit_match": 0.95,
+                "user_id": "test-user-001",
+                "noise_level": 0.01,
+                "audio_quality": 0.99,
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["voice_score"] > 80
@@ -524,13 +610,16 @@ class TestRiskAPI:
 
     def test_voice_verify_high_risk(self, client):
         """低声纹匹配 → 高风险"""
-        resp = client.post("/api/v1/risk/voice-verify", json={
-            "voice_match": 0.15,
-            "habit_match": 0.20,
-            "user_id": "test-user-001",
-            "noise_level": 0.85,
-            "audio_quality": 0.30,
-        })
+        resp = client.post(
+            "/api/v1/risk/voice-verify",
+            json={
+                "voice_match": 0.15,
+                "habit_match": 0.20,
+                "user_id": "test-user-001",
+                "noise_level": 0.85,
+                "audio_quality": 0.30,
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["voice_score"] < 40
@@ -540,44 +629,54 @@ class TestRiskAPI:
 
     def test_voice_verify_response_shape(self, client):
         """验证响应字段完整性"""
-        resp = client.post("/api/v1/risk/voice-verify", json={
-            "voice_match": 0.50,
-            "habit_match": 0.50,
-            "user_id": "test-user-001",
-            "noise_level": 0.50,
-            "audio_quality": 0.50,
-        })
+        resp = client.post(
+            "/api/v1/risk/voice-verify",
+            json={
+                "voice_match": 0.50,
+                "habit_match": 0.50,
+                "user_id": "test-user-001",
+                "noise_level": 0.50,
+                "audio_quality": 0.50,
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert set(data.keys()) == {
-            "voice_score", "risk_score", "risk_level",
-            "action_required", "recommended_verification",
+            "voice_score",
+            "risk_score",
+            "risk_level",
+            "action_required",
+            "recommended_verification",
         }
+
     def test_evaluate_full(self, client):
-        resp = client.post("/api/v1/risk/evaluate", json={
-            "device_current": {
-                "hardware_id": "hw-001",
-                "ip_address": "192.168.1.1",
-                "location": "北京",
-                "browser_info": "Chrome 120",
-                "screen_resolution": "1920x1080",
-                "first_access_time": "2024-01-01T00:00:00Z",
+        resp = client.post(
+            "/api/v1/risk/evaluate",
+            json={
+                "device_current": {
+                    "hardware_id": "hw-001",
+                    "ip_address": "192.168.1.1",
+                    "location": "北京",
+                    "browser_info": "Chrome 120",
+                    "screen_resolution": "1920x1080",
+                    "first_access_time": "2024-01-01T00:00:00Z",
+                },
+                "behavior_current": {
+                    "typing_speed": 85.5,
+                    "session_time": "05:00",
+                    "common_words": [],
+                    "error_rate": 0.0,
+                    "word_count": 0,
+                    "emoji_count": 0,
+                },
+                "voice_data": {
+                    "voice_match": 0.95,
+                    "habit_match": 0.88,
+                    "noise_level": 0.02,
+                    "audio_quality": 0.99,
+                },
             },
-            "behavior_current": {
-                "typing_speed": 85.5,
-                "session_time": "05:00",
-                "common_words": [],
-                "error_rate": 0.0,
-                "word_count": 0,
-                "emoji_count": 0,
-            },
-            "voice_data": {
-                "voice_match": 0.95,
-                "habit_match": 0.88,
-                "noise_level": 0.02,
-                "audio_quality": 0.99,
-            },
-        })
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["risk_score"] < 50  # 数据正常，风险较低

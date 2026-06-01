@@ -1,11 +1,11 @@
 """社交网络 API 路由"""
 
 from fastapi import APIRouter, HTTPException, Query
+
+from alpha_id.container import Container
 from core.alpha_social import AlphaSocialManager
 
 from .models import FriendRequestRespond, FriendRequestSend, MessageSend
-
-from alpha_id.container import Container
 
 router = APIRouter(prefix="/api/v1/social", tags=["社交"])
 
@@ -30,9 +30,7 @@ def send_friend_request(body: FriendRequestSend):
 @router.put("/friend-request/{request_id}")
 def respond_friend_request(request_id: str, body: FriendRequestRespond):
     """响应好友请求"""
-    result = get_manager().respond_friend_request(
-        request_id=request_id, response=body.response
-    )
+    result = get_manager().respond_friend_request(request_id=request_id, response=body.response)
     if not result["success"]:
         raise HTTPException(status_code=400, detail=result["message"])
     return result

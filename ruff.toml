@@ -17,4 +17,3 @@ ignore = [
 
 [format]
 quote-style = "double"
-indent-width = 4

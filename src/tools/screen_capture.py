@@ -6,7 +6,6 @@
 """
 
 import os
-import tempfile
 from datetime import datetime
 from typing import Optional, Tuple
 
@@ -14,24 +13,28 @@ from typing import Optional, Tuple
 try:
     from langchain.tools import tool
 except ImportError:
+
     def tool(func=None, **kwargs):
         if func is not None:
             return func
+
         def decorator(f):
             return f
+
         return decorator
 
 # ── 延迟导入，避免无依赖时报错 ──
+
 
 def _import_pyautogui():
     """导入 pyautogui，失败时给清晰提示"""
     try:
         import pyautogui
+
         return pyautogui
     except ImportError:
         raise ImportError(
-            "请安装 pyautogui：pip install pyautogui\n"
-            "如果遇到依赖问题，可尝试：pip install pyautogui --upgrade"
+            "请安装 pyautogui：pip install pyautogui\n如果遇到依赖问题，可尝试：pip install pyautogui --upgrade"
         )
 
 
@@ -39,6 +42,7 @@ def _import_pil():
     """导入 PIL，失败时给清晰提示"""
     try:
         from PIL import Image
+
         return Image
     except ImportError:
         raise ImportError("请安装 Pillow：pip install Pillow")
@@ -48,24 +52,19 @@ def _import_pygetwindow():
     """导入 pygetwindow，失败时给清晰提示"""
     try:
         import pygetwindow as gw
+
         return gw
     except ImportError:
-        raise ImportError(
-            "请安装 pygetwindow：pip install pygetwindow\n"
-            "Windows 下用于按窗口标题查找和操作窗口。"
-        )
+        raise ImportError("请安装 pygetwindow：pip install pygetwindow\nWindows 下用于按窗口标题查找和操作窗口。")
 
 
-SCREENSHOT_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "..", "screenshots"
-)
+SCREENSHOT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "..", "screenshots")
 os.makedirs(SCREENSHOT_DIR, exist_ok=True)
 
 
 def _save_image(pil_image) -> str:
     """保存 PIL Image 到截图目录，返回文件路径"""
-    Image = _import_pil()
+    _import_pil()
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
     filename = f"screenshot_{timestamp}.png"
     filepath = os.path.join(SCREENSHOT_DIR, filename)
@@ -135,10 +134,7 @@ def capture_application_window(window_title: str) -> str:
         pyautogui = _import_pyautogui()
         img = pyautogui.screenshot(region=(left, top, width, height))
         path = _save_image(img)
-        return (
-            f"✅ 窗口「{window_title}」截图已保存: {path}\n"
-            f"   位置: ({left}, {top})  大小: {width}×{height}"
-        )
+        return f"✅ 窗口「{window_title}」截图已保存: {path}\n   位置: ({left}, {top})  大小: {width}×{height}"
     except Exception as e:
         return f"❌ 窗口截图失败: {str(e)}"
 
@@ -181,11 +177,7 @@ def list_application_windows() -> str:
 
         lines = ["📋 当前可见窗口列表：", "─" * 60]
         for i, w in enumerate(visible, 1):
-            lines.append(
-                f"  {i}. [{w.title}]  "
-                f"位置({w.left}, {w.top})  "
-                f"大小({w.width}×{w.height})"
-            )
+            lines.append(f"  {i}. [{w.title}]  位置({w.left}, {w.top})  大小({w.width}×{w.height})")
         return "\n".join(lines)
     except Exception as e:
         return f"❌ 获取窗口列表失败: {str(e)}"

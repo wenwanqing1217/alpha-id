@@ -1,6 +1,7 @@
 """JWT 认证模块纯单元测试（零外部依赖）"""
 
 import sys, os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import time
@@ -148,6 +149,7 @@ class TestTokenVerification:
     def test_verify_wrong_type(self):
         token = create_access_token("alpha-001")
         import pytest
+
         with pytest.raises(ValueError, match="令牌类型不匹配"):
             verify_token(token, "refresh")
 
@@ -160,6 +162,7 @@ class TestTokenVerification:
         )
         bad_token = f"{parts[0]}.{tampered_payload}.{parts[2]}"
         import pytest
+
         with pytest.raises(ValueError, match="签名验证失败"):
             decode_token(bad_token)
 
@@ -169,12 +172,14 @@ class TestTokenVerification:
         bad_header = _b64url_encode(json.dumps({"alg": "none"}).encode())
         bad_token = f"{bad_header}.{parts[1]}.{parts[2]}"
         import pytest
+
         with pytest.raises(ValueError, match="签名验证失败"):
             decode_token(bad_token)
 
     def test_expired_token(self):
         """创建一个已经过期的令牌"""
         import json, time
+
         payload = {
             "sub": "alpha-001",
             "iat": 0,
@@ -183,11 +188,13 @@ class TestTokenVerification:
         }
         expired_token = _encode(payload)
         import pytest
+
         with pytest.raises(ValueError, match="令牌已过期"):
             decode_token(expired_token)
 
     def test_malformed_token(self):
         import pytest
+
         with pytest.raises(ValueError, match="令牌格式无效"):
             decode_token("not-a-jwt")
         with pytest.raises(ValueError, match="令牌格式无效"):
@@ -199,23 +206,28 @@ class TestTokenVerification:
 class TestVerifyTokenEdgeCases:
     def test_empty_string(self):
         import pytest
+
         with pytest.raises(ValueError, match="令牌格式无效"):
             verify_token("")
 
     def test_invalid_base64(self):
         import pytest
+
         with pytest.raises(ValueError):
             verify_token("header.payload!!!.signature")
 
     def test_unknown_type(self):
         """type 字段既不是 access 也不是 refresh"""
-        token = _encode({
-            "sub": "alpha-001",
-            "iat": int(time.time()),
-            "exp": int(time.time()) + 3600,
-            "type": "magic",
-        })
+        token = _encode(
+            {
+                "sub": "alpha-001",
+                "iat": int(time.time()),
+                "exp": int(time.time()) + 3600,
+                "type": "magic",
+            }
+        )
         import pytest
+
         with pytest.raises(ValueError, match="未知的令牌类型"):
             decode_token(token)
 
@@ -227,23 +239,27 @@ class TestGetCurrentAlphaId:
     def test_valid_bearer(self):
         token = create_access_token("alpha-001")
         from auth.jwt import get_current_alpha_id
+
         alpha_id = get_current_alpha_id(f"Bearer {token}")
         assert alpha_id == "alpha-001"
 
     def test_missing_header(self):
         from auth.jwt import get_current_alpha_id
         import pytest
+
         with pytest.raises(ValueError, match="缺少 Authorization header"):
             get_current_alpha_id(None)
 
     def test_invalid_scheme(self):
         from auth.jwt import get_current_alpha_id
         import pytest
+
         with pytest.raises(ValueError, match="Authorization 必须是 Bearer 令牌"):
             get_current_alpha_id("Token abc123")
 
     def test_invalid_token(self):
         from auth.jwt import get_current_alpha_id
         import pytest
+
         with pytest.raises(ValueError):
             get_current_alpha_id("Bearer invalid-token-here")

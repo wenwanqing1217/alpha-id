@@ -5,7 +5,6 @@ Alpha-ID 社交网络核心逻辑（零外部依赖）
 支持 JSON 文件 / PostgreSQL 双存储后端。
 """
 
-import json
 import os
 from dataclasses import asdict, dataclass
 from datetime import datetime
@@ -18,25 +17,27 @@ from core.storage_sqlite import SqliteStorage
 @dataclass
 class FriendRequest:
     """好友请求"""
-    request_id: str            # 请求ID
-    from_alpha_id: str         # 发起方Alpha-ID
-    to_alpha_id: str           # 接收方Alpha-ID
-    message: str               # 请求消息
-    status: str                # 状态（pending/accepted/rejected）
-    created_at: str            # 创建时间
+
+    request_id: str  # 请求ID
+    from_alpha_id: str  # 发起方Alpha-ID
+    to_alpha_id: str  # 接收方Alpha-ID
+    message: str  # 请求消息
+    status: str  # 状态（pending/accepted/rejected）
+    created_at: str  # 创建时间
     responded_at: Optional[str]  # 响应时间
 
 
 @dataclass
 class AlphaMessage:
     """Alpha消息"""
-    message_id: str            # 消息ID
-    from_alpha_id: str         # 发送方Alpha-ID
-    to_alpha_id: str           # 接收方Alpha-ID
-    content: str               # 消息内容
-    message_type: str          # 消息类型（text/image/file）
-    timestamp: str             # 时间戳
-    read: bool                 # 是否已读
+
+    message_id: str  # 消息ID
+    from_alpha_id: str  # 发送方Alpha-ID
+    to_alpha_id: str  # 接收方Alpha-ID
+    content: str  # 消息内容
+    message_type: str  # 消息类型（text/image/file）
+    timestamp: str  # 时间戳
+    read: bool  # 是否已读
 
 
 class AlphaSocialManager:
@@ -44,11 +45,7 @@ class AlphaSocialManager:
 
     def __init__(self, storage: Optional[StorageBackend] = None):
         if storage is None:
-            db_path = os.path.join(
-                os.getenv("COZE_WORKSPACE_PATH", os.getcwd()),
-                "assets",
-                "alpha_id.db"
-            )
+            db_path = os.path.join(os.getenv("COZE_WORKSPACE_PATH", os.getcwd()), "assets", "alpha_id.db")
             storage = SqliteStorage(db_path)
         else:
             self._storage = storage
@@ -78,9 +75,11 @@ class AlphaSocialManager:
             return {"success": False, "message": "已经是好友了"}
 
         for req in requests.values():
-            if (req["from_alpha_id"] == from_alpha_id
-                    and req["to_alpha_id"] == to_alpha_id
-                    and req["status"] == "pending"):
+            if (
+                req["from_alpha_id"] == from_alpha_id
+                and req["to_alpha_id"] == to_alpha_id
+                and req["status"] == "pending"
+            ):
                 return {"success": False, "message": "已有待处理的好友请求"}
 
         request_id = f"req_{datetime.now().strftime('%Y%m%d%H%M%S')}_{from_alpha_id.replace('-', '')}"
@@ -91,7 +90,7 @@ class AlphaSocialManager:
             message=message,
             status="pending",
             created_at=datetime.now().isoformat(),
-            responded_at=None
+            responded_at=None,
         )
 
         requests[request_id] = asdict(friend_request)
@@ -133,8 +132,7 @@ class AlphaSocialManager:
         else:
             return {"success": True, "message": "已拒绝好友请求", "friend_added": False}
 
-    def send_message(self, from_alpha_id: str, to_alpha_id: str,
-                     content: str, message_type: str = "text") -> Dict:
+    def send_message(self, from_alpha_id: str, to_alpha_id: str, content: str, message_type: str = "text") -> Dict:
         """发送消息给好友"""
         friends = self._storage.load("friends") or {}
 
@@ -151,7 +149,7 @@ class AlphaSocialManager:
             content=content,
             message_type=message_type,
             timestamp=datetime.now().isoformat(),
-            read=False
+            read=False,
         )
 
         if to_alpha_id not in messages:
@@ -186,10 +184,7 @@ class AlphaSocialManager:
     def get_pending_friend_requests(self, alpha_id: str) -> List[Dict]:
         """获取待处理的好友请求"""
         requests = self._storage.load("friend_requests") or {}
-        return [
-            req for req in requests.values()
-            if req["to_alpha_id"] == alpha_id and req["status"] == "pending"
-        ]
+        return [req for req in requests.values() if req["to_alpha_id"] == alpha_id and req["status"] == "pending"]
 
     def get_storage_backend(self) -> StorageBackend:
         """获取当前存储后端（供迁移工具使用）"""

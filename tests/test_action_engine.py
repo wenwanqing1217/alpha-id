@@ -1,10 +1,18 @@
 """
 ActionEngine 单元测试 —— 行动引擎、审批流、平台适配器
 """
+
 import pytest
 from core.action_engine import (
-    ActionEngine, Action, ActionResult, ActionType, ActionStatus,
-    ApprovalLevel, ApprovalGate, ApprovalPolicy, ConsoleAdapter
+    ActionEngine,
+    Action,
+    ActionResult,
+    ActionType,
+    ActionStatus,
+    ApprovalLevel,
+    ApprovalGate,
+    ApprovalPolicy,
+    ConsoleAdapter,
 )
 
 
@@ -77,8 +85,9 @@ class TestActionModel:
         assert "post" in action.tags
 
     def test_create_message_factory(self):
-        action = Action.create_message(platform="wechat", recipient="Alpha-002",
-                                        content="Hi there", source_alpha_id="Alpha-001")
+        action = Action.create_message(
+            platform="wechat", recipient="Alpha-002", content="Hi there", source_alpha_id="Alpha-001"
+        )
         assert action.action_type == ActionType.SEND_MESSAGE
         assert action.payload["recipient"] == "Alpha-002"
         assert action.payload["content"] == "Hi there"
@@ -153,6 +162,7 @@ class TestApprovalPolicy:
         policy = self.setup()
         # 模拟未知 ActionType
         from unittest.mock import MagicMock
+
         action = MagicMock(spec=Action)
         action.action_type.name = "UNKNOWN_TYPE"
         action.platform = ""

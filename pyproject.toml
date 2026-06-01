@@ -1,7 +1,7 @@
 [project]
 name = "alpha-id"
-version = "0.2.0"
-description = "数字身份智能管理系统"
+version = "0.3.0"
+description = "数字身份智能管理系统 — 含桌面精灵 (AID Fairy)"
 requires-python = ">=3.12"
 dependencies = [
     "psycopg2-binary>=2.9,<3",
@@ -11,11 +11,30 @@ dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.30",
     "pydantic>=2.9",
+    "typer>=0.12",
+    "jinja2>=3.1",
+    "taskipy>=1.13",
 ]
 
+[project.scripts]
+aid = "alpha_id.cli:app"
+aid-mcp = "aid_mcp_server:main"
+aid-fairy = "aid_daemon:main"
+
 [project.optional-dependencies]
+fairy = [
+    "openai>=1.0",
+    "pyautogui>=0.9",
+    "pygetwindow>=0.0",
+    "Pillow>=10.0",
+    "pytesseract>=0.3",
+]
+mcp-server = [
+    "mcp>=1.0",
+]
 test = [
     "pytest>=8.0",
+    "pytest-asyncio>=1.0",
     "pytest-cov>=5.0",
     "ruff>=0.5",
     "pyright>=1.1",
@@ -24,13 +43,48 @@ postgres = [
     "asyncpg>=0.29",
     "psycopg2-binary>=2.9,<3",
 ]
+all = [
+    "alpha-id[fairy,mcp-server,test,postgres]",
+]
 dev = [
     "alpha-id[test,postgres]",
 ]
 
+[build-system]
+requires = ["setuptools>=75.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["aid*", "aid_*", "core*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+addopts = "-q --tb=short --no-header"
+
+[tool.pytest.ini_options.junit_family]
+junit_family = "xunit2"
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*", "*/__pycache__/*", "*/site-packages/*"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "except ImportError",
+    "HAS_",
+]
+fail_under = 68
+
+[tool.coverage.html]
+directory = "htmlcov"
 
 [tool.pyright]
 include = ["src/core", "tests"]
@@ -38,3 +92,70 @@ typeCheckingMode = "basic"
 reportMissingTypeStubs = false
 reportUnknownMemberType = false
 reportMissingModuleSource = false
+reportMissingParameterType = true
+reportMissingTypeArgument = true
+reportOptionalMemberAccess = false
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "W",   # pycodestyle warnings
+    "UP",  # pyupgrade (Python 3.12+ 写法)
+    "RUF", # ruff 专用规则
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+    "N999",  # module name not lowercase (project convention)
+]
+fixable = ["ALL"]
+unfixable = []
+exclude = ["__pycache__", ".git", "htmlcov", "dist"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-width = 4
+line-ending = "auto"
+
+[tool.taskipy.tasks]
+# 开发
+dev = "python src/aid_daemon.py"
+dev-mcp = "python src/aid_mcp_server.py --transport sse --port 8100"
+web = "python src/alpha_id/web.py"
+
+# 测试
+test = "python -m pytest tests/ -q --tb=short"
+test-v = "python -m pytest tests/ -v --tb=long"
+test-x = "python -m pytest tests/ -q --tb=short -x"  # 首次失败即停止
+coverage = "python -m pytest tests/ -q --tb=short --cov=src --cov-report=term-missing"
+coverage-html = "python -m pytest tests/ -q --tb=short --cov=src --cov-report=html"
+
+# 代码质量
+lint = "ruff check src/"
+format = "ruff format src/ tests/"
+typecheck = "pyright src/"
+check-all = "ruff format --check src/ tests/ && ruff check src/ && pyright src/ && python -m pytest tests/ -q --tb=short"
+
+# 维护
+clean = "python -c \"import shutil, pathlib; [shutil.rmtree(p) for p in pathlib.Path('.').rglob('__pycache__') if p.is_dir()]; [p.unlink() for p in pathlib.Path('.').rglob('*.pyc')]\""
+pre-commit-run = "pre-commit run --all-files"
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+follow_imports = "silent"
+exclude = ["tests/"]
+
+[tool.codespell]
+skip = "*.pyc,*.git,*.db,*.png,*.jpg,htmlcov,node_modules,.venv"
+ignore-words-list = "ba,hte"
+check-hidden = true
+

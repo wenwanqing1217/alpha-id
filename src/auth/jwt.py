@@ -1,10 +1,10 @@
 """JWT 令牌生成与验证"""
 
+import base64
+import hashlib
+import hmac
 import os
 import time
-import hmac
-import hashlib
-import base64
 from typing import Optional
 
 # ── 配置（生产环境请从环境变量或密钥管理服务读取） ──
@@ -16,12 +16,8 @@ MASTER_KEY: str = os.environ.get(
 )
 
 # 令牌有效期
-ACCESS_TOKEN_EXPIRE_MINUTES: int = int(
-    os.environ.get("JWT_ACCESS_EXPIRE_MINUTES", "30")
-)
-REFRESH_TOKEN_EXPIRE_DAYS: int = int(
-    os.environ.get("JWT_REFRESH_EXPIRE_DAYS", "7")
-)
+ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.environ.get("JWT_ACCESS_EXPIRE_MINUTES", "30"))
+REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.environ.get("JWT_REFRESH_EXPIRE_DAYS", "7"))
 
 ALGORITHM: str = "HS256"
 

@@ -1,0 +1,8 @@
+@ECHO OFF
+CD /D "%p~dp0"
+"C:\Users\温杣\AppData\Local\Python\bin\python.exe" -M PYTEST %* --BASETEMP=%TEMP%\PYTEST_AID
+IF ERRORLEVEL 1 (
+  ECHO.
+  ECHO TESTS FAILED, CHECK OUTPUT ABOVE.
+  PAUSE
+)

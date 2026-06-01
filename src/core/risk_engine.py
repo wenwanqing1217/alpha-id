@@ -3,17 +3,24 @@ Alpha-ID 风险评分引擎（无外部依赖）
 
 独立于 langchain 框架的核心业务逻辑，可单独测试。
 """
-import hashlib
-import json
-import os
+
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
-from dataclasses import dataclass, asdict
+from typing import Dict, List, Optional
+
+try:
+    import numpy as np
+except ImportError:
+    np = None
+import logging
+from dataclasses import dataclass
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
 class DeviceFingerprint:
     """设备指纹"""
+
     hardware_id: str
     ip_address: str
     location: str
@@ -25,6 +32,7 @@ class DeviceFingerprint:
 @dataclass
 class BehaviorFingerprint:
     """行为指纹"""
+
     typing_speed: float = 0.0  # 字符/秒
     common_words: List[str] = None  # 常用词列表
     error_rate: float = 0.0  # 错误率
@@ -39,6 +47,7 @@ class BehaviorFingerprint:
 @dataclass
 class RiskAssessmentResult:
     """风险评估结果"""
+
     total_risk_score: float
     device_score: float
     behavior_score: float
@@ -126,7 +135,7 @@ class RiskAssessmentEngine:
         score = 100.0
 
         # 打字速度匹配度（20分）
-        baseline_typing = self.baseline['typing_speed']
+        baseline_typing = self.baseline["typing_speed"]
         typing_diff = abs(current.typing_speed - baseline_typing) / baseline_typing if baseline_typing else 0
         if typing_diff > 0.5:  # 偏差超过50%
             score -= 20
@@ -141,7 +150,7 @@ class RiskAssessmentEngine:
             score -= 10
 
         # 错别字模式（15分）
-        error_diff = abs(current.error_rate - self.baseline['error_rate'])
+        error_diff = abs(current.error_rate - self.baseline["error_rate"])
         if error_diff > 0.1:  # 错误率偏差超过10%
             score -= 15
 
@@ -150,11 +159,11 @@ class RiskAssessmentEngine:
             score -= 20
 
         # 对话风格（15分）
-        base_wc = self.baseline['word_count'] or 1
-        base_ec = self.baseline['emoji_count'] or 1
+        base_wc = self.baseline["word_count"] or 1
+        base_ec = self.baseline["emoji_count"] or 1
         style_diff = (
-            abs(current.word_count - self.baseline['word_count']) / base_wc +
-            abs(current.emoji_count - self.baseline['emoji_count']) / base_ec
+            abs(current.word_count - self.baseline["word_count"]) / base_wc
+            + abs(current.emoji_count - self.baseline["emoji_count"]) / base_ec
         )
         if style_diff > 0.5:
             score -= 15
@@ -179,19 +188,19 @@ class RiskAssessmentEngine:
         score = 100.0
 
         # 声音特征匹配（60分）
-        if voice_data.get('voice_match', 0) < 0.9:  # 匹配度低于90%
+        if voice_data.get("voice_match", 0) < 0.9:  # 匹配度低于90%
             score -= 60
 
         # 语音习惯（20分）
-        if voice_data.get('habit_match', 0) < 0.8:
+        if voice_data.get("habit_match", 0) < 0.8:
             score -= 20
 
         # 环境噪音（10分）
-        if voice_data.get('noise_level', 0) > 0.3:  # 噪音高于30%
+        if voice_data.get("noise_level", 0) > 0.3:  # 噪音高于30%
             score -= 10
 
         # 音频质量（10分）
-        if voice_data.get('audio_quality', 0) < 0.7:
+        if voice_data.get("audio_quality", 0) < 0.7:
             score -= 10
 
         return max(0.0, score)
@@ -208,21 +217,35 @@ class RiskAssessmentEngine:
         )
         """
         total_trust = (
-            device_score * self.device_weight +
-            behavior_score * self.behavior_weight +
-            voice_score * self.voice_weight
+            device_score * self.device_weight + behavior_score * self.behavior_weight + voice_score * self.voice_weight
         )
 
-        return 100.0 - total_trust
+        risk_score = 100.0 - total_trust
+        logger.info(
+            "分数计算: device=%.1f behavior=%.1f voice=%.1f risk=%.1f",
+            device_score,
+            behavior_score,
+            voice_score,
+            risk_score,
+        )
+        return risk_score
 
     def determine_risk_level(self, risk_score: float) -> str:
         """判断风险等级（返回中文兼容）"""
         if risk_score < self.safe_threshold:
-            return "安全区"
+            level = "安全区"
         elif risk_score < self.caution_threshold:
-            return "警戒区"
+            level = "警戒区"
         else:
-            return "危险区"
+            level = "危险区"
+        logger.warning(
+            "规则触发: risk=%.1f threshold=(safe=%.1f, caution=%.1f) level=%s",
+            risk_score,
+            self.safe_threshold,
+            self.caution_threshold,
+            level,
+        )
+        return level
 
     def get_action_required(self, risk_level: str, risk_score: float) -> str:
         """获取需要采取的行动"""
@@ -253,40 +276,26 @@ class RiskAssessmentEngine:
 
         # 使用指数平滑更新基线
         alpha = 0.3  # 学习率
-        self.baseline['typing_speed'] = (
-            alpha * current_behavior.typing_speed +
-            (1 - alpha) * self.baseline['typing_speed']
+        self.baseline["typing_speed"] = (
+            alpha * current_behavior.typing_speed + (1 - alpha) * self.baseline["typing_speed"]
         )
-        self.baseline['error_rate'] = (
-            alpha * current_behavior.error_rate +
-            (1 - alpha) * self.baseline['error_rate']
-        )
-        self.baseline['word_count'] = (
-            alpha * current_behavior.word_count +
-            (1 - alpha) * self.baseline['word_count']
-        )
-        self.baseline['emoji_count'] = (
-            alpha * current_behavior.emoji_count +
-            (1 - alpha) * self.baseline['emoji_count']
-        )
-        self.baseline['common_words'] = current_behavior.common_words
+        self.baseline["error_rate"] = alpha * current_behavior.error_rate + (1 - alpha) * self.baseline["error_rate"]
+        self.baseline["word_count"] = alpha * current_behavior.word_count + (1 - alpha) * self.baseline["word_count"]
+        self.baseline["emoji_count"] = alpha * current_behavior.emoji_count + (1 - alpha) * self.baseline["emoji_count"]
+        self.baseline["common_words"] = current_behavior.common_words
 
     def adjust_thresholds(self, risk_score: float):
         """自适应调整阈值"""
         # 记录历史
-        self.user_history.append({
-            'timestamp': datetime.now().isoformat(),
-            'risk_score': risk_score
-        })
+        self.user_history.append({"timestamp": datetime.now().isoformat(), "risk_score": risk_score})
 
         # 每10次访问重新计算阈值
         if len(self.user_history) % 10 == 0 and len(self.user_history) >= 10:
-            scores = [h['risk_score'] for h in self.user_history[-10:]]
+            scores = [h["risk_score"] for h in self.user_history[-10:]]
 
             # 基于百分位数
-            import numpy as np
-            self.safe_threshold = np.percentile(scores, 10)   # 10%分位数
-            self.caution_threshold = np.percentile(scores, 90) # 90%分位数
+            self.safe_threshold = np.percentile(scores, 10)  # 10%分位数
+            self.caution_threshold = np.percentile(scores, 90)  # 90%分位数
 
     def predict_next_risk(self) -> Optional[float]:
         """
@@ -297,38 +306,38 @@ class RiskAssessmentEngine:
         if len(self.user_history) < 3:
             return None
 
-        recent_scores = [h['risk_score'] for h in self.user_history[-5:]]
+        recent_scores = [h["risk_score"] for h in self.user_history[-5:]]
         return sum(recent_scores) / len(recent_scores)
 
     def _same_ip_segment(self, ip1: str, ip2: str) -> bool:
         """判断两个IP是否在同一个网段"""
         try:
             # 简单判断前三位是否相同
-            return ip1.rsplit('.', 1)[0] == ip2.rsplit('.', 1)[0]
-        except:
+            return ip1.rsplit(".", 1)[0] == ip2.rsplit(".", 1)[0]
+        except:  # noqa: E722
             return False
 
     def _same_session_time(self, time1: str, time2: Optional[str] = None) -> bool:
         """判断会话时间是否一致（相差不超过2小时）"""
         if time2 is None and self.baseline:
-            time2 = self.baseline['session_time']
+            time2 = self.baseline["session_time"]
 
         if not time1 or not time2:
             return True
 
         try:
-            hour1 = int(time1.split(':')[0])
-            hour2 = int(time2.split(':')[0])
+            hour1 = int(time1.split(":")[0])
+            hour2 = int(time2.split(":")[0])
             return abs(hour1 - hour2) <= 2
-        except:
+        except:  # noqa: E722
             return True
 
     def _calculate_word_overlap(self, current_words: List[str]) -> float:
         """计算常用词重叠度"""
-        if not self.baseline or not self.baseline.get('common_words'):
+        if not self.baseline or not self.baseline.get("common_words"):
             return 1.0
 
-        baseline_words = set(self.baseline['common_words'])
+        baseline_words = set(self.baseline["common_words"])
         current_set = set(current_words)
 
         if not baseline_words:
@@ -340,10 +349,10 @@ class RiskAssessmentEngine:
     def _establish_baseline(self, behavior: BehaviorFingerprint):
         """建立行为基线"""
         self.baseline = {
-            'typing_speed': behavior.typing_speed,
-            'error_rate': behavior.error_rate,
-            'session_time': behavior.session_time,
-            'word_count': behavior.word_count,
-            'emoji_count': behavior.emoji_count,
-            'common_words': behavior.common_words
+            "typing_speed": behavior.typing_speed,
+            "error_rate": behavior.error_rate,
+            "session_time": behavior.session_time,
+            "word_count": behavior.word_count,
+            "emoji_count": behavior.emoji_count,
+            "common_words": behavior.common_words,
         }

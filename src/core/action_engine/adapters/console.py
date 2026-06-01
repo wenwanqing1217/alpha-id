@@ -3,10 +3,11 @@ Console 适配器 —— 开发调试用的"假执行"
 所有行动只打印日志，不真的调用外部 API
 """
 
-from typing import Any, Dict, Optional
 from datetime import datetime
-from . import PlatformAdapter
+from typing import Any, Dict
+
 from ..models import Action, ActionResult, ActionType
+from . import PlatformAdapter
 
 
 class ConsoleAdapter(PlatformAdapter):
@@ -41,7 +42,7 @@ class ConsoleAdapter(PlatformAdapter):
         elif action.action_type == ActionType.CREATE_GROUP:
             print(f"  [模拟建群] {action.payload.get('group_name', '未命名群')}")
         elif action.action_type == ActionType.GET_CONTACTS:
-            print(f"  [模拟获取联系人] 返回模拟联系人列表")
+            print("  [模拟获取联系人] 返回模拟联系人列表")
         elif action.action_type == ActionType.CREATE_DOC:
             print(f"  [模拟创建文档] 标题: {action.payload.get('title', '未命名')}")
         elif action.action_type == ActionType.SCHEDULE:

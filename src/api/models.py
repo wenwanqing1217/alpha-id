@@ -1,10 +1,11 @@
 """Pydantic 请求/响应模型"""
 
-from pydantic import BaseModel, Field
-from typing import Dict, List, Optional
+from typing import List, Optional
 
+from pydantic import BaseModel, Field
 
 # ── 认证模块 ──
+
 
 class LoginRequest(BaseModel):
     alpha_id: str
@@ -24,6 +25,7 @@ class RefreshRequest(BaseModel):
 
 # ── 身份模块 ──
 
+
 class RegisterRequest(BaseModel):
     device_fingerprint: str = Field(..., description="设备指纹")
     is_founder: bool = False
@@ -40,6 +42,7 @@ class SyncRequest(BaseModel):
 
 
 # ── 社交模块 ──
+
 
 class FriendRequestSend(BaseModel):
     from_alpha_id: str
@@ -63,6 +66,7 @@ class MessageQuery(BaseModel):
 
 
 # ── 风控模块 ──
+
 
 class DeviceFingerprintModel(BaseModel):
     hardware_id: str
@@ -94,6 +98,7 @@ class VoiceDataModel(BaseModel):
 
 class VoiceVerifyRequest(BaseModel):
     """声纹验证请求"""
+
     user_id: str
     voice_sample_id: str = ""
     device_fingerprint: str = ""
@@ -105,6 +110,7 @@ class VoiceVerifyRequest(BaseModel):
 
 class VoiceVerifyResponse(BaseModel):
     """声纹验证响应"""
+
     voice_score: float
     risk_score: float
     risk_level: str

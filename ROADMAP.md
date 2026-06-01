@@ -1,6 +1,9 @@
-# Alpha-ID → 4.5 跃迁计划
+# AID — Agent Identity Layer
 
-## 当前评分：2.7 / 5.0（2025-06-28）
+> **从「技能管理器」到「Agent 身份层」**
+> 技能会泛滥，模型会过时。唯一恒定的是「你是谁」和「这是谁写的」。
+
+## 当前评分：2.7 / 5.0（2025-07）
 
 | 维度 | 分数 | 短板 |
 |------|:----:|------|
@@ -12,19 +15,61 @@
 | 安全 | 1.5 | 数据库未加密，无 ZK |
 | 代码 | 4.0 | 277 测试，类型注解 |
 | 创新 | 3.0 | 组合创新，无单点突破 |
+| **Skill 生态** | — | **全新维度：尚不存在，决定方向** |
 
 ## 最终目标：4.5
+
+一个 **身份优先、协议驱动** 的 Agent 生态 —— 任何 Agent 框架、任何模型都能接入的「身份层」。
+**技能签名可验证、作者信誉可追溯、执行证明可审计。**
 
 ## 三阶段路线
 
 ```
 2.7 ── Phase 1 ── 3.5 ── Phase 2 ── 4.0 ── Phase 3 ── 4.5
-      (4 weeks)         (3 months)          (6 months)
+      (8 weeks)         (3 months)          (6 months)
 ```
+
+| 阶段 | 目标分 | 主题 | 一句话定位 |
+|------|--------|------|-----------|
+| Phase 1「身份地基」 | 2.7 → 3.5 | Agent DID Registry + Skill SDK | 先让 Agent 有「身份」，让 Skill 有「签名」 |
+| Phase 2「信誉网络」 | 3.5 → 4.0 | 技能归因 + 跨框架信誉传播 | 让好作者被看见，让恶意代码被追踪 |
+| Phase 3「身份自治」 | 4.0 → 4.5 | 执行证明(PoE) + 去平台化协议 | Agent 自治，不再依赖任何中心平台 |
 
 ---
 
-## Phase 1「地基加固」：2.7 → 3.5（全量可写）
+## Phase 1「身份地基」：2.7 → 3.5（全量可写）
+
+> **核心转变：** 原来 Phase 1 是「地基加固」(ReAct Agent + 安全加固)，现在是「身份地基」—— DID 优先级提到最前面，所有东西都围绕身份层来建。ReAct Agent 不变，但它是基础设施的一部分，不是目的。
+
+### P1-0 Agent DID Registry（新增最高优先）
+
+**目标：** 让每个 Agent 有一个可验证的身份，让每个 Skill 有作者签名。
+
+```json
+// .aid/identity.json — 最小 DID 文件
+{
+  "did": "did:aid:abc123...",
+  "publicKey": "-----BEGIN PUBLIC KEY-----...",
+  "skills_signed": ["tts", "search", "code_review"],
+  "created": "2025-07-15"
+}
+```
+
+**交付物：**
+- [ ] CLI `aid identity init` — 生成 DID + 密钥对
+- [ ] CLI `aid identity show` — 查看当前身份
+- [ ] CLI `aid identity verify <file>` — 验证技能签名
+- [ ] Python SDK `AIDSigner` — 签名/验签接口
+- [ ] `.aid/` 目录规范（identity.json + skills/ + keys/）
+
+**为什么先做这个：**
+- 身份是 trust 的基础，没有身份就没有信誉
+- 所有后续功能（Skill SDK、信誉图谱、归因）都依赖它
+- 足够小、两周内可交付，立刻见效
+
+**依赖：** cryptography（已有），无外部服务
+
+---
 
 ### P1-1 ReAct Agent（Agent 2.0 → 3.5）
 
@@ -146,20 +191,26 @@ final_score = 0.7 * rule_score + 0.3 * ml_score
 
 ### P1-5 CLI 工具（产品载体）
 
-**目标：** `alpha-id` 命令行工具
+**目标：** `aid` 命令行工具
 
 **文件清单：**
 - 新建 `src/alpha_id/cli.py` → Typer CLI
+- 新建 `src/alpha_id/identity_cli.py` → DID 身份子命令
 
 **命令设计：**
 ```bash
-alpha-id create                          # 创建新 Agent
-alpha-id identify <alpha_id>             # 查询身份
-alpha-id connect <id1> <id2>             # 建立好友关系
-alpha-id send <from> <to> "message"      # 发送消息
-alpha-id think <alpha_id>                # 触发思考
-alpha-id list                            # 列出所有 Agent
-alpha-id risk <alpha_id>                 # 风险评估
+# 身份层（P1-0 最高优先）
+aid identity init                     # 生成 DID + 密钥对
+aid identity show                     # 查看当前身份
+aid identity verify <file>            # 验证技能签名
+
+# 原有功能（P1-1 ~ P1-4）
+aid agent create                      # 创建新 Agent
+aid agent think <id>                  # 触发思考
+aid agent connect <id1> <id2>         # 建立好友关系
+aid agent send <from> <to> "message"  # 发送消息
+aid agent list                        # 列出所有 Agent
+aid agent risk <id>                   # 风险评估
 ```
 
 **依赖：** `typer>=0.12`（写到 pyproject.toml）
@@ -196,41 +247,46 @@ typer>=0.12
 
 ---
 
-## Phase 2「智能升级」：3.5 → 4.0（大纲，待细化）
+## Phase 2「信誉网络」：3.5 → 4.0（大纲，待细化）
 
-### P2-1 DID + 可验证凭证（身份 3.0 → 4.5）
-- W3C DID Core 标准实现
-- `did:alpha:` 方法
-- 签发/验证 Verifiable Credentials
-- Credential Status List 撤销检查
+> **核心转变：** 原来 Phase 2「智能升级」(DID + 社交 + 工具市场)，现在是「信誉网络」—— 所有 DID 和社交能力围绕「技能信誉」来组织。
 
-### P2-2 联邦社交协议（社交 2.5 → 4.0）
-- Agent 之间 HTTP/gRPC 直连
-- Alpha-ID 全局解析器（公钥 + 地址）
-- 好友关系跨实例可移植
+### P2-1 技能签名与验证（身份 3.5 → 4.0）
+- Skill 包的 DID 签发（作者私钥签名 skill 内容 hash）
+- 用户侧 `aid identity verify <skill>` 验签
+- 撤销列表（作者可吊销已发布的 skill 版本）
+- 参考：MiMo-Skills 的 npm 包格式 + 附加签名字段
 
-### P2-3 Agent 工具市场（Agent 3.5 → 4.5）
-- `agent install tool:<name>` 插件系统
-- Chain of Thought 多步规划
-- 外部 API 自动发现
+### P2-2 使用归因与信誉图谱（社交 2.5 → 4.0）
+- 记录「谁执行了谁的 skill」的归因链（有向图）
+- 作者信誉分 = f(下载量, 好评率, 持续维护, 签名历史)
+- 信誉分跨 Agent 框架传播（OpenClaw 的信用 → Claude Code 可见）
+- 恶意 skill 被举报 → 作者信誉扣分 → 社区自动过滤
 
----
-
-## Phase 3「去中心化」：4.0 → 4.5（大纲，待细化）
-
-### P3-1 P2P 身份网络
-- Kademlia DHT 全局发现
-- 去中心化身份解析
-
-### P3-2 零知识证明（安全 3.0 → 4.5）
-- 选择性披露
-- 属性基加密
-
-### P3-3 多 Agent 涌现
-- Agent 间辩论/协作/投票
-- 群组集体决策
+### P2-3 跨框架运行时抽象（Agent 3.5 → 4.5）✅
+- Skill SDK 接口抽象层（`execute(ctx, input) -> output`）✅
+- 适配器：OpenClaw → AID, Claude Code → AID, Cursor → AID
+- 每个适配器负责将对应框架的 tool call 标准化为 AID Skill 接口
+- **不造新框架，只造桥**
 
 ---
+
+## Phase 3「身份自治」：4.0 → 4.5（大纲，待细化）
+
+### P3-1 执行证明（Proof of Execution）
+- Agent 每次执行 skill 生成可验证的 PoE 记录
+- PoE = (skill_hash, caller_did, author_did, timestamp, output_hash) 签名链
+- 链下存储，可选发布到公共日志做公证
+
+### P3-2 去平台化协议
+- 不再依赖任何中心市场/平台发现 skill
+- Git-based 发现 + DID 解析器作为 fallback
+- 作者可自托管 skill 仓库，用户通过 DID 解析找到
+
+### P3-3 多 Agent 协作自治
+- Agent 间通过 DID 互相认证身份
+- 技能调用链可追溯（A → B's skill → C's skill）
+- 多方执行证明自动聚合
 
 ## 测试策略
 
@@ -454,6 +510,47 @@ class TwinBrainMemory:
 
 ---
 
+#### 洞察 7：Xiaomi MiMo — Agent Skills 生态已到来，我们应「借势不硬刚」
+
+**调查时间：** 2025-07 | **来源：** [github.com/XiaomiMiMo](https://github.com/XiaomiMiMo)
+
+**MiMo 是什么：**
+小米的 AI Agent 生态体系。核心仓库：
+
+| 仓库 | ⭐ | 对应关系 |
+|------|---|---------|
+| MiMo-Skills | 62 | **Agent skills 分发** — `npx skills add XiaomiMiMo/MiMo-Skills` |
+| MiMo-V2-Flash | 1320 | 推理+Agentic 基础模型 |
+| MiMo | 2134 | 推理管线（预训练到后训练） |
+| MiMo-VL | 641 | 视觉语言多模态 |
+| MiMo-Embodied | 385 | 具身智能 |
+
+**对我们最关键的发现 — MiMo-Skills：**
+
+```
+npx skills add XiaomiMiMo/MiMo-Skills
+```
+
+- 跨 Agent 框架兼容（Claude Code / Cursor / OpenClaw 都可以装）
+- Skill = 一个可安装的 npm 包，包含工具定义 + 实现 + 文档
+- MIT 开源
+- 平台入口：platform.xiaomimimo.com（API Key 模式鉴权）
+
+**对我们的影响：**
+
+| MiMo 方向 | 我们的应对 |
+|-----------|-----------|
+| 分发层：npx 安装 | 兼容其格式，技能包加 DID 签名字段，而非另造轮子 |
+| API Key 鉴权 | 借鉴其简洁设计，我们加一层 DID 可选验证 |
+| 跨 Agent 兼容 | 我们 Skill SDK 预留适配器接口，直接对标 |
+| 平台中心化（platform.xiaomimimo.com） | **差异点：** 我们不做平台，做身份层——去中心化 + DID 验证 |
+| 纯分发，无信誉系统 | **差异点：** 我们做信誉图谱 + 归因链，MiMo 不做 |
+
+**一句话结论：**
+> MiMo 在造最好的模型+技能平台。我们在造「谁写的、谁用的、谁可信」的**身份层**。两者正交——我们的 Skill 可以跑在 MiMo 上，MiMo 的 Skill 可以用我们的 DID 签名增强可信度。
+
+---
+
 ### 路线图优化总结
 
 | 原计划 | 优化后 | 原因 |
@@ -463,4 +560,5 @@ class TwinBrainMemory:
 | Agent 重心在 think 逻辑 | Agent 重心在 Tool API 设计 | Anthropic: 工具接口决定 Agent 质量 |
 | 只做向量记忆 | 工作记忆 + 长期记忆分层 | LangGraph 模式 |
 | 联邦社交 Phase 2 | Phase 1 加导出/导入可移植性 | AT Protocol 启发 |
-| 完整 W3C DID | 最小 DID: `did:alpha` | 标准里只取 20% 就得 80% 效果 |
+| 完整 W3C DID | 最小 DID: `did:aid` | 标准里只取 20% 就得 80% 效果 |
+| 做 Agent 技能管理器 | 做 Agent 身份层 + 签名层 | MiMo-Skills 已解决分发，我们解决信任 |

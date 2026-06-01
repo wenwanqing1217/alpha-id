@@ -8,20 +8,27 @@ TwinBrain 不再是"只能想的数字大脑"——
   Action (意图) → ApprovalGate (审批) → PlatformAdapter (执行) → ActionResult (结果)
 """
 
-from .models import Action, ActionResult, ActionType, ActionStatus, ApprovalLevel
-from .engine import ActionEngine
-from .approval import ApprovalGate, ApprovalPolicy
 from .adapters import PlatformAdapter
 from .adapters.console import ConsoleAdapter
 from .adapters.wechat import WeChatAdapter
+from .approval import ApprovalGate, ApprovalPolicy
+from .engine import ActionEngine
+from .models import Action, ActionResult, ActionStatus, ActionType, ApprovalLevel
 
 __all__ = [
     # 模型
-    "Action", "ActionResult", "ActionType", "ActionStatus", "ApprovalLevel",
+    "Action",
+    "ActionResult",
+    "ActionType",
+    "ActionStatus",
+    "ApprovalLevel",
     # 引擎
     "ActionEngine",
     # 审批
-    "ApprovalGate", "ApprovalPolicy",
+    "ApprovalGate",
+    "ApprovalPolicy",
     # 适配器
-    "PlatformAdapter", "ConsoleAdapter", "WeChatAdapter",
+    "PlatformAdapter",
+    "ConsoleAdapter",
+    "WeChatAdapter",
 ]
