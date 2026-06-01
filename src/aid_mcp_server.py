@@ -690,6 +690,13 @@ if HAS_MEMORY_GRAPH:
 def main():
     """AID MCP Server 入口点（CLI & pyproject entry point）"""
     import argparse
+    import io
+
+    # Windows GBK → UTF-8: 确保 emoji 不会炸掉 stderr/stdout
+    if sys.platform == "win32":
+        for s in (sys.stdout, sys.stderr):
+            if hasattr(s, "reconfigure"):
+                s.reconfigure(encoding="utf-8", errors="replace")
 
     parser = argparse.ArgumentParser(description="AID MCP Server")
     parser.add_argument(

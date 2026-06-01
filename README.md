@@ -2,7 +2,7 @@
 
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-525-passing-green.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-803-passing-green.svg)](tests/)
 
 > **身份优先、协议驱动的 Agent 生态层。**  
 > 任何 Agent 框架、任何模型都能接入的身份层——技能签名可验证、作者信誉可追溯、执行证明可审计。
@@ -44,7 +44,7 @@ pip install -e ".[dev]"
 
 ```bash
 pytest tests/ -q
-# 525 passed ✅
+# 803 passed ✅
 ```
 
 ### CLI 快速体验
@@ -70,6 +70,12 @@ aid skill stats leaderboard
 # 6. 启动 Web 演示
 uvicorn src.alpha_id.web:app --port 8000
 # → http://localhost:8000
+
+# 7. 启动 MCP Server（给 Claude Desktop 用）
+aid-mcp
+
+# 8. 启动桌面精灵
+aid-daemon
 ```
 
 ---
@@ -98,6 +104,31 @@ python src/aid_daemon.py
 | `输入 你好世界` | 在当前窗口打字 |
 
 **启动脚本：** `scripts/aid_daemon.bat`（双击即可启动）
+
+---
+
+## MCP Server（AI 代理桌面接口）
+
+> 为 Claude Desktop / Cursor / Windsurf 等 AI 工具提供**桌面操作能力**。
+
+```bash
+# 启动（一键）
+aid-mcp
+
+# SSE 模式（Web 客户端用）
+aid-mcp --transport sse --port 8001
+```
+
+### 30 个工具一览
+
+| 类别 | 工具 |
+|------|------|
+| 🖥️ 屏幕 | `capture_full_screen` `capture_window` `capture_region` `list_windows` |
+| 👁️ 视觉 | `ocr_image` `analyze_image` |
+| 🖱️ 操作 | `click_screen` `click_double` `click_right` `type_text` `type_at` `press_key` `press_enter` `scroll` `mouse_position` `focus_window` |
+| 🪪 身份 | `get_identity` `get_server_info` |
+| 📝 代码 | `read_code` `search_code` `edit_code` `run_python` `list_code_files` `count_code_lines` |
+| 🧠 记忆 | `memory_graph_stats` `memory_graph_html` `memory_graph_search` `memory_graph_save` `memory_graph_delete` `memory_graph_update` |
 
 ---
 
@@ -180,6 +211,14 @@ python src/aid_daemon.py
 | `aid brain think` | 主动思考 |
 | `aid brain status` | 查看大脑状态 |
 
+### 服务入口
+
+| 命令 | 说明 |
+|------|------|
+| `aid-mcp` | 启动 MCP Server（桌面操作/身份/代码工具） |
+| `aid-daemon` | 启动桌面精灵（托盘 + 语音 + 截图） |
+| `aid-api` | 启动 FastAPI 服务（身份/社交/风控 API） |
+
 ---
 
 ## Python SDK 示例
@@ -220,7 +259,7 @@ print(chain.summary())
 
 ## 测试矩阵
 
-### 当前：525 tests ✅
+### 当前：803 tests ✅
 
 | 模块 | 测试数 | 覆盖内容 |
 |------|--------|---------|
@@ -240,7 +279,7 @@ print(chain.summary())
 | Web 演示 | 17 | 登录、聊天、大脑控制 |
 | API 集成 | 35 | 身份/社交/风控 API |
 | E2E 集成 | 60+ | Skill 生命周期、PoE、Agent 协作 |
-| **合计** | **525** | |
+| **合计** | **803** | |
 
 ---
 

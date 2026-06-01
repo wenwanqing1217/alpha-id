@@ -1,7 +1,12 @@
-"""Proper MCP client test (ASCII safe for Windows cmd)"""
+"""MCP client integration test (Windows-safe encoding)"""
 import asyncio
 import sys
-sys.path.insert(0, 'src')
+
+sys.path.insert(0, "src")
+
+# Windows GBK console → force UTF-8 so emoji in tool output doesn't crash print()
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 async def test():
     from mcp import ClientSession, StdioServerParameters
