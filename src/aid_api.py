@@ -5,12 +5,8 @@ import sys
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="AID Web API — 身份/社交/大脑控制 REST 服务"
-    )
-    parser.add_argument(
-        "--host", default="0.0.0.0", help="监听地址（默认 0.0.0.0）"
-    )
+    parser = argparse.ArgumentParser(description="AID Web API — 身份/社交/大脑控制 REST 服务")
+    parser.add_argument("--host", default="0.0.0.0", help="监听地址（默认 0.0.0.0）")
     parser.add_argument(
         "--port",
         "-p",
@@ -43,11 +39,10 @@ def main():
 
     from alpha_id.web import app
 
-    print(f"🚀 AID Web API 启动 → http://{args.host}:{args.port}")
-    print(f"   📄 主页: http://localhost:{args.port}/")
-    print(f"   🔑 登录: POST /login")
-    print(f"   💬 聊天: POST /chat")
-    print(f"   🧠 大脑: GET  /brain/status")
+    print(f"AID Web API 启动 -> http://{args.host}:{args.port}")
+    print("   主页: GET /")
+    print("   聊天: POST /chat")
+    print("   大脑: GET /brain/status")
     print()
 
     uvicorn.run(

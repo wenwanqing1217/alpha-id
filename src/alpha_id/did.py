@@ -223,6 +223,7 @@ class DIDDocument:
     verification_method: list = field(default_factory=list)
     authentication: list = field(default_factory=list)
     service: list = field(default_factory=list)
+    metadata: dict = field(default_factory=dict)  # 新增元数据字段
 
     def to_json(self) -> str:
         return json.dumps(asdict(self), ensure_ascii=False, indent=2)
@@ -243,11 +244,13 @@ class DIDRegistry:
 
     # ── 身份生成 ──
 
-    def generate(self) -> str:
+    def generate(self, metadata=None) -> str:
         """生成新 DID + Ed25519 密钥对"""
         self._private_key, self._public_key = generate_keypair()
         did_hash = hashlib.sha256(self._public_key).digest()[:16]
         self._did = f"did:aid:{_b58encode(did_hash)}"
+        if metadata:
+            self._metadata = metadata
         return self._did
 
     def from_private_key_bytes(self, private_bytes: bytes) -> str:
@@ -279,9 +282,6 @@ class DIDRegistry:
         if self._public_key is None:
             raise ValueError("No public key loaded")
         return self._public_key
-
-    # ── DID Document ──
-
     def build_document(self) -> DIDDocument:
         if self._did is None or self._public_key is None:
             raise ValueError("Identity not initialized")
@@ -298,8 +298,8 @@ class DIDRegistry:
                 }
             ],
             authentication=[vm_id],
+            metadata=getattr(self, "_metadata", {}),  # 嵌入元数据
         )
-
     # ── 签名 & 验证 ──
 
     def sign(self, payload: bytes) -> bytes:

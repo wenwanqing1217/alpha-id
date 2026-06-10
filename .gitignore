@@ -34,3 +34,12 @@ chi_sim.traineddata
 .ruff_cache/
 .pyright/
 *.installed.cfg
+
+# Temp
+.pytest_tmp*
+.coverage
+_build/
+*.bak
+_*.py
+.vue_app_script.txt
+test_output.html

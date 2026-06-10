@@ -24,7 +24,6 @@ def clean_cli(tmp_path, monkeypatch):
         if mod.startswith("alpha_id.") or mod in (
             "alpha_id.identity_cli",
             "alpha_id.skill_cli",
-            "alpha_id.brain_cli",
             "alpha_id.social_cli",
             "alpha_id.cli",
         ):
@@ -44,7 +43,7 @@ def test_help(clean_cli):
     assert r.exit_code == 0
     assert "identity" in r.stdout
     assert "social" in r.stdout
-    assert "brain" in r.stdout
+    assert "profile" in r.stdout
     assert "skill" in r.stdout
 
 
@@ -110,15 +109,6 @@ class TestIdentity:
 
         restored_did = (tmp_home / ".aid" / "identity.did").read_text().strip()
         assert restored_did == original_did
-
-
-class TestBrain:
-    def test_help(self, clean_cli):
-        r = invoke(clean_cli, ["brain", "--help"])
-        assert r.exit_code == 0
-        assert "status" in r.stdout
-        assert "awake" in r.stdout
-        assert "sleep" in r.stdout
 
 
 class TestSocial:

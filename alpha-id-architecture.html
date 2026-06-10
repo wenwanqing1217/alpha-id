@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alpha-ID Architecture Diagram</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: #020617;
+      min-height: 100vh;
+      padding: 2rem;
+      color: white;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      margin-bottom: 2rem;
+    }
+    
+    .header-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .pulse-dot {
+      width: 12px;
+      height: 12px;
+      background: #22d3ee;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+    }
+    
+    .subtitle {
+      color: #94a3b8;
+      font-size: 1rem;
+      margin-left: 1.75rem;
+    }
+    
+    .diagram-container {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 1rem;
+      border: 1px solid #1e293b;
+      padding: 1.5rem;
+      overflow-x: auto;
+    }
+    
+    svg {
+      width: 100%;
+      min-width: 1200px;
+      display: block;
+    }
+    
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    
+    .card {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 0.75rem;
+      border: 1px solid #1e293b;
+      padding: 1.25rem;
+    }
+    
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .card-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    
+    .card-dot.cyan { background: #22d3ee; }
+    .card-dot.emerald { background: #34d399; }
+    .card-dot.violet { background: #a78bfa; }
+    .card-dot.amber { background: #fbbf24; }
+    .card-dot.rose { background: #fb7185; }
+    
+    .card h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+    
+    .card ul {
+      list-style: none;
+      color: #94a3b8;
+      font-size: 0.75rem;
+    }
+    
+    .card li {
+      margin-bottom: 0.375rem;
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      color: #475569;
+      font-size: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-row">
+        <div class="pulse-dot"></div>
+        <h1>Alpha-ID Architecture</h1>
+      </div>
+      <p class="subtitle">Your Digital Soul - Unified Identity Layer for the AI Era</p>
+    </div>
+
+    <!-- Main Diagram -->
+    <div class="diagram-container">
+      <svg viewBox="0 0 1400 800">
+        <!-- Definitions -->
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#64748b" />
+          </marker>
+          <marker id="arrowhead-sec" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#fb7185" />
+          </marker>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+          </pattern>
+        </defs>
+
+        <!-- Background Grid -->
+        <rect width="100%" height="100%" fill="url(#grid)" />
+
+        <!-- =============================================================
+             CORE IDENTITY LAYER (CENTER)
+             ============================================================= -->
+        
+        <!-- Alpha-ID Core Identity -->
+        <rect x="600" y="300" width="200" height="120" rx="10" fill="rgba(30, 41, 59, 0.6)" stroke="#64748b" stroke-width="2"/>
+        <text x="700" y="335" fill="white" font-size="16" font-weight="600" text-anchor="middle">Alpha-ID Core</text>
+        <text x="700" y="355" fill="#94a3b8" font-size="12" text-anchor="middle">DID + Persona + Private Key</text>
+        <text x="700" y="375" fill="#22d3ee" font-size="10" font-weight="500" text-anchor="middle">did:aid:xxx</text>
+        
+        <!-- Private Key Storage (Local) -->
+        <rect x="500" y="450" width="120" height="60" rx="6" fill="rgba(136, 19, 55, 0.3)" stroke="#fb7185" stroke-width="1.5" stroke-dasharray="2,2"/>
+        <text x="560" y="475" fill="#fb7185" font-size="10" font-weight="600" text-anchor="middle">Private Key</text>
+        <text x="560" y="490" fill="#94a3b8" font-size="8" text-anchor="middle">Stored Locally</text>
+        <line x1="600" y1="360" x2="560" y2="450" stroke="#fb7185" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arrowhead-sec)"/>
+
+        <!-- =============================================================
+             DATA SOURCES (LEFT SIDE)
+             ============================================================= -->
+        
+        <!-- ChatGPT -->
+        <rect x="100" y="100" width="140" height="80" rx="6" fill="rgba(10, 107, 114, 0.3)" stroke="#06b6d4" stroke-width="1.5"/>
+        <text x="170" y="130" fill="#06b6d4" font-size="11" font-weight="600" text-anchor="middle">ChatGPT</text>
+        <text x="170" y="145" fill="#94a3b8" font-size="8" text-anchor="middle">Conversation Export</text>
+        
+        <!-- Claude -->
+        <rect x="100" y="220" width="140" height="80" rx="6" fill="rgba(139, 92, 246, 0.3)" stroke="#a855f7" stroke-width="1.5"/>
+        <text x="170" y="250" fill="#a855f7" font-size="11" font-weight="600" text-anchor="middle">Claude</text>
+        <text x="170" y="265" fill="#94a3b8" font-size="8" text-anchor="middle">Project Context</text>
+        
+        <!-- Cursor -->
+        <rect x="100" y="340" width="140" height="80" rx="6" fill="rgba(234, 179, 8, 0.3)" stroke="#eab308" stroke-width="1.5"/>
+        <text x="170" y="370" fill="#eab308" font-size="11" font-weight="600" text-anchor="middle">Cursor</text>
+        <text x="170" y="385" fill="#94a3b8" font-size="8" text-anchor="middle">Code Style</th>
+        
+        <!-- Browser -->
+        <rect x="100" y="460" width="140" height="80" rx="6" fill="rgba(16, 185, 129, 0.3)" stroke="#10b981" stroke-width="1.5"/>
+        <text x="170" y="490" fill="#10b981" font-size="11" font-weight="600" text-anchor="middle">Browser</text>
+        <text x="170" y="505" fill="#94a3b8" font-size="8" text-anchor="middle">Search History</text>
+
+        <!-- =============================================================
+             ALPHA-ID COMPONENTS (RIGHT SIDE)
+             ============================================================= -->
+        
+        <!-- CLI Layer -->
+        <rect x="900" y="100" width="180" height="100" rx="6" fill="rgba(6, 78, 59, 0.3)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="990" y="130" fill="#34d399" font-size="11" font-weight="600" text-anchor="middle">CLI Interface</text>
+        <text x="990" y="148" fill="#94a3b8" font-size="8" text-anchor="middle">aid init • aid collect • aid profile</text>
+        <line x1="800" y1="140" x2="900" y2="150" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        
+        <!-- Collectors -->
+        <rect x="900" y="230" width="180" height="120" rx="6" fill="rgba(6, 78, 59, 0.3)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="990" y="260" fill="#34d399" font-size="11" font-weight="600" text-anchor="middle">Data Collectors</text>
+        <text x="990" y="280" fill="#94a3b8" font-size="8" text-anchor="middle">chatgpt.py • claude.py • cursor.py • browser.py</text>
+        <line x1="240" y1="140" x2="900" y2="290" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <line x1="240" y1="260" x2="900" y2="290" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <line x1="240" y1="380" x2="900" y2="290" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <line x1="240" y1="500" x2="900" y2="290" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        
+        <!-- Detection & Analysis -->
+        <rect x="900" y="380" width="180" height="80" rx="6" fill="rgba(6, 78, 59, 0.3)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="990" y="410" fill="#34d399" font-size="11" font-weight="600" text-anchor="middle">Persona Detection</text>
+        <text x="990" y="428" fill="#94a3b8" font-size="8" text-anchor="middle">detect.py • style analysis</text>
+        <line x1="990" y1="360" x2="990" y2="380" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        
+        <!-- Profile System -->
+        <rect x="1120" y="100" width="180" height="140" rx="6" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="1210" y="130" fill="#a78bfa" font-size="11" font-weight="600" text-anchor="middle">Profile System</text>
+        <text x="1210" y="150" fill="#94a3b8" font-size="8" text-anchor="middle">profile_schema.py • validation</text>
+        <text x="1210" y="168" fill="#94a3b8" font-size="8" text-anchor="middle">profile_wizard.py • MCP server</text>
+        <line x1="1080" y1="340" x2="1120" y2="170" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <line x1="1080" y1="420" x2="1120" y2="170" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        
+        <!-- MCP Services -->
+        <rect x="1120" y="270" width="180" height="100" rx="6" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="1210" y="300" fill="#a78bfa" font-size="11" font-weight="600" text-anchor="middle">MCP Services</text>
+        <text x="1210" y="320" fill="#94a3b8" font-size="8" text-anchor="middle">aid_mcp_server.py • web.py</text>
+        <line x1="1210" y1="240" x2="1210" y2="270" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        
+        <!-- API & Daemon -->
+        <rect x="1120" y="400" width="180" height="100" rx="6" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="1210" y="430" fill="#a78bfa" font-size="11" font-weight="600" text-anchor="middle">API & Daemon</text>
+        <text x="1210" y="450" fill="#94a3b8" font-size="8" text-anchor="middle">aid_api.py • aid_daemon.py</text>
+        <line x1="1210" y1="370" x2="1210" y2="400" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+        <!-- =============================================================
+             EXTERNAL AI TOOLS (BOTTOM)
+             ============================================================= -->
+         
+        <!-- Claude Desktop -->
+        <rect x="300" y="620" width="160" height="80" rx="6" fill="rgba(139, 92, 246, 0.2)" stroke="#a855f7" stroke-width="1.5"/>
+        <text x="380" y="650" fill="#a855f7" font-size="11" font-weight="600" text-anchor="middle">Claude Desktop</text>
+        <text x="380" y="665" fill="#94a3b8" font-size="8" text-anchor="middle">With MCP Identity</text>
+        <line x1="1210" y1="450" x2="380" y2="620" stroke="#a855f7" stroke-width="1.5" marker-end="url(#arrowhead-sec)" stroke-dasharray="4,2"/>
+        
+        <!-- Cursor IDE -->
+        <rect x="520" y="620" width="160" height="80" rx="6" fill="rgba(234, 179, 8, 0.2)" stroke="#eab308" stroke-width="1.5"/>
+        <text x="600" y="650" fill="#eab308" font-size="11" font-weight="600" text-anchor="middle">Cursor IDE</text>
+        <text x="600" y="665" fill="#94a3b8" font-size="8" text-anchor="middle">Code Style Injection</text>
+        <line x1="1210" y1="450" x2="600" y2="620" stroke="#eab308" stroke-width="1.5" marker-end="url(#arrowhead-sec)" stroke-dasharray="4,2"/>
+        
+        <!-- Custom Agents -->
+        <rect x="740" y="620" width="160" height="80" rx="6" fill="rgba(16, 185, 129, 0.2)" stroke="#10b981" stroke-width="1.5"/>
+        <text x="820" y="650" fill="#10b981" font-size="11" font-weight="600" text-anchor="middle">Custom AI Agents</text>
+        <text x="820" y="665" fill="#94a3b8" font-size="8" text-anchor="middle">Fairy Agent • Codex</text>
+        <line x1="1210" y1="450" x2="820" y2="620" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrowhead-sec)" stroke-dasharray="4,2"/>
+
+        <!-- =============================================================
+             ARROW LABELS
+             ============================================================= -->
+         
+        <!-- Data flow labels -->
+        <text x="450" y="180" fill="#94a3b8" font-size="9">Exported Conversations</text>
+        <text x="450" y="300" fill="#94a3b8" font-size="9">Code Context & Style</text>
+        <text x="450" y="420" fill="#94a3b8" font-size="9">Browsing Patterns</text>
+        <text x="450" y="540" fill="#94a3b8" font-size="9">Search History</text>
+        
+        <!-- Processing labels -->
+        <text x="1020" y="180" fill="#94a3b8" font-size="9">Command Line Tools</text>
+        <text x="1020" y="310" fill="#94a3b8" font-size="9">Data Extraction & Parsing</text>
+        <text x="1020" y="420" fill="#94a3b8" font-size="9">Persona Analysis</text>
+        <text x="1240" y="180" fill="#94a3b8" font-size="9">Schema Validation</text>
+        <text x="1240" y="310" fill="#94a3b8" font-size="9">MCP Identity Injection</text>
+        <text x="1240" y="440" fill="#94a3b8" font-size="9">REST API & Background Service</text>
+        
+        <!-- Security labels -->
+        <text x="420" y="500" fill="#fb7185" font-size="9" text-anchor="end">Private Key</text>
+        <text x="420" y="515" fill="#fb7185" font-size="8" text-anchor="end">Never Leaves Device</text>
+        
+        <!-- External injection labels -->
+        <text x="750" y="580" fill="#94a3b8" font-size="9" text-anchor="end">Secure Identity</text>
+        <text x="750" y="595" fill="#94a3b8" font-size="8" text-anchor="end">Injection via MCP</text>
+
+        <!-- =============================================================
+             BOUNDARIES & LEGEND
+             ============================================================= -->
+         
+        <!-- Local Device Boundary -->
+        <rect x="50" y="50" width="1280" height="680" rx="16" fill="transparent" stroke="#334155" stroke-width="1" stroke-dasharray="4,4"/>
+        <text x="60" y="80" fill="#64748b" font-size="10" font-weight="600">Local Device (User Controlled)</text>
+        
+        <!-- Legend -->
+        <text x="1100" y="720" fill="white" font-size="11" font-weight="600">Component Types</text>
+        
+        <rect x="1100" y="735" width="16" height="12" rx="2" fill="rgba(10, 107, 114, 0.3)" stroke="#06b6d4" stroke-width="1"/>
+        <text x="1122" y="744" fill="#94a3b8" font-size="8">Data Sources</text>
+        
+        <rect x="1220" y="735" width="16" height="12" rx="2" fill="rgba(6, 78, 59, 0.3)" stroke="#34d399" stroke-width="1"/>
+        <text x="1242" y="744" fill="#94a3b8" font-size="8">Processing Layer</text>
+        
+        <rect x="1340" y="735" width="16" height="12" rx="2" fill="rgba(76, 29, 149, 0.3)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="1362" y="744" fill="#94a3b8" font-size="8">Services & API</text>
+        
+        <line x1="1100" y1="760" x2="1116" y2="760" stroke="#fb7185" stroke-width="1" stroke-dasharray="3,3"/>
+        <text x="1122" y="769" fill="#94a3b8" font-size="8">Security Flows</text>
+        
+        <rect x="1220" y="760" width="16" height="12" rx="2" fill="transparent" stroke="#fb7185" stroke-width="1" stroke-dasharray="3,3"/>
+        <text x="1242" y="769" fill="#94a3b8" font-size="8">Boundaries</text>
+
+        <!-- =============================================================
+             TITLE & CONCEPT
+             ============================================================= -->
+         
+        <text x="700" y="780" fill="#22d3ee" font-size="14" font-weight="600" text-anchor="middle">Alpha-ID = DID (did:aid:xxx) + Persona + Private Key (Local First)</text>
+      </svg>
+    </div>
+
+    <!-- Info Cards -->
+    <div class="cards">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot cyan"></div>
+          <h3>Core Philosophy</h3>
+        </div>
+        <ul>
+          <li>• One identity to rule them all</li>
+          <li>• Private key never leaves your device</li>
+          <li>• Works across all AI platforms</li>
+          <li>• User owns their digital identity</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot emerald"></div>
+          <h3>Key Features</h3>
+        </div>
+        <ul>
+          <li>• DID-based identity (W3C standard)</li>
+          <li>• Automatic persona extraction</li>
+          <li>• MCP protocol integration</li>
+          <li>• Local-first privacy model</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot violet"></div>
+          <h3>Supported Platforms</h3>
+        </div>
+        <ul>
+          <li>• ChatGPT ( conversation history)</li>
+          <li>• Claude (projects & context)</li>
+          <li>• Cursor (code style)</li>
+          <li>• Browser (search patterns)</li>
+          <li>• Trae (coming soon)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <p class="footer">
+      Alpha-ID Architecture Diagram • Generated for Agent Understanding • Local-First Identity Layer
+    </p>
+  </div>
+</body>
+</html>

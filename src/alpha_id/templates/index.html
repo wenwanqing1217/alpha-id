@@ -1,424 +1,2890 @@
 <!DOCTYPE html>
-<html lang="zh-CN" class="h-full">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Alpha-ID Agent</title>
+<title>Alpha-ID · 数字灵魂全景 · Ghost Layer</title>
+<meta name="description" content="Alpha-ID - AI时代的统一身份层。你的数字灵魂，坐在所有AI工具之上的Ghost Layer。支持DID身份、因果图谱、三层记忆、MCP桥接、A2A协议，让每个AI工具都真正认识你。">
+<meta name="keywords" content="Alpha-ID, DID, 去中心化身份, 数字灵魂, Ghost Layer, 因果图谱, MCP, A2A, AI identity, personal AI">
+<meta name="author" content="Alpha-ID Team">
+<meta name="robots" content="index, follow">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23a78bfa'/%3E%3Cstop offset='100%25' stop-color='%237c3aed'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' fill='url(%23g)'/%3E%3Ctext x='50' y='68' font-family='Arial Black' font-size='50' fill='white' text-anchor='middle'%3Eα%3C/text%3E%3C/svg%3E">
 <script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config={darkMode:'class',theme:{extend:{colors:{primary:{50:'#eef2ff',100:'#e0e7ff',200:'#c7d2fe',300:'#a5b4fc',400:'#818cf8',500:'#6366f1',600:'#4f46e5',700:'#4338ca',800:'#3730a3',900:'#312e81',}}}}}</script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['"Inter"', '"Noto Sans SC"', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+      },
+      colors: {
+        nebula: {
+          50: '#f5f3ff', 100: '#ede9fe', 200: '#ddd6fe', 300: '#c4b5fd',
+          400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9',
+          800: '#5b21b6', 900: '#4c1d95', 950: '#2e1065'
+        },
+        cosmic: {
+          50: '#edf6ff', 100: '#dbeafe', 200: '#b8dbfe', 300: '#93c5fd',
+          400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8',
+          800: '#1e40af', 900: '#1e3a8a', 950: '#172554'
+        },
+        aurora: {
+          50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac',
+          400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d',
+          800: '#166534', 900: '#14532d', 950: '#052e16'
+        },
+        stardust: {
+          50: '#fefce8', 100: '#fef9c3', 200: '#fef08a', 300: '#fde047',
+          400: '#facc15', 500: '#eab308', 600: '#ca8a04', 700: '#a16207',
+          800: '#854d0e', 900: '#713f12', 950: '#451a03'
+        },
+        starlight: {
+          50: '#fdf2f8', 100: '#fce7f3', 200: '#fbcfe8', 300: '#f9a8d4',
+          400: '#f472b6', 500: '#ec4899', 600: '#db2777', 700: '#be185d',
+          800: '#9d174d', 900: '#831843', 950: '#500724'
+        },
+        night: {
+          50: '#e2e8f0', 100: '#cbd5e1', 200: '#94a3b8', 300: '#64748b',
+          400: '#475569', 500: '#334155', 600: '#1e293b', 700: '#1a1f2e',
+          800: '#151922', 900: '#0f1318', 950: '#0a0418'
+        },
+      },
+      animation: {
+        'gradient-x': 'gradient-x 15s ease infinite',
+        'float-slow': 'float-slow 8s ease-in-out infinite',
+        'pulse-soft': 'pulse-soft 3s ease-in-out infinite',
+        'shimmer': 'shimmer 3s linear infinite',
+        'aurora': 'aurora 12s ease-in-out infinite',
+        'blink': 'blink 1s step-end infinite',
+        'flow': 'flow 20s linear infinite',
+        'spin-slow': 'spin 20s linear infinite',
+        'ring-pulse': 'ring-pulse 2.4s ease-in-out infinite',
+      },
+      keyframes: {
+        'gradient-x': { '0%,100%': { backgroundPosition: '0% 50%' }, '50%': { backgroundPosition: '100% 50%' } },
+        'float-slow': { '0%,100%': { transform: 'translateY(0) rotate(0deg)' }, '50%': { transform: 'translateY(-14px) rotate(1deg)' } },
+        'pulse-soft': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.65 } },
+        shimmer: { '0%': { backgroundPosition: '-200% 0' }, '100%': { backgroundPosition: '200% 0' } },
+        aurora: { '0%,100%': { transform: 'translate(0,0) scale(1)' }, '33%': { transform: 'translate(40px,-30px) scale(1.08)' }, '66%': { transform: 'translate(-30px,20px) scale(0.95)' } },
+        blink: { '0%,100%': { opacity: 1 }, '50%': { opacity: 0 } },
+        flow: { '0%': { backgroundPosition: '0% 50%' }, '100%': { backgroundPosition: '200% 50%' } },
+        'ring-pulse': { '0%': { boxShadow: '0 0 0 0 rgba(139,92,246,0.45)' }, '70%': { boxShadow: '0 0 0 18px rgba(139,92,246,0)' }, '100%': { boxShadow: '0 0 0 0 rgba(139,92,246,0)' } },
+      },
+    },
+  },
+};
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-#chat-box::-webkit-scrollbar { width: 6px; }
-#chat-box::-webkit-scrollbar-track { background: transparent; }
-#chat-box::-webkit-scrollbar-thumb { background: #a5b4fc; border-radius: 3px; }
-.message-enter { animation: fadeIn 0.3s ease-out; }
-@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-.typing-dot { animation: pulse 1.4s infinite ease-in-out; }
-.typing-dot:nth-child(2) { animation-delay: 0.2s; }
-.typing-dot:nth-child(3) { animation-delay: 0.4s; }
-@keyframes pulse { 0%,80%,100%{opacity:0.3} 40%{opacity:1} }
+  * { scrollbar-width: thin; scrollbar-color: rgba(139,92,246,0.4) transparent; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { 
+    background: rgba(139,92,246,0.03); 
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(167,139,250,0.6), rgba(139,92,246,0.5), rgba(99,102,241,0.4));
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    transition: all 0.25s ease;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(167,139,250,0.8), rgba(139,92,246,0.7), rgba(99,102,241,0.6));
+    box-shadow: 0 0 12px rgba(139,92,246,0.3);
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+
+  /* 星云背景 - 统一深度 */
+  .cosmic-bg {
+    background: #0a0418;
+    position: relative;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+  .cosmic-bg::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 70% 50% at 15% 10%, rgba(139,92,246,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 90%, rgba(56,189,248,0.12) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 35% at 50% 50%, rgba(236,72,153,0.06) 0%, transparent 55%);
+    pointer-events: none; z-index: 0;
+    animation: bg-pulse 8s ease-in-out infinite;
+  }
+  
+  @keyframes bg-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.85; }
+  }
+
+  /* 星点层 */
+  .stars, .stars2, .stars3 {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 0;
+  }
+  .stars { background-image: radial-gradient(1px 1px at 25% 30%, #fff, transparent), radial-gradient(1px 1px at 50% 70%, #fff, transparent), radial-gradient(1px 1px at 80% 20%, #fff, transparent), radial-gradient(1px 1px at 15% 80%, #fff, transparent), radial-gradient(1px 1px at 90% 50%, #fff, transparent); background-size: 300px 300px; opacity: 0.4; }
+  .stars2 { background-image: radial-gradient(1.5px 1.5px at 10% 25%, #c4b5fd, transparent), radial-gradient(1.5px 1.5px at 65% 60%, #7dd3fc, transparent), radial-gradient(1.5px 1.5px at 40% 90%, #fff, transparent); background-size: 500px 500px; opacity: 0.3; animation: pulse-soft 4s ease-in-out infinite; }
+  .stars3 { background-image: radial-gradient(2px 2px at 20% 50%, #f9a8d4, transparent), radial-gradient(2px 2px at 80% 30%, #fff, transparent); background-size: 800px 800px; opacity: 0.2; animation: pulse-soft 6s ease-in-out infinite 1s; }
+
+  /* 浮动光球 */
+  .orb { position: fixed; border-radius: 50%; pointer-events: none; filter: blur(80px); opacity: 0.5; z-index: 0; }
+  .orb-1 { width: 420px; height: 420px; background: radial-gradient(circle, rgba(139,92,246,0.45), transparent); top: -100px; right: -100px; animation: aurora 14s ease-in-out infinite; }
+  .orb-2 { width: 380px; height: 380px; background: radial-gradient(circle, rgba(56,189,248,0.35), transparent); bottom: -80px; left: -100px; animation: aurora 11s ease-in-out infinite reverse; }
+  .orb-3 { width: 300px; height: 300px; background: radial-gradient(circle, rgba(236,72,153,0.25), transparent); top: 40%; left: 45%; transform: translate(-50%,-50%); animation: aurora 16s ease-in-out infinite 3s; }
+
+  /* 毛玻璃卡片 - 升级版 */
+  .glass {
+    background: linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(99,102,241,0.05) 50%, rgba(56,189,248,0.03) 100%);
+    backdrop-filter: blur(28px) saturate(1.5);
+    -webkit-backdrop-filter: blur(28px) saturate(1.5);
+    border: 1px solid rgba(139,92,246,0.18);
+    box-shadow: 0 8px 48px rgba(0,0,0,0.35), 
+                0 0 0 1px rgba(139,92,246,0.08) inset,
+                inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+  .glass:hover { 
+    border-color: rgba(139,92,246,0.35); 
+    box-shadow: 0 12px 64px rgba(139,92,246,0.15), 
+                0 0 0 1px rgba(139,92,246,0.15) inset,
+                inset 0 1px 0 rgba(255,255,255,0.12); 
+  }
+  .glass-soft {
+    background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(139,92,246,0.03) 100%);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    border: 1px solid rgba(139,92,246,0.12);
+  }
+  .glass-light {
+    background: rgba(255,255,255,0.025);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(139,92,246,0.08);
+  }
+  .glass:hover { border-color: rgba(139,92,246,0.35); box-shadow: 0 12px 64px rgba(139,92,246,0.2), inset 0 1px 0 rgba(255,255,255,0.1); }
+
+  /* 发光文字渐变 */
+  .text-gradient {
+    background: linear-gradient(135deg, #c4b5fd 0%, #7c3aed 30%, #38bdf8 65%, #f9a8d4 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradient-x 8s ease infinite;
+  }
+  .text-gradient-2 {
+    background: linear-gradient(135deg, #a78bfa, #60a5fa, #f472b6);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* 主按钮 - 简洁高级设计 */
+  .btn-primary {
+    background: rgba(139,92,246,0.12);
+    border: 1px solid rgba(139,92,246,0.3);
+    backdrop-filter: blur(12px);
+    transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(139,92,246,0.1) 0%, transparent 50%, rgba(56,189,248,0.1) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .btn-primary:hover {
+    background: rgba(139,92,246,0.2);
+    border-color: rgba(139,92,246,0.5);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 40px rgba(139,92,246,0.3), 0 0 0 1px rgba(139,92,246,0.4);
+  }
+  .btn-primary:hover::before {
+    opacity: 1;
+  }
+  .btn-primary:active {
+    transform: translateY(-1px) scale(1.01);
+    box-shadow: 0 6px 20px rgba(139,92,246,0.25);
+  }
+  .btn-ghost {
+    border: 1px solid rgba(148,163,184,0.25);
+    background: rgba(148,163,184,0.05);
+    transition: all 0.25s ease;
+  }
+  .btn-ghost:hover { 
+    background: rgba(148,163,184,0.1); 
+    border-color: rgba(148,163,184,0.4); 
+  }
+
+  /* 分割线光晕 */
+  .glow-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(139,92,246,0.5), rgba(56,189,248,0.5), rgba(236,72,153,0.5), transparent);
+    position: relative;
+  }
+  .glow-divider::before {
+    content: ''; position: absolute; inset: -1px 0;
+    background: inherit; filter: blur(6px); opacity: 0.5;
+  }
+
+  /* 章节编号 */
+  .chapter-num {
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(135deg, #a78bfa, #38bdf8);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    font-weight: 700;
+  }
+
+  /* 代码块 */
+  .code-block {
+    background: linear-gradient(135deg, rgba(15,10,26,0.9) 0%, rgba(10,20,40,0.9) 100%);
+    border: 1px solid rgba(139,92,246,0.2);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* 节点 */
+  .node { transition: all 0.4s cubic-bezier(0.4,0,0.2,1); }
+  .node:hover { transform: translateY(-6px) scale(1.04); }
+
+  /* SVG 连线动画 */
+  @keyframes dash { to { stroke-dashoffset: -30; } }
+  .flow-line { stroke-dasharray: 6 8; animation: dash 2s linear infinite; }
+
+  /* Terminal 闪烁 */
+  .cursor { display: inline-block; width: 8px; height: 18px; background: #a78bfa; vertical-align: middle; animation: blink 1s step-end infinite; }
+
+  /* 滚动显现 */
+  .reveal { opacity: 0; transform: translateY(40px) scale(0.95); transition: all 0.7s cubic-bezier(0.16,1,0.3,1); }
+  .reveal.visible { opacity: 1; transform: translateY(0) scale(1); }
+
+  /* 徽章 */
+  .tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 9999px;
+    font-size: 11px; font-weight: 500; letter-spacing: 0.02em;
+    background: rgba(139,92,246,0.12);
+    border: 1px solid rgba(139,92,246,0.25);
+    color: #c4b5fd;
+  }
+  .tag-blue { background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.25); color: #a78bfa; }
+  .tag-pink { background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.25); color: #a78bfa; }
+  .tag-emerald { background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.25); color: #a78bfa; }
+  .tag-amber { background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.25); color: #a78bfa; }
+  .tag-rose { background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.25); color: #a78bfa; }
+  .tag-slate { background: rgba(148,163,184,0.12); border-color: rgba(148,163,184,0.25); color: #94a3b8; }
+  .tag-nebula { background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.25); color: #a78bfa; }
+
+  /* 英雄发光环 */
+  .hero-glow {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(139,92,246,0.25) 0%, rgba(56,189,248,0.12) 30%, transparent 70%);
+    filter: blur(40px);
+    pointer-events: none;
+    animation: pulse-soft 4s ease-in-out infinite;
+  }
+
+  /* 球体层级图 */
+  .sphere-layer {
+    border: 1.5px solid rgba(139,92,246,0.3);
+    border-radius: 50%;
+    position: relative;
+    transition: all 0.5s ease;
+  }
+  .sphere-layer:hover { border-color: rgba(56,189,248,0.6); background: rgba(139,92,246,0.05); }
+
+  /* 玻璃球体 */
+  .glass-sphere {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  .glass-sphere:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 40px rgba(139,92,246,0.2);
+  }
+
+  /* 表格 */
+  table.dark-table th { background: rgba(139,92,246,0.1); color: #c4b5fd; font-weight: 600; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; }
+  table.dark-table td { border-top: 1px solid rgba(139,92,246,0.1); }
+  table.dark-table tr:hover td { background: rgba(139,92,246,0.04); }
+
+  /* 导航 */
+  .nav-pill { transition: all 0.25s ease; }
+  .nav-pill:hover { background: rgba(139,92,246,0.12); color: #c4b5fd; }
+  .nav-underline {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 1.5px;
+    background: linear-gradient(90deg, #a78bfa, #60a5fa);
+    border-radius: 1px;
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    opacity: 0;
+  }
+  .nav-pill:hover .nav-underline {
+    width: 50%;
+    opacity: 1;
+  }
+
+  /* 进度条 */
+  .progress-track { background: rgba(139,92,246,0.08); border-radius: 9999px; overflow: hidden; position: relative; }
+  .progress-fill {
+    background: linear-gradient(90deg, #7c3aed, #6366f1, #0ea5e9);
+    background-size: 200% 100%; animation: flow 4s linear infinite;
+    height: 100%; border-radius: 9999px;
+    box-shadow: 0 0 12px rgba(124,58,237,0.4);
+  }
+  .progress-fill.nebula {
+    background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+    animation: none;
+    box-shadow: 0 0 8px rgba(139,92,246,0.3);
+  }
+
+  /* 原子点小图标 */
+  .atom-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* 能力域卡片环 */
+  .ring-card {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  .ring-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, transparent, currentColor, transparent);
+    opacity: 0.6;
+  }
+
+  /* 进入动画 */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-up { animation: fadeInUp 0.8s cubic-bezier(0.16,1,0.3,1) both; }
+
+  /* 时间线 */
+  .timeline-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: radial-gradient(circle, #a78bfa, #7c3aed);
+    box-shadow: 0 0 0 4px rgba(139,92,246,0.15), 0 0 20px rgba(139,92,246,0.4);
+  }
+
+  /* ============ 小α 数字小精灵 ============ */
+  .alpha-sprite {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    margin: 0 auto;
+    animation: sprite-float 6s ease-in-out infinite;
+    cursor: grab;
+    user-select: none;
+    z-index: 10;
+  }
+
+  .alpha-sprite:active {
+    cursor: grabbing;
+  }
+
+  @keyframes sprite-float {
+    0%, 100% { transform: translateY(0) rotate(-1deg); }
+    50% { transform: translateY(-20px) rotate(1deg); }
+  }
+
+  /* 小精灵全界面幽灵跳跃动画 */
+  .alpha-sprite.excited {
+    animation: sprite-ghost-fly 2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+
+  @keyframes sprite-ghost-fly {
+    0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
+    10% { transform: translate(200px, -150px) scale(1.3) rotate(10deg); opacity: 0.9; }
+    25% { transform: translate(-250px, -200px) scale(0.8) rotate(-15deg); opacity: 0.8; }
+    40% { transform: translate(300px, -100px) scale(1.2) rotate(20deg); opacity: 0.9; }
+    55% { transform: translate(-150px, 50px) scale(0.9) rotate(-10deg); opacity: 0.95; }
+    70% { transform: translate(100px, -80px) scale(1.1) rotate(5deg); opacity: 0.9; }
+    85% { transform: translate(-50px, -30px) scale(1.05) rotate(0deg); opacity: 0.95; }
+    100% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  /* 小精灵的光晕 */
+  .sprite-aura {
+    position: absolute;
+    inset: -30px;
+    background: radial-gradient(circle, rgba(167,139,250,0.35) 0%, rgba(56,189,248,0.2) 40%, transparent 70%);
+    border-radius: 50%;
+    filter: blur(20px);
+    animation: aura-pulse 4s ease-in-out infinite;
+  }
+
+  @keyframes aura-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.1); opacity: 1; }
+  }
+
+  /* 小精灵身体 - 半透明球体 */
+  .sprite-body {
+    position: absolute;
+    inset: 20px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25) 0%, transparent 40%),
+      radial-gradient(circle at 70% 70%, rgba(253,164,175,0.15) 0%, transparent 50%),
+      linear-gradient(135deg, #c4b5fd 0%, #8b5cf6 35%, #6366f1 65%, #38bdf8 100%);
+    box-shadow:
+      0 20px 60px rgba(139,92,246,0.4),
+      inset 0 2px 10px rgba(255,255,255,0.3),
+      inset 0 -10px 20px rgba(124,58,237,0.3);
+    animation: body-shimmer 3s ease-in-out infinite;
+  }
+
+  @keyframes body-shimmer {
+    0%, 100% { filter: hue-rotate(0deg) brightness(1); }
+    50% { filter: hue-rotate(15deg) brightness(1.08); }
+  }
+
+  /* 小精灵的脸 */
+  .sprite-face {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px;
+    height: 60px;
+  }
+
+  /* 大眼睛 */
+  .sprite-eye {
+    position: absolute;
+    width: 32px;
+    height: 36px;
+    background: radial-gradient(circle at 35% 30%, #fff 0%, #fff 30%, #1e1b4b 100%);
+    border-radius: 50%;
+    top: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .sprite-eye.left { left: 12px; animation: blink-l 4.5s ease-in-out infinite; }
+  .sprite-eye.right { right: 12px; animation: blink-r 4.5s ease-in-out infinite; }
+
+  @keyframes blink-l {
+    0%, 45%, 55%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(0.1); }
+  }
+  @keyframes blink-r {
+    0%, 43%, 57%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(0.1); }
+  }
+
+  /* 眼睛高光 */
+  .sprite-eye::after {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: #fff;
+    border-radius: 50%;
+    top: 8px;
+    left: 8px;
+    box-shadow: 0 0 6px rgba(255,255,255,0.8);
+  }
+
+  /* 腮红 */
+  .sprite-cheek {
+    position: absolute;
+    width: 20px;
+    height: 12px;
+    background: radial-gradient(circle, rgba(244,114,182,0.7) 0%, rgba(244,114,182,0) 70%);
+    border-radius: 50%;
+    top: 30px;
+  }
+  .sprite-cheek.left { left: 0; }
+  .sprite-cheek.right { right: 0; }
+
+  /* 小嘴 */
+  .sprite-mouth {
+    position: absolute;
+    top: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 10px;
+    border-radius: 0 0 20px 20px;
+    border: 2px solid #1e1b4b;
+    border-top: 0;
+  }
+
+  /* 头顶光环（DID 隐喻） */
+  .sprite-halo {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    background: linear-gradient(90deg, #a78bfa, #f9a8d4, #7dd3fc, #a78bfa) border-box;
+    background-size: 200% 100%;
+    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    padding: 2px;
+    animation: halo-spin 8s linear infinite;
+    box-shadow: 0 0 20px rgba(167,139,250,0.5);
+  }
+
+  @keyframes halo-spin {
+    0% { background-position: 0% 50%; transform: translateX(-50%) rotate(0deg); }
+    100% { background-position: 200% 50%; transform: translateX(-50%) rotate(360deg); }
+  }
+
+  /* 周围飘浮的小节点（因果图谱） */
+  .sprite-node {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #f9a8d4, #a78bfa);
+    box-shadow: 0 0 10px rgba(249,168,212,0.6);
+  }
+  .sprite-node.n1 { top: 0; left: 0; animation: node-orbit 7s ease-in-out infinite; }
+  .sprite-node.n2 { top: 10%; right: 0; animation: node-orbit 6s ease-in-out infinite reverse; }
+  .sprite-node.n3 { bottom: 10%; left: 5%; animation: node-orbit 8s ease-in-out infinite 1s; }
+  .sprite-node.n4 { bottom: 0; right: 10%; animation: node-orbit 5s ease-in-out infinite 0.5s; }
+  .sprite-node.n5 { top: 40%; right: -15px; animation: node-orbit 7.5s ease-in-out infinite 2s; }
+  .sprite-node.n6 { top: 55%; left: -10px; animation: node-orbit 6.5s ease-in-out infinite 1.5s; }
+
+  @keyframes node-orbit {
+    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.6; }
+    25% { transform: translate(15px, -10px) scale(1.2); opacity: 1; }
+    50% { transform: translate(-5px, 15px) scale(0.9); opacity: 0.7; }
+    75% { transform: translate(-15px, -5px) scale(1.1); opacity: 0.9; }
+  }
+
+  /* 小精灵下方的 AID */
+  .sprite-alpha {
+    position: absolute;
+    bottom: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #c4b5fd, #8b5cf6, #6366f1);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-family: 'JetBrains Mono', monospace;
+    text-shadow: 0 0 20px rgba(139,92,246,0.4);
+    opacity: 0.95;
+  }
+
+  /* 诗意气泡 - 两侧清晰显示 */
+  .sprite-bubble {
+    position: fixed;
+    font-size: 18px;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    z-index: 1000;
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    backdrop-filter: none;
+    box-shadow: none;
+  }
+
+  .sprite-bubble.visible {
+    opacity: 1;
+  }
+
+  .bubble-char {
+    display: inline-block;
+    color: #e2e8f0;
+    font-weight: 400;
+    animation: char-appear 5s ease-out forwards;
+    opacity: 0;
+  }
+
+  @keyframes char-appear {
+    0% {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    10% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    70% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    100% {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+  }
+
+  /* 涟漪效果 */
+  .ripple-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    overflow: hidden;
+  }
+
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(196,181,253,0.3) 0%, rgba(196,181,253,0) 70%);
+    transform: scale(0);
+    animation: ripple-expand 1s ease-out forwards;
+    pointer-events: none;
+  }
+
+  @keyframes ripple-expand {
+    0% {
+      transform: scale(0);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(4);
+      opacity: 0;
+    }
+  }
+
+  /* 小精灵害羞效果 */
+  .alpha-sprite.shy .sprite-eye {
+    transform: scaleY(0.3);
+  }
+
+  .alpha-sprite.shy .sprite-cheek {
+    background: radial-gradient(circle, rgba(249,168,212,0.8) 0%, rgba(249,168,212,0) 70%);
+  }
+
+  /* 小精灵开心旋转 */
+  .alpha-sprite.happy {
+    animation: happy-spin 0.6s ease-out;
+  }
+
+  @keyframes happy-spin {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(15deg); }
+    50% { transform: rotate(-15deg); }
+    75% { transform: rotate(10deg); }
+    100% { transform: rotate(0deg); }
+  }
+
+  /* 小精灵睡眠 */
+  .alpha-sprite.sleeping .sprite-eye {
+    height: 4px;
+    transform: translateY(16px);
+  }
+
+  /* 引力场效果 */
+  .alpha-sprite.attract .sprite-node.n1 { transform: translate(-5px, 3px); }
+  .alpha-sprite.attract .sprite-node.n2 { transform: translate(5px, -3px); }
+  .alpha-sprite.attract .sprite-node.n3 { transform: translate(-3px, 5px); }
+  .alpha-sprite.attract .sprite-node.n4 { transform: translate(3px, -5px); }
+  .alpha-sprite.attract .sprite-node.n5 { transform: translate(6px, 2px); }
+  .alpha-sprite.attract .sprite-node.n6 { transform: translate(-6px, -2px); }
+
+  /* Hero 区域的亮点徽章行 */
+  .highlight-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  /* 快速开始命令样式 */
+  .cmd-prompt { color: #64748b; }
+  .cmd-keyword { color: #34d399; font-weight: 600; }
+  .cmd-arg { color: #fbbf24; }
+  .cmd-output { color: #94a3b8; }
+
+  /* 对比表格增强 */
+  .compare-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(139,92,246,0.12);
+  }
+  .compare-row:last-child { border-bottom: none; }
 </style>
 </head>
-<body class="h-full bg-gradient-to-br from-slate-50 to-indigo-50 dark:from-slate-900 dark:to-indigo-950">
-<div id="app" class="h-full flex flex-col max-w-3xl mx-auto px-4 py-4" v-cloak>
+<body class="cosmic-bg text-slate-200 min-h-screen relative">
 
-<!-- Header -->
-<div class="flex items-center justify-between mb-1">
-<div>
-  <h1 class="text-xl font-bold text-indigo-700 dark:text-indigo-300">🧠 数字灵魂</h1>
-  <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-    <template v-if="agent.alpha_id">
-      🆔 <span class="font-mono text-indigo-600 dark:text-indigo-400">{{ agent.alpha_id }}</span>
-      · 🧠 <span :class="brainStateClass">{{ brainStateText }}</span>
-      · 消息 <span class="font-mono">{{ agent.stats?.msg_count ?? 0 }}</span>
-      · 好友 <span class="font-mono">{{ agent.friends?.length ?? 0 }}</span>
-    </template>
-    <template v-else>
-      未登录 · <button @click="showLogin=true" class="underline text-indigo-500 hover:text-indigo-700">创建你的数字灵魂</button>
-    </template>
-  </p>
-</div>
-<div class="flex gap-2">
-  <button @click="fetchIdentity" class="text-xs px-3 py-1.5 rounded-lg bg-white/80 dark:bg-slate-800/80 border border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 transition-colors">身份</button>
-  <button @click="brainSleep" :disabled="!isAwake" class="text-xs px-3 py-1.5 rounded-lg bg-white/80 dark:bg-slate-800/80 border border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 transition-colors disabled:opacity-40">💤</button>
-  <button @click="brainThink" class="text-xs px-3 py-1.5 rounded-lg bg-white/80 dark:bg-slate-800/80 border border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/50 transition-colors">🧠</button>
-  <button @click="toggleDark" class="text-xs px-3 py-1.5 rounded-lg bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">🌓</button>
-</div>
-</div>
+<!-- 背景层 -->
+<div class="stars"></div>
+<div class="stars2"></div>
+<div class="stars3"></div>
+<div class="orb orb-1 hidden md:block"></div>
+<div class="orb orb-2 hidden md:block"></div>
+<div class="orb orb-3 hidden lg:block"></div>
 
-<!-- Tab Bar -->
-<div class="flex gap-4 mb-3 border-b border-slate-200 dark:border-slate-700 text-sm">
-  <button @click="activeTab='chat'" :class="activeTab==='chat' ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500 font-medium' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'" class="pb-2 px-1 transition-colors">💬 聊天</button>
-  <button @click="activeTab='network'; fetchNetwork()" :class="activeTab==='network' ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500 font-medium' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'" class="pb-2 px-1 transition-colors">🌐 网络</button>
-</div>
+<!-- ============ 顶部导航 ============ -->
+<header class="relative z-30 sticky top-0 glass-soft border-b border-nebula-500/10">
+  <nav class="max-w-7xl mx-auto px-5 md:px-8 py-4 flex items-center justify-between">
+    <a href="#hero" class="flex items-center gap-3 group">
+      <div class="w-10 h-10 rounded-full relative cursor-grab active:cursor-grabbing" id="logo-sprite">
+        <!-- 最内层星体核心 -->
+        <div class="absolute inset-0 rounded-full bg-gradient-to-br from-nebula-300 via-nebula-500 to-nebula-700 shadow-lg shadow-nebula-500/50 animate-pulse-soft">
+          <div class="absolute inset-1.5 rounded-full bg-gradient-to-br from-white/20 to-transparent"></div>
+          <div class="absolute top-1.5 left-1/4 w-1.5 h-1.5 rounded-full bg-white/60"></div>
+          <div class="absolute top-3 left-1/2 w-0.5 h-0.5 rounded-full bg-white/30"></div>
+        </div>
+        <!-- 半圆弧光带 - 横切效果 -->
+        <div class="absolute inset-0 bg-gradient-to-b from-amber-400/25 via-amber-300/10 to-transparent"></div>
+        <div class="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-amber-400/60 to-transparent"></div>
+        <!-- 外层半圆弧光环 - 双层 -->
+        <div class="absolute -inset-1.5 rounded-full border-t-2 border-x-2 border-b-0 border-amber-400/40 animate-spin-slow"></div>
+        <div class="absolute -inset-2.5 rounded-full border-t-2 border-x-2 border-b-0 border-amber-300/20 animate-spin-slow" style="animation-direction: reverse"></div>
+        <!-- 金色光晕层 -->
+        <div class="absolute -inset-1 rounded-full bg-gradient-to-t from-transparent via-amber-400/5 to-amber-300/10"></div>
+        <!-- 环绕粒子 -->
+        <div class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-300 animate-pulse shadow-lg shadow-amber-400/50"></div>
+        <div class="absolute -bottom-0.5 -left-0.5 w-1.5 h-1.5 rounded-full bg-nebula-300 animate-pulse shadow-lg shadow-nebula-400/50" style="animation-delay:0.5s"></div>
+        <div class="absolute top-1/2 -right-3 w-1 h-1 rounded-full bg-white/60 animate-pulse" style="animation-delay:1s"></div>
+      </div>
+      <div class="leading-tight">
+        <div class="text-sm font-bold text-white tracking-wide">Alpha<span class="text-nebula-400">-ID</span></div>
+        <div class="text-[10px] text-night-300 font-mono tracking-wider">Ghost Layer</div>
+      </div>
+    </a>
 
-<!-- Chat Tab -->
-<template v-if="activeTab === 'chat'">
-<div id="chat-box" class="flex-1 overflow-y-auto space-y-3 pr-1 mb-3 min-h-0" ref="chatBox">
-<div v-for="(msg, i) in messages" :key="i" class="message-enter" :class="msg.role==='user' ? 'flex justify-end' : 'flex justify-start'">
-  <div class="max-w-[80%] space-y-1">
-    <!-- 如果是大脑回复且有回忆到的记忆，显示记忆标签 -->
-    <div v-if="msg.role==='agent' && msg.memories && msg.memories.length" class="flex flex-wrap gap-1 mb-1">
-      <span v-for="(mem, mi) in msg.memories" :key="mi"
-            class="text-xs px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-300 border border-amber-200 dark:border-amber-700"
-            title="大脑回忆到了">
-        🧠 {{ mem.content.length > 20 ? mem.content.slice(0, 20) + '…' : mem.content }}
+    <div class="hidden lg:flex items-center gap-1 text-sm">
+      <a href="#vision" class="nav-pill group relative px-4 py-2.5 rounded-lg text-slate-300 min-w-[64px] text-center">愿景<span class="nav-underline"></span></a>
+      <a href="#concepts" class="nav-pill group relative px-4 py-2.5 rounded-lg text-slate-300 min-w-[64px] text-center">核心概念<span class="nav-underline"></span></a>
+      <a href="#architecture" class="nav-pill group relative px-4 py-2.5 rounded-lg text-slate-300 min-w-[64px] text-center">技术架构<span class="nav-underline"></span></a>
+      <a href="#framework" class="nav-pill group relative px-4 py-2.5 rounded-lg text-slate-300 min-w-[64px] text-center">方法论<span class="nav-underline"></span></a>
+      <a href="#execution" class="nav-pill group relative px-4 py-2.5 rounded-lg text-slate-300 min-w-[64px] text-center">执行计划<span class="nav-underline"></span></a>
+      <a href="#synthesis" class="nav-pill group relative px-4 py-2.5 rounded-lg text-slate-300 min-w-[64px] text-center">审计研判<span class="nav-underline"></span></a>
+      <a href="#ecosystem" class="nav-pill group relative px-4 py-2.5 rounded-lg text-slate-300 min-w-[64px] text-center">生态<span class="nav-underline"></span></a>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <span class="hidden md:inline-flex items-center gap-1.5 tag"><span class="w-1.5 h-1.5 rounded-full bg-nebula-400 animate-pulse"></span> v1.0 · 已发布</span>
+      <a href="#concepts" class="btn-primary px-5 py-2 rounded-xl text-white text-sm font-semibold whitespace-nowrap">立即体验</a>
+    </div>
+  </nav>
+</header>
+
+<main class="relative z-10">
+
+<!-- ============ HERO ============ -->
+<section id="hero" class="relative pt-16 md:pt-24 pb-24 md:pb-32 px-5 md:px-8">
+  <div class="hero-glow"></div>
+  <div class="max-w-7xl mx-auto relative">
+
+    <!-- 顶部徽章 -->
+    <div class="flex justify-center mb-6 fade-up">
+      <div class="inline-flex items-center gap-2 glass rounded-full px-5 py-2 text-xs text-slate-300">
+        <span class="w-1.5 h-1.5 rounded-full bg-nebula-400 animate-pulse"></span>
+        <span class="font-mono tracking-wider">AI · ERA · UNIFIED · IDENTITY</span>
+        <span class="w-1.5 h-1.5 rounded-full bg-cosmic-400 animate-pulse"></span>
+      </div>
+    </div>
+
+    <!-- 小α 数字小精灵 -->
+    <div class="flex justify-center mb-6 fade-up" style="animation-delay:0.05s" id="alpha-container">
+      <div class="alpha-sprite" id="alpha-sprite">
+        <!-- 小精灵的光晕 -->
+        <div class="sprite-aura"></div>
+        <!-- 小精灵身体 - 半透明球体 -->
+        <div class="sprite-body"></div>
+        <!-- 头顶光环（DID 隐喻） -->
+        <div class="sprite-halo"></div>
+        <!-- 小精灵的脸 -->
+        <div class="sprite-face">
+          <!-- 大眼睛 -->
+          <div class="sprite-eye left"></div>
+          <div class="sprite-eye right"></div>
+          <!-- 腮红 -->
+          <div class="sprite-cheek left"></div>
+          <div class="sprite-cheek right"></div>
+          <!-- 小嘴 -->
+          <div class="sprite-mouth"></div>
+        </div>
+        <!-- 周围飘浮的小节点（因果图谱） -->
+        <div class="sprite-node n1"></div>
+        <div class="sprite-node n2"></div>
+        <div class="sprite-node n3"></div>
+        <div class="sprite-node n4"></div>
+        <div class="sprite-node n5"></div>
+        <div class="sprite-node n6"></div>
+        <!-- 小精灵下方的 AID -->
+        <div class="sprite-alpha">AID</div>
+        <!-- 诗意气泡 -->
+        <div class="sprite-bubble" id="sprite-bubble">
+          <span id="bubble-text"></span>
+        </div>
+      </div>
+      <!-- 涟漪容器 -->
+      <div class="ripple-container" id="ripple-container"></div>
+    </div>
+
+    <!-- 主标题 -->
+    <h1 class="text-center text-5xl md:text-7xl lg:text-8xl font-black leading-[1.05] tracking-tight fade-up" style="animation-delay:0.1s">
+      <span class="text-white">坐在所有</span><br class="md:hidden">
+      <span class="text-gradient">AI 工具之上</span><br>
+      <span class="text-white">的</span><span class="text-gradient-2">数字灵魂</span>
+    </h1>
+
+    <p class="text-center mt-8 text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed fade-up" style="animation-delay:0.2s">
+      底层采集碎片拼成<strong class="text-white">"你"</strong> → 打开任何 AI 工具<strong class="text-nebula-300">自动认出你</strong> → 最终<strong class="text-cosmic-300">代替你在电脑上操作</strong>
+    </p>
+
+    <!-- 项目亮点徽章行 -->
+    <div class="highlight-row fade-up" style="animation-delay:0.25s">
+      <span class="tag">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-1"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        DID 身份
       </span>
-      <span class="text-xs text-amber-400 dark:text-amber-500 self-center">· 我记得</span>
+      <span class="tag tag-blue">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-1"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
+        因果图谱
+      </span>
+      <span class="tag tag-pink">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-1"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+        三层记忆
+      </span>
+      <span class="tag tag-emerald">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-1"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        PoE 可验证
+      </span>
+      <span class="tag tag-amber">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-1"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        MCP 桥接
+      </span>
+      <span class="tag">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-1"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        A2A 协议
+      </span>
+      <span class="tag tag-rose">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-1"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        本地优先
+      </span>
+      <span class="tag tag-blue">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-1"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        零依赖安装
+      </span>
     </div>
-    <div class="rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm"
-         :class="msg.role==='user'
-           ? 'bg-indigo-500 text-white rounded-br-md'
-           : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-bl-md'">
-      <div class="text-xs opacity-60 mb-0.5" v-if="msg.role==='agent'">
-        <template v-if="msg.is_greeting">✨ 灵魂诞生</template>
-        <template v-else>🧠 {{ agent.alpha_id }}</template>
+
+    <!-- 主 CTA -->
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 mt-10 fade-up" style="animation-delay:0.3s">
+      <a href="#concepts" class="btn-primary px-8 py-3.5 rounded-2xl text-white font-semibold text-sm inline-flex items-center gap-2">
+        <span>唤醒你的数字灵魂</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+      </a>
+      <a href="#execution" class="btn-ghost px-8 py-3.5 rounded-2xl text-nebula-200 font-semibold text-sm inline-flex items-center gap-2">
+        <span>开启 AI 身份之旅</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+      </a>
+    </div>
+
+    <!-- 统计数字 -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 mt-20 max-w-6xl mx-auto fade-up" style="animation-delay:0.4s">
+      <div class="glass rounded-2xl p-5 text-center">
+        <div class="text-3xl md:text-4xl font-black text-gradient">20+</div>
+        <div class="text-xs text-slate-500 mt-2 font-mono tracking-wider">原子点</div>
       </div>
-      <div class="whitespace-pre-wrap">{{ msg.content }}</div>
-    </div>
-  </div>
-</div>
-<!-- Typing indicator -->
-<div v-if="loading" class="flex justify-start message-enter">
-  <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
-    <div class="flex gap-1.5">
-      <span class="typing-dot w-2 h-2 bg-indigo-400 rounded-full inline-block"></span>
-      <span class="typing-dot w-2 h-2 bg-indigo-400 rounded-full inline-block"></span>
-      <span class="typing-dot w-2 h-2 bg-indigo-400 rounded-full inline-block"></span>
-    </div>
-  </div>
-</div>
-</div>
-
-  <!-- Input -->
-  <div class="flex gap-2 items-end">
-    <textarea v-model="input" @keydown.enter.exact.prevent="send" placeholder="输入消息... (Enter 发送)"
-              class="flex-1 resize-none rounded-xl border border-indigo-200 dark:border-indigo-700 bg-white dark:bg-slate-800 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-indigo-500 focus:border-transparent transition-shadow dark:text-slate-200 dark:placeholder-slate-400"
-              rows="1" @input="autoResize"></textarea>
-    <button @click="send" :disabled="loading || !input.trim() && !agent.alpha_id"
-            class="px-5 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-600 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white text-sm font-medium transition-colors shadow-sm disabled:shadow-none">
-      {{ agent.alpha_id ? '发送' : '连接' }}
-    </button>
-  </div>
-
-  <!-- Login Modal -->
-  <div v-if="showLogin" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm" @click.self="showLogin=false">
-    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 w-80 shadow-xl border border-slate-200 dark:border-slate-700">
-      <h2 class="text-lg font-bold text-indigo-700 dark:text-indigo-300 mb-4">✨ 创建你的数字灵魂</h2>
-      <input v-model="deviceFp" placeholder="输入任意字符串作为你的身份指纹"
-             class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400 dark:text-slate-200 mb-3">
-      <input v-model="existingAlphaId" placeholder="已有 Alpha-ID 则输入（可选）"
-             class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400 dark:text-slate-200 mb-4">
-      <div class="flex gap-2">
-        <button @click="login" class="flex-1 px-4 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium transition-colors">确定</button>
-        <button @click="showLogin=false" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">取消</button>
+      <div class="glass rounded-2xl p-5 text-center">
+        <div class="text-3xl md:text-4xl font-black text-gradient">10</div>
+        <div class="text-xs text-slate-500 mt-2 font-mono tracking-wider">连接关系</div>
       </div>
-      <p v-if="loginError" class="text-red-500 text-xs mt-2">{{ loginError }}</p>
+      <div class="glass rounded-2xl p-5 text-center">
+        <div class="text-3xl md:text-4xl font-black text-gradient">9</div>
+        <div class="text-xs text-slate-500 mt-2 font-mono tracking-wider">能力域</div>
+      </div>
+      <div class="glass rounded-2xl p-5 text-center">
+        <div class="text-3xl md:text-4xl font-black text-gradient">6</div>
+        <div class="text-xs text-slate-500 mt-2 font-mono tracking-wider">思维框架</div>
+      </div>
+      <div class="glass rounded-2xl p-5 text-center">
+        <div class="text-3xl md:text-4xl font-black text-gradient">90<span class="text-xl">天</span></div>
+        <div class="text-xs text-slate-500 mt-2 font-mono tracking-wider">MVP → v1.0</div>
+      </div>
+    </div>
+
+    <!-- Terminal 示意 -->
+    <div class="max-w-4xl mx-auto mt-16 fade-up" style="animation-delay:0.5s">
+      <div class="code-block rounded-2xl overflow-hidden shadow-2xl shadow-nebula-900/30">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-nebula-500/10">
+          <span class="w-3 h-3 rounded-full bg-rose-400/70"></span>
+          <span class="w-3 h-3 rounded-full bg-nebula-400/70"></span>
+          <span class="w-3 h-3 rounded-full bg-nebula-400/70"></span>
+          <span class="ml-3 text-[11px] text-slate-500 font-mono">alpha-id · terminal</span>
+        </div>
+        <div class="p-5 text-sm leading-relaxed font-mono">
+          <div class="text-slate-500">$ <span class="text-nebula-300">aid</span> init</div>
+          <div class="text-cosmic-300">→ DID 生成中... <span class="text-nebula-300">did:aid:7b3c8d9e…f1a2</span> · Ed25519 私钥已存入本地</div>
+          <div class="text-slate-500 mt-2">$ <span class="text-nebula-300">aid</span> collect chatgpt exports/</div>
+          <div class="text-cosmic-300">→ 抽取 <span class="text-nebula-300">312 段</span>对话 · LLM 抽取 <span class="text-nebula-300">1,284</span>个因果节点 · 构建记忆图谱…</div>
+          <div class="text-slate-500 mt-2">$ <span class="text-nebula-300">aid</span> profile show --style</div>
+          <div class="text-slate-300">  活跃时段：<span class="text-pink-300">23:30 - 03:15</span>  ·  风格：<span class="text-pink-300">简洁直接 / 功能性编程</span></div>
+          <div class="text-slate-300">  关注话题：<span class="text-pink-300">MCP 协议 · DID 身份 · 因果推理 · A2A 协议</span></div>
+          <div class="text-slate-500 mt-2">$ <span class="text-nebula-300">aid</span> profile serve --mcp</div>
+          <div class="text-nebula-300">→ Ghost Layer 已挂载 · Claude / Cursor / Windsurf 均可看见完整的你</div>
+          <div class="mt-2 text-slate-500">$ <span class="cursor ml-1"></span></div>
+        </div>
+      </div>
     </div>
   </div>
+</section>
 
-  <!-- Identity Modal -->
-  <div v-if="showIdentity" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm" @click.self="showIdentity=false">
-    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 w-96 shadow-xl border border-slate-200 dark:border-slate-700 max-h-[80vh] overflow-y-auto">
-      <h2 class="text-lg font-bold text-indigo-700 dark:text-indigo-300 mb-4">身份信息</h2>
-      <pre class="text-xs text-slate-600 dark:text-slate-400 whitespace-pre-wrap bg-slate-50 dark:bg-slate-900 rounded-xl p-3">{{ identityJson }}</pre>
-      <button @click="showIdentity=false" class="mt-4 w-full px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium transition-colors">关闭</button>
+<div class="glow-divider max-w-4xl mx-auto"></div>
+
+<!-- ============ 01 · 愿景与问题 ============ -->
+<section id="vision" class="py-20 md:py-28 px-5 md:px-8">
+  <div class="max-w-7xl mx-auto">
+
+    <div class="text-center mb-16 reveal">
+      <div class="inline-flex items-center gap-2 mb-4">
+        <span class="chapter-num text-sm">01 / VISION</span>
+        <span class="h-px w-12 bg-nebula-500/30"></span>
+      </div>
+      <h2 class="text-4xl md:text-5xl font-black text-white mb-4">为什么需要数字灵魂？</h2>
+      <p class="text-slate-400 max-w-2xl mx-auto">AI 工具在爆发式增长，但"你"正变得越来越分散。每换一个工具，就要重新介绍一次自己。</p>
+    </div>
+
+    <!-- 痛点对比 -->
+    <div class="grid md:grid-cols-2 gap-6">
+      <!-- 左：旧世界 -->
+      <div class="glass rounded-3xl p-7 reveal">
+        <div class="flex items-center gap-2 mb-5">
+          <span class="tag tag-slate">旧世界</span>
+          <span class="text-xs text-slate-500 font-mono">BEFORE</span>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-6">碎片化的你</h3>
+        <div class="space-y-3.5">
+          <div class="flex gap-3">
+            <span class="text-slate-400 font-mono text-sm mt-0.5 shrink-0">—</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">身份碎片化：</span>ChatGPT 的你 ≠ Claude 的你 ≠ Cursor 的你</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-slate-400 font-mono text-sm mt-0.5 shrink-0">—</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">记忆孤岛：</span>每个工具都有自己的上下文窗口，无法跨工具迁移</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-slate-400 font-mono text-sm mt-0.5 shrink-0">—</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">决策断层：</span>因果链无法被 AI 理解，建议缺乏个性化与连续性</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-slate-400 font-mono text-sm mt-0.5 shrink-0">—</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">数据主权：</span>你生成的数据属于平台，无法自由迁移，隐私难以保障</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-slate-400 font-mono text-sm mt-0.5 shrink-0">—</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">协作困难：</span>团队知识分散在多人对话中，新人无法继承上下文</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-slate-400 font-mono text-sm mt-0.5 shrink-0">—</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">协议割裂：</span>MCP、A2A、浏览器扩展各成体系，没有统一身份层</div>
+          </div>
+        </div>
+
+        <div class="mt-6 p-4 rounded-2xl bg-slate-500/5 border border-slate-500/15">
+          <div class="text-xs text-slate-400 font-mono mb-1.5">问题公式</div>
+          <div class="text-sm text-slate-200 font-mono">N 个工具 · N 个"你" = <span class="text-slate-400">O(N²) 的上下文冗余</span></div>
+        </div>
+      </div>
+
+      <!-- 右：新世界 -->
+      <div class="glass rounded-3xl p-7 reveal relative overflow-hidden">
+        <div class="absolute -top-20 -right-20 w-56 h-56 rounded-full bg-nebula-500/15 blur-3xl"></div>
+        <div class="flex items-center gap-2 mb-5">
+          <span class="tag tag-nebula">新世界</span>
+          <span class="text-xs text-slate-500 font-mono">AFTER</span>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-6">统一的数字灵魂</h3>
+        <div class="space-y-3.5">
+          <div class="flex gap-3">
+            <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">+</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">一个身份走遍所有平台：</span>DID + Ed25519 签名，你是你，不是平台分配的用户 ID</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">+</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">无感注入：</span>打开任何 AI 工具自动认出你，记忆跨工具迁移，不再重新自我介绍</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">+</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">代替操作：</span>不只是聊天，真正代替你操作电脑——看屏幕、点按钮、处理文件</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">+</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">私钥在你手里：</span>本地优先 + 端到端加密 + 社交恢复，身份不会被封禁</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">+</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">A2A 社交：</span>你的数字灵魂与其他人的数字灵魂交朋友、协作。Agent-to-Agent</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">+</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">PoE 可验证：</span>每条操作生成哈希链，全程可审计、可追溯</div>
+          </div>
+        </div>
+
+        <div class="mt-6 p-4 rounded-2xl bg-nebula-500/5 border border-nebula-500/20">
+          <div class="text-xs text-nebula-300 font-mono mb-1.5">新范式</div>
+          <div class="text-sm text-slate-200 font-mono">1 个数字灵魂 · N 个工具 = <span class="text-nebula-300">O(1) 的一致性</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 终极目标宣言 -->
+    <div class="mt-14 glass rounded-3xl p-8 md:p-12 relative overflow-hidden reveal">
+      <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-nebula-400 via-cosmic-400 to-pink-400"></div>
+      <div class="grid md:grid-cols-5 gap-8 items-center">
+        <div class="md:col-span-2">
+          <div class="text-xs text-nebula-300 font-mono tracking-wider mb-3">ULTIMATE · GOAL</div>
+          <h3 class="text-3xl md:text-4xl font-black leading-tight text-white">创造属于用户的<br><span class="text-gradient">数字灵魂</span></h3>
+        </div>
+        <div class="md:col-span-3 space-y-3 text-sm text-slate-400">
+          <div class="flex gap-3"><span class="text-nebula-400 font-bold shrink-0 w-16">跨平台</span><span>身份与记忆自动跟随，工具只是外壳，你才是内核</span></div>
+          <div class="flex gap-3"><span class="text-cosmic-400 font-bold shrink-0 w-16">本地优先</span><span>数据主权在你手中，云端同步只是可选增值</span></div>
+          <div class="flex gap-3"><span class="text-nebula-400 font-bold shrink-0 w-16">私钥自持</span><span>Ed25519 签名即所有权，社交恢复防意外丢失</span></div>
+          <div class="flex gap-3"><span class="text-pink-400 font-bold shrink-0 w-16">复刻思考</span><span>捕获你的因果链而非只是文本，Agent 真正懂你</span></div>
+          <div class="flex gap-3"><span class="text-nebula-400 font-bold shrink-0 w-16">生态递归</span><span>个人球 → 团队球 → 行业球 → 文明球，递归扩张</span></div>
+        </div>
+      </div>
     </div>
   </div>
-</template>
+</section>
 
-<!-- Network Tab -->
-<template v-if="activeTab === 'network'">
-  <div class="flex-1 flex flex-col min-h-0">
-    <!-- Stats bar -->
-    <div class="flex gap-3 mb-2 text-xs text-slate-500 dark:text-slate-400">
-      <span>🤖 对等节点: <strong class="text-indigo-600 dark:text-indigo-400">{{ networkStats.peers }}</strong></span>
-      <span>📜 调用链: <strong class="text-emerald-600 dark:text-emerald-400">{{ networkStats.chains }}</strong></span>
+<div class="glow-divider max-w-4xl mx-auto"></div>
+
+<!-- ============ DEMO · 在线演示 ============ -->
+<section id="demo" class="py-20 md:py-28 px-5 md:px-8">
+  <div class="max-w-7xl mx-auto">
+
+    <div class="text-center mb-12 reveal">
+      <div class="inline-flex items-center gap-2 mb-4">
+        <span class="chapter-num text-sm">LIVE · DEMO</span>
+        <span class="h-px w-12 bg-nebula-500/30"></span>
+      </div>
+      <h2 class="text-4xl md:text-5xl font-black text-white mb-4">见证<span class="text-gradient">数字身份</span>的诞生</h2>
+      <p class="text-slate-400 max-w-2xl mx-auto">点击下方按钮，体验 DID 生成的全过程。这只是一个演示，你的真实身份将在本地安全生成。</p>
     </div>
-    <!-- Graph container -->
-    <div ref="networkContainer" class="flex-1 bg-white/60 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden min-h-0" style="min-height:400px"></div>
-    <!-- Legend -->
-    <div class="flex gap-4 mt-2 text-xs text-slate-500 dark:text-slate-400">
-      <span><span class="inline-block w-3 h-3 rounded-full bg-indigo-400 mr-1"></span> 自己</span>
-      <span><span class="inline-block w-3 h-3 rounded-full bg-violet-400 mr-1"></span> 对等节点</span>
-      <span><span class="inline-block w-3 h-3 rounded-full bg-emerald-400 mr-1"></span> PoE 证明</span>
+
+    <!-- 演示区域 -->
+    <div class="max-w-2xl mx-auto reveal">
+      <div class="glass rounded-3xl p-8 md:p-10 relative overflow-hidden" id="demo-container">
+
+        <!-- 初始状态 -->
+        <div class="text-center" id="demo-init">
+          <div class="mb-8">
+            <div class="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/30 mb-6 cursor-pointer hover:scale-105 transition-transform" id="generate-btn">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">生成你的 DID</h3>
+            <p class="text-slate-400 text-sm">Ed25519 密钥对 · 去中心化身份</p>
+          </div>
+          <button class="btn-primary px-8 py-3 rounded-2xl text-white font-semibold text-sm" id="start-demo-btn">
+            开始演示
+          </button>
+        </div>
+
+        <!-- 生成中状态 -->
+        <div class="hidden text-center" id="demo-generating">
+          <div class="mb-8">
+            <div class="w-20 h-20 mx-auto rounded-full border-4 border-violet-500/30 border-t-violet-500 animate-spin mb-6"></div>
+            <h3 class="text-xl font-bold text-white mb-2">身份生成中...</h3>
+            <p class="text-slate-400 text-sm">正在生成 Ed25519 密钥对</p>
+          </div>
+          <div class="space-y-2 text-left font-mono text-sm">
+            <div class="text-slate-500">→ 生成随机种子...</div>
+            <div class="text-slate-500">→ 推导 Ed25519 密钥对...</div>
+            <div class="text-slate-500">→ 计算公钥哈希...</div>
+          </div>
+        </div>
+
+        <!-- 生成完成状态 -->
+        <div class="hidden" id="demo-complete">
+          <div class="text-center mb-8">
+            <div class="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 mb-4">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">身份已生成</h3>
+            <p class="text-slate-400 text-sm">这就是属于你的数字灵魂，独一无二</p>
+          </div>
+
+          <!-- DID 展示 -->
+          <div class="code-block rounded-2xl p-5 mb-4">
+            <div class="text-xs text-slate-500 font-mono mb-2">DID</div>
+            <div class="text-lg font-mono text-nebula-300 break-all" id="demo-did">did:aid:7b3c8d9e-f1a2-4e5b-8c3d-2f6e1a9b4c8d</div>
+          </div>
+
+          <!-- 签名展示 -->
+          <div class="code-block rounded-2xl p-5 mb-4">
+            <div class="text-xs text-slate-500 font-mono mb-2">签名公钥</div>
+            <div class="text-sm font-mono text-sky-300 break-all" id="demo-pubkey">0x8f2d4e6a1b3c5d7e9f1a2b3c4d5e6f7a8b9c0d</div>
+          </div>
+
+          <!-- 状态 -->
+          <div class="flex flex-wrap justify-center gap-3 mt-6">
+            <span class="tag tag-emerald">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mr-1"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              已验证
+            </span>
+            <span class="tag">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mr-1"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              本地存储
+            </span>
+            <span class="tag tag-blue">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mr-1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              私钥加密
+            </span>
+          </div>
+
+          <div class="mt-6 pt-6 border-t border-white/10 text-center">
+            <button class="text-sm text-slate-500 hover:text-slate-300 transition" id="reset-demo-btn">
+              重新演示
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
-    <p v-if="!networkLoaded" class="text-xs text-slate-400 text-center mt-4">💡 加载网络数据…</p>
-    <p v-else-if="networkStats.peers === 0 && networkStats.chains === 0" class="text-xs text-slate-400 text-center mt-4">📭 还没有对等节点。用 <code class="text-indigo-500">aid network peer add</code> 注册一个试试</p>
+
   </div>
-</template>
+</section>
 
-</div>
+<div class="glow-divider max-w-4xl mx-auto"></div>
 
-<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-<script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+<!-- ============ QUICK START · 快速开始 ============ -->
+<section id="quickstart" class="py-20 md:py-28 px-5 md:px-8">
+  <div class="max-w-7xl mx-auto">
+
+    <div class="text-center mb-16 reveal">
+      <div class="inline-flex items-center gap-2 mb-4">
+        <span class="chapter-num text-sm">QUICK · START</span>
+        <span class="h-px w-12 bg-nebula-500/30"></span>
+      </div>
+      <h2 class="text-4xl md:text-5xl font-black text-white mb-4">3 分钟拥有你的<span class="text-gradient">数字灵魂</span></h2>
+      <p class="text-slate-400 max-w-2xl mx-auto">从零开始，生成身份 → 导入记忆 → 挂载到 AI 工具。</p>
+    </div>
+
+    <!-- 三步流程 -->
+    <div class="grid md:grid-cols-3 gap-5 mb-10 reveal">
+
+      <!-- 步骤 1 -->
+      <div class="glass rounded-3xl p-6 node">
+        <div class="flex items-start gap-4 mb-4">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-nebula-500 to-purple-600 flex items-center justify-center shadow-lg shadow-nebula-500/30 flex-shrink-0">
+            <span class="text-white text-xl font-black">1</span>
+          </div>
+          <div>
+            <div class="text-xs text-nebula-300 font-mono tracking-wider mb-1">STEP 01</div>
+            <h3 class="text-lg font-bold text-white">生成身份</h3>
+          </div>
+        </div>
+        <div class="code-block rounded-2xl p-4 font-mono text-sm">
+          <div><span class="cmd-prompt">$</span> <span class="cmd-keyword">pip</span> install alpha-id</div>
+          <div class="cmd-output">Installing dependencies...</div>
+          <div><span class="cmd-prompt">$</span> <span class="cmd-keyword">aid</span> init</div>
+          <div class="cmd-output">→ DID 生成中... <span class="text-nebula-300">did:aid:7b3c8d9e…f1a2</span></div>
+          <div class="cmd-output">→ Ed25519 私钥已存入 <span class="text-cosmic-300">~/.alpha-id/keys/</span></div>
+          <div class="cmd-output">→ 助记词已保存，请妥善备份</div>
+        </div>
+        <div class="mt-4 text-xs text-slate-500 leading-relaxed">
+          → <span class="text-slate-400">首次运行会自动创建本地数据库和密钥目录。私钥始终在本地，不上传任何服务器。</span>
+        </div>
+      </div>
+
+      <!-- 步骤 2 -->
+      <div class="glass rounded-3xl p-6 node">
+        <div class="flex items-start gap-4 mb-4">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-sky-500/30 flex-shrink-0">
+            <span class="text-white text-xl font-black">2</span>
+          </div>
+          <div>
+            <div class="text-xs text-sky-300 font-mono tracking-wider mb-1">STEP 02</div>
+            <h3 class="text-lg font-bold text-white">导入记忆</h3>
+          </div>
+        </div>
+        <div class="code-block rounded-2xl p-4 font-mono text-sm">
+          <div><span class="cmd-prompt">$</span> <span class="cmd-keyword">aid</span> collect chatgpt <span class="cmd-arg">exports/conversation.json</span></div>
+          <div class="cmd-output">→ 解析 <span class="text-nebula-300">312</span> 段对话</div>
+          <div class="cmd-output">→ 抽取 <span class="text-nebula-300">1,284</span> 个因果节点</div>
+          <div class="cmd-output">→ 构建三层记忆图谱...</div>
+          <div><span class="cmd-prompt">$</span> <span class="cmd-keyword">aid</span> collect trae <span class="cmd-arg">~/trae-workspace/</span></div>
+          <div class="cmd-output">→ 扫描 <span class="text-nebula-300">24</span> 个项目，<span class="text-nebula-300">1,204</span> 条记录</div>
+        </div>
+        <div class="mt-4 text-xs text-slate-500 leading-relaxed">
+          → <span class="text-slate-400">支持的采集器：ChatGPT · Claude · Trae · 浏览器历史 · 本地 Markdown</span>
+        </div>
+      </div>
+
+      <!-- 步骤 3 -->
+      <div class="glass rounded-3xl p-6 node">
+        <div class="flex items-start gap-4 mb-4">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center shadow-lg shadow-pink-400/30 flex-shrink-0">
+            <span class="text-white text-xl font-black">3</span>
+          </div>
+          <div>
+            <div class="text-xs text-pink-300 font-mono tracking-wider mb-1">STEP 03</div>
+            <h3 class="text-lg font-bold text-white">挂载使用</h3>
+          </div>
+        </div>
+        <div class="code-block rounded-2xl p-4 font-mono text-sm">
+          <div><span class="cmd-prompt">$</span> <span class="cmd-keyword">aid</span> profile show --style</div>
+          <div class="cmd-output"><span class="text-nebula-300">⚡ 活跃时段</span>: 23:30 - 03:15</div>
+          <div class="cmd-output"><span class="text-nebula-300">风格</span>: 简洁直接 / 功能性编程</div>
+          <div class="cmd-output"><span class="text-nebula-300">关注</span>: MCP · DID · 因果推理</div>
+          <div><span class="cmd-prompt">$</span> <span class="cmd-keyword">aid</span> profile serve --mcp</div>
+          <div class="cmd-output">→ Ghost Layer 已挂载</div>
+          <div class="cmd-output">→ Claude / Cursor / Windsurf 均可看见你</div>
+        </div>
+        <div class="mt-4 text-xs text-slate-500 leading-relaxed">
+          → <span class="text-slate-400">MCP Server 让任何 AI 工具都能通过标准协议读取你的人格画像和记忆节点。</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 命令速查表 -->
+    <div class="reveal">
+      <div class="text-center mb-8">
+        <h3 class="text-2xl md:text-3xl font-black text-white mb-2"><span class="text-gradient">核心命令速查</span></h3>
+        <p class="text-slate-400 text-sm">所有可用命令的一张表，方便快速查找</p>
+      </div>
+
+      <div class="glass rounded-3xl p-6 md:p-8">
+        <div class="grid md:grid-cols-2 gap-3 font-mono text-sm">
+
+          <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition">
+            <div>
+              <span class="cmd-keyword">aid</span> init
+            </div>
+            <span class="text-xs text-slate-500">生成 DID 身份</span>
+          </div>
+
+          <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition">
+            <div>
+              <span class="cmd-keyword">aid</span> profile show
+            </div>
+            <span class="text-xs text-slate-500">查看人格画像</span>
+          </div>
+
+          <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition">
+            <div>
+              <span class="cmd-keyword">aid</span> collect chatgpt <span class="cmd-arg">PATH</span>
+            </div>
+            <span class="text-xs text-slate-500">导入 ChatGPT 对话</span>
+          </div>
+
+          <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition">
+            <div>
+              <span class="cmd-keyword">aid</span> collect claude <span class="cmd-arg">PATH</span>
+            </div>
+            <span class="text-xs text-slate-500">导入 Claude 对话</span>
+          </div>
+
+          <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition">
+            <div>
+              <span class="cmd-keyword">aid</span> collect trae <span class="cmd-arg">PATH</span>
+            </div>
+            <span class="text-xs text-slate-500">导入 Trae 工作区</span>
+          </div>
+
+          <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition">
+            <div>
+              <span class="cmd-keyword">aid</span> profile serve --mcp
+            </div>
+            <span class="text-xs text-slate-500">启动 MCP 服务</span>
+          </div>
+
+          <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition">
+            <div>
+              <span class="cmd-keyword">aid</span>-daemon
+            </div>
+            <span class="text-xs text-slate-500">后台守护进程</span>
+          </div>
+
+          <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition">
+            <div>
+              <span class="cmd-keyword">aid</span> recover --mnemonic
+            </div>
+            <span class="text-xs text-slate-500">助记词恢复身份</span>
+          </div>
+
+          <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition">
+            <div>
+              <span class="cmd-keyword">aid</span> skill register <span class="cmd-arg">NAME</span>
+            </div>
+            <span class="text-xs text-slate-500">注册执行技能</span>
+          </div>
+
+          <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition">
+            <div>
+              <span class="cmd-keyword">aid</span> skill list
+            </div>
+            <span class="text-xs text-slate-500">列出已注册技能</span>
+          </div>
+
+          <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition">
+            <div>
+              <span class="cmd-keyword">aid</span> memory query <span class="cmd-arg">KEYWORD</span>
+            </div>
+            <span class="text-xs text-slate-500">查询记忆节点</span>
+          </div>
+
+          <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition">
+            <div>
+              <span class="cmd-keyword">aid</span> will set
+            </div>
+            <span class="text-xs text-slate-500">设置数字遗嘱</span>
+          </div>
+
+        </div>
+
+        <div class="mt-6 pt-6 border-t border-white/10 text-center text-xs text-slate-500">
+          → 所有命令均可使用 <span class="text-nebula-300 font-mono">--help</span> 查看详细参数
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="glow-divider max-w-4xl mx-auto"></div>
+
+<!-- ============ 02 · 核心概念：点 · 线 · 面 · 球 · 超球 ============ -->
+<section id="concepts" class="py-20 md:py-28 px-5 md:px-8 relative">
+  <div class="max-w-7xl mx-auto">
+
+    <div class="text-center mb-16 reveal">
+      <div class="inline-flex items-center gap-2 mb-4">
+        <span class="chapter-num text-sm">02 / CORE · CONCEPTS</span>
+        <span class="h-px w-12 bg-nebula-500/30"></span>
+      </div>
+      <h2 class="text-4xl md:text-5xl font-black text-white mb-4">从<span class="text-gradient"> 点 </span>到<span class="text-gradient-2"> 超球 </span>的五层宇宙</h2>
+      <p class="text-slate-400 max-w-2xl mx-auto">最小可分单元 → 关系连接 → 能力模块 → 完整实例 → 生态递归。一个自洽、可演化的思维宇宙。</p>
+    </div>
+
+    <!-- 五层横向图示 -->
+    <div class="relative mb-16 reveal">
+      <div class="glass rounded-3xl p-6 md:p-10 overflow-hidden">
+        <div class="grid grid-cols-5 gap-2 md:gap-5">
+          <!-- 点 -->
+          <div class="node text-center">
+            <div class="w-full aspect-square max-w-[120px] mx-auto rounded-full flex items-center justify-center relative glass-sphere">
+              <div class="absolute inset-0 rounded-full bg-gradient-to-br from-nebula-500/15 to-nebula-700/8"></div>
+              <div class="absolute inset-2 rounded-full bg-gradient-to-br from-white/5 to-transparent"></div>
+              <span class="text-white text-3xl md:text-4xl font-black relative z-10">点</span>
+              <div class="absolute -inset-1 rounded-full border border-nebula-500/25"></div>
+            </div>
+            <div class="mt-4">
+              <div class="text-sm font-bold text-white/90">星核</div>
+              <div class="text-[10px] text-slate-500 font-mono mt-1">CORE · 20+</div>
+            </div>
+          </div>
+          <!-- 线 -->
+          <div class="node text-center">
+            <div class="w-full aspect-square max-w-[120px] mx-auto rounded-full flex items-center justify-center relative glass-sphere">
+              <div class="absolute inset-0 rounded-full bg-gradient-to-br from-cosmic-500/15 to-nebula-600/8"></div>
+              <div class="absolute inset-2 rounded-full bg-gradient-to-br from-white/5 to-transparent"></div>
+              <span class="text-white text-3xl md:text-4xl font-black relative z-10">线</span>
+              <div class="absolute -inset-1 rounded-full border border-cosmic-400/25"></div>
+            </div>
+            <div class="mt-4">
+              <div class="text-sm font-bold text-white/90">星链</div>
+              <div class="text-[10px] text-slate-500 font-mono mt-1">LINK · 10 种</div>
+            </div>
+          </div>
+          <!-- 面 -->
+          <div class="node text-center">
+            <div class="w-full aspect-square max-w-[120px] mx-auto rounded-full flex items-center justify-center relative glass-sphere">
+              <div class="absolute inset-0 rounded-full bg-gradient-to-br from-nebula-400/15 to-cosmic-600/8"></div>
+              <div class="absolute inset-2 rounded-full bg-gradient-to-br from-white/5 to-transparent"></div>
+              <span class="text-white text-3xl md:text-4xl font-black relative z-10">面</span>
+              <div class="absolute -inset-1 rounded-full border border-nebula-400/25"></div>
+            </div>
+            <div class="mt-4">
+              <div class="text-sm font-bold text-white/90">星域</div>
+              <div class="text-[10px] text-slate-500 font-mono mt-1">DOMAIN · 9 个</div>
+            </div>
+          </div>
+          <!-- 球 -->
+          <div class="node text-center">
+            <div class="w-full aspect-square max-w-[120px] mx-auto rounded-full flex items-center justify-center relative glass-sphere">
+              <div class="absolute inset-0 rounded-full bg-gradient-to-br from-cosmic-400/15 to-nebula-700/8"></div>
+              <div class="absolute inset-2 rounded-full bg-gradient-to-br from-white/5 to-transparent"></div>
+              <span class="text-white text-3xl md:text-4xl font-black relative z-10">球</span>
+              <div class="absolute -inset-1 rounded-full border border-cosmic-400/25"></div>
+            </div>
+            <div class="mt-4">
+              <div class="text-sm font-bold text-white/90">星体</div>
+              <div class="text-[10px] text-slate-500 font-mono mt-1">BODY · 1 人 / 1 队</div>
+            </div>
+          </div>
+          <!-- 超球 -->
+          <div class="node text-center">
+            <div class="w-full aspect-square max-w-[120px] mx-auto rounded-full flex items-center justify-center relative glass-sphere">
+              <div class="absolute inset-0 rounded-full bg-gradient-to-br from-nebula-400/15 to-cosmic-500/8"></div>
+              <div class="absolute inset-2 rounded-full bg-gradient-to-br from-white/5 to-transparent"></div>
+              <span class="text-white text-2xl md:text-3xl font-black relative z-10">超球</span>
+              <div class="absolute -inset-1 rounded-full border border-nebula-400/25"></div>
+            </div>
+            <div class="mt-4">
+              <div class="text-sm font-bold text-white/90">星海</div>
+              <div class="text-[10px] text-slate-500 font-mono mt-1">SEA · 文明级</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 箭头说明 -->
+        <div class="mt-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] text-slate-500 font-mono">
+          <span class="text-nebula-400">不可再分</span> →
+          <span class="text-cosmic-400">形成关系</span> →
+          <span class="text-pink-400">聚合能力</span> →
+          <span class="text-nebula-400">成为实例</span> →
+          <span class="text-nebula-400">生态递归</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- === 原子点（点层） === -->
+    <div class="mb-20 reveal">
+      <div class="flex items-end justify-between mb-8 flex-wrap gap-4">
+        <div>
+          <div class="text-xs text-nebula-300 font-mono tracking-wider mb-2">POINT · LAYER</div>
+          <h3 class="text-2xl md:text-3xl font-black text-white"><span class="text-nebula-300">点层</span> · 20+ 个不可再分的原子单元</h3>
+          <p class="text-sm text-slate-400 mt-2 max-w-2xl">整个架构的最小建造单元。每个原子点代表一种"存在"——身份、节点、技能、事件、工具、数据块。</p>
+        </div>
+        <span class="tag tag-blue font-mono">20+ ATOMS</span>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+        <div class="glass rounded-2xl p-4 node">
+          <div class="atom-icon bg-nebula-500/20 text-nebula-300 mb-3">①</div>
+          <div class="text-sm font-bold text-white">DID 身份</div>
+          <div class="text-xs text-slate-500 mt-1">did:aid:xxx · 去中心化标识符</div>
+        </div>
+        <div class="glass rounded-2xl p-4 node">
+          <div class="atom-icon bg-nebula-500/20 text-nebula-300 mb-3">②</div>
+          <div class="text-sm font-bold text-white">私钥</div>
+          <div class="text-xs text-slate-500 mt-1">Ed25519 · 本地加密存储</div>
+        </div>
+        <div class="glass rounded-2xl p-4 node">
+          <div class="atom-icon bg-nebula-500/20 text-nebula-300 mb-3">③</div>
+          <div class="text-sm font-bold text-white">公钥</div>
+          <div class="text-xs text-slate-500 mt-1">用于签名验证</div>
+        </div>
+        <div class="glass rounded-2xl p-4 node">
+          <div class="atom-icon bg-nebula-500/20 text-nebula-300 mb-3">④</div>
+          <div class="text-sm font-bold text-white">助记词 / 社交恢复</div>
+          <div class="text-xs text-slate-500 mt-1">12-24 words · M-of-N 见证人</div>
+        </div>
+        <div class="glass rounded-2xl p-4 node">
+          <div class="atom-icon bg-cosmic-500/20 text-cosmic-300 mb-3">⑤</div>
+          <div class="text-sm font-bold text-white">目标节点</div>
+          <div class="text-xs text-slate-500 mt-1">记忆图谱中的"意图起点"</div>
+        </div>
+        <div class="glass rounded-2xl p-4 node">
+          <div class="atom-icon bg-cosmic-500/20 text-cosmic-300 mb-3">⑥</div>
+          <div class="text-sm font-bold text-white">动作节点</div>
+          <div class="text-xs text-slate-500 mt-1">为达成目标采取的行动</div>
+        </div>
+        <div class="glass rounded-2xl p-4 node">
+          <div class="atom-icon bg-cosmic-500/20 text-cosmic-300 mb-3">⑦</div>
+          <div class="text-sm font-bold text-white">结果节点</div>
+          <div class="text-xs text-slate-500 mt-1">行动产出的可验证结果</div>
+        </div>
+        <div class="glass rounded-2xl p-4 node">
+          <div class="atom-icon bg-cosmic-500/20 text-cosmic-300 mb-3">⑧</div>
+          <div class="text-sm font-bold text-white">反馈节点</div>
+          <div class="text-xs text-slate-500 mt-1">用户或系统对结果的评价</div>
+        </div>
+        <div class="glass rounded-2xl p-4 node">
+          <div class="atom-icon bg-cosmic-500/20 text-cosmic-300 mb-3">⑨</div>
+          <div class="text-sm font-bold text-white">偏好节点</div>
+          <div class="text-xs text-slate-500 mt-1">用户长期偏好与约束</div>
+        </div>
+        <div class="glass rounded-2xl p-4 node">
+          <div class="atom-icon bg-cosmic-500/20 text-cosmic-300 mb-3">⑩</div>
+          <div class="text-sm font-bold text-white">上下文节点</div>
+          <div class="text-xs text-slate-500 mt-1">环境条件与可变参数</div>
+        </div>
+        <div class="glass rounded-2xl p-4 node">
+          <div class="atom-icon bg-pink-500/20 text-pink-300 mb-3">⑪</div>
+          <div class="text-sm font-bold text-white">Skill（技能）</div>
+          <div class="text-xs text-slate-500 mt-1">可执行的原子能力单元 · 有签名</div>
+        </div>
+        <div class="glass rounded-2xl p-4 node">
+          <div class="atom-icon bg-pink-500/20 text-pink-300 mb-3">⑫</div>
+          <div class="text-sm font-bold text-white">系统事件</div>
+          <div class="text-xs text-slate-500 mt-1">剪贴板 / 文件 / 定时触发</div>
+        </div>
+        <div class="glass rounded-2xl p-4 node">
+          <div class="atom-icon bg-pink-500/20 text-pink-300 mb-3">⑬</div>
+          <div class="text-sm font-bold text-white">配置条目</div>
+          <div class="text-xs text-slate-500 mt-1">YAML · 用户可编辑</div>
+        </div>
+        <div class="glass rounded-2xl p-4 node">
+          <div class="atom-icon bg-pink-500/20 text-pink-300 mb-3">⑭</div>
+          <div class="text-sm font-bold text-white">原始记忆块</div>
+          <div class="text-xs text-slate-500 mt-1">未加工的对话 / 文本片段</div>
+        </div>
+        <div class="glass rounded-2xl p-4 node">
+          <div class="atom-icon bg-pink-500/20 text-pink-300 mb-3">⑮</div>
+          <div class="text-sm font-bold text-white">PoE 条目</div>
+          <div class="text-xs text-slate-500 mt-1">Proof of Execution · 哈希链</div>
+        </div>
+        <div class="glass rounded-2xl p-4 node">
+          <div class="atom-icon bg-nebula-500/20 text-nebula-300 mb-3">⑯</div>
+          <div class="text-sm font-bold text-white">MCP 工具</div>
+          <div class="text-xs text-slate-500 mt-1">通过 Model Context Protocol 暴露</div>
+        </div>
+        <div class="glass rounded-2xl p-4 node">
+          <div class="atom-icon bg-nebula-500/20 text-nebula-300 mb-3">⑰</div>
+          <div class="text-sm font-bold text-white">A2A 消息</div>
+          <div class="text-xs text-slate-500 mt-1">Agent-to-Agent · 签名消息包</div>
+        </div>
+        <div class="glass rounded-2xl p-4 node">
+          <div class="atom-icon bg-nebula-500/20 text-nebula-300 mb-3">⑱</div>
+          <div class="text-sm font-bold text-white">悬浮球状态</div>
+          <div class="text-xs text-slate-500 mt-1">idle / thinking / listening</div>
+        </div>
+        <div class="glass rounded-2xl p-4 node">
+          <div class="atom-icon bg-nebula-500/20 text-nebula-300 mb-3">⑲</div>
+          <div class="text-sm font-bold text-white">语音命令词</div>
+          <div class="text-xs text-slate-500 mt-1">Hey AID · save this · practice</div>
+        </div>
+        <div class="glass rounded-2xl p-4 node">
+          <div class="atom-icon bg-nebula-500/20 text-nebula-300 mb-3">⑳</div>
+          <div class="text-sm font-bold text-white">星链粒子</div>
+          <div class="text-xs text-slate-500 mt-1">Web 可视化中的节点表示</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- === 线层（10 种连接关系） === -->
+    <div class="mb-20 reveal">
+      <div class="flex items-end justify-between mb-8 flex-wrap gap-4">
+        <div>
+          <div class="text-xs text-cosmic-300 font-mono tracking-wider mb-2">EDGE · LAYER</div>
+          <h3 class="text-2xl md:text-3xl font-black text-white"><span class="text-cosmic-300">线层</span> · 10 种定义"关系"的边</h3>
+          <p class="text-sm text-slate-400 mt-2 max-w-2xl">节点之间的边定义了因果、归属、调用、时序、验证等关系。没有边，节点只是散落的星尘。</p>
+        </div>
+        <span class="tag tag-blue font-mono">10 EDGES</span>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <!-- 每条边 -->
+        <div class="glass rounded-2xl p-5 node">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="tag tag-blue font-mono">因果边</span>
+            <span class="text-xs text-slate-500">CAUSAL · strength 0.0~1.0</span>
+          </div>
+          <div class="text-sm text-slate-300">目标节点 → 动作节点 → 结果节点 → 反馈节点。强度来源：<span class="text-white font-semibold">用户手动确认 = 1.0 / LLM 初始 = 0.6 / 行为序列验证 += 0.1</span>。</div>
+          <div class="mt-3 text-xs text-slate-500 font-mono">反脆弱：strength &lt; 0.3 且 90 天未使用时，系统建议确认或删除。</div>
+        </div>
+
+        <div class="glass rounded-2xl p-5 node">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="tag tag-blue font-mono">归属边</span>
+            <span class="text-xs text-slate-500">OWNERSHIP · DID → 原子点</span>
+          </div>
+          <div class="text-sm text-slate-300">将所有原子点锚定到一个 DID，确立"这是谁的数据"。是数据主权的基石。</div>
+          <div class="mt-3 text-xs text-slate-500 font-mono">反脆弱：即使 DID 被注销，归属边的历史记录仍保留在只读审计表中。</div>
+        </div>
+
+        <div class="glass rounded-2xl p-5 node">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="tag tag-blue font-mono">调用边</span>
+            <span class="text-xs text-slate-500">CALL · Skill → Skill · sync/async</span>
+          </div>
+          <div class="text-sm text-slate-300">一个 Skill 执行过程中调用另一个 Skill，可能跨进程、跨语言。形成能力依赖图。</div>
+          <div class="mt-3 text-xs text-slate-500 font-mono">反脆弱：被调用方失败时自动重试（指数退避），并提供降级路径。</div>
+        </div>
+
+        <div class="glass rounded-2xl p-5 node">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="tag tag-blue font-mono">事件触发边</span>
+            <span class="text-xs text-slate-500">TRIGGER · Event → Skill</span>
+          </div>
+          <div class="text-sm text-slate-300">当特定系统事件发生时自动触发某个 Skill。例如"剪贴板内容变化 → 若匹配 URL → 保存"。</div>
+          <div class="mt-3 text-xs text-slate-500 font-mono">属性：priority / filter 条件 / cooldown 防抖。</div>
+        </div>
+
+        <div class="glass rounded-2xl p-5 node">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="tag tag-blue font-mono">通信边</span>
+            <span class="text-xs text-slate-500">COMM · MCP / A2A · 双向</span>
+          </div>
+          <div class="text-sm text-slate-300">MCP 请求-响应或 A2A 消息交换。对外连接你的数字灵魂与外部世界。</div>
+          <div class="mt-3 text-xs text-slate-500 font-mono">反脆弱：MCP 失败自动降级为剪贴板注入模式。</div>
+        </div>
+
+        <div class="glass rounded-2xl p-5 node">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="tag tag-blue font-mono">存储边</span>
+            <span class="text-xs text-slate-500">STORAGE · 原子点 → SQLite 行</span>
+          </div>
+          <div class="text-sm text-slate-300">表示原子点在持久层的物理位置。用于全息追溯——知道一个节点存在哪张表的哪一行。</div>
+        </div>
+
+        <div class="glass rounded-2xl p-5 node">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="tag tag-blue font-mono">验证边</span>
+            <span class="text-xs text-slate-500">VERIFY · PoE → Skill 执行</span>
+          </div>
+          <div class="text-sm text-slate-300">PoE 条目验证 Skill 执行记录，形成哈希链。每条 PoE 包含 previous_poe_hash，确保全程可追溯。</div>
+          <div class="mt-3 text-xs text-slate-500 font-mono">反脆弱：哈希链断裂时标记为"不可信"，但不影响其他 PoE。</div>
+        </div>
+
+        <div class="glass rounded-2xl p-5 node">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="tag tag-blue font-mono">展示边</span>
+            <span class="text-xs text-slate-500">DISPLAY · 状态 → UI</span>
+          </div>
+          <div class="text-sm text-slate-300">内部状态变化触发 UI 更新（悬浮球、Web 星链）。通过 WebSocket 推送事件。</div>
+        </div>
+
+        <div class="glass rounded-2xl p-5 node">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="tag tag-blue font-mono">依赖边</span>
+            <span class="text-xs text-slate-500">DEPEND · 面 → 面 · hard/soft</span>
+          </div>
+          <div class="text-sm text-slate-300">一个能力域依赖另一个域的能力。hard = 必须存在；soft = 可选降级。</div>
+          <div class="mt-3 text-xs text-slate-500 font-mono">示例：决策面 依赖 图谱引擎面（hard）；展示面 依赖 桥接面（soft）。</div>
+        </div>
+
+        <div class="glass rounded-2xl p-5 node">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="tag tag-blue font-mono">时序边</span>
+            <span class="text-xs text-slate-500">TEMPORAL · 先 → 后 · 非因果</span>
+          </div>
+          <div class="text-sm text-slate-300">仅表示时间先后顺序，不蕴含因果关系。用于时间线可视化、行为模式分析。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- === 面层（9个能力域） === -->
+    <div class="mb-20 reveal">
+      <div class="flex items-end justify-between mb-8 flex-wrap gap-4">
+        <div>
+          <div class="text-xs text-pink-300 font-mono tracking-wider mb-2">PLANE · LAYER</div>
+          <h3 class="text-2xl md:text-3xl font-black text-white"><span class="text-pink-300">面层</span> · 9 个聚合能力域</h3>
+          <p class="text-sm text-slate-400 mt-2 max-w-2xl">由原子点和线组合而成的功能模块。每个面有明确的边界、对外 API 和依赖关系。遵循"向内依赖"原则。</p>
+        </div>
+        <span class="tag tag-pink font-mono">9 DOMAINS</span>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-4">
+        <!-- 面1: 身份面 -->
+        <div class="glass rounded-2xl p-5 node ring-card" style="color: #a78bfa;">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="tag font-mono">身份面</span>
+            <span class="tag tag-emerald text-[10px]">✓ 优选落地</span>
+          </div>
+          <div class="text-xs text-slate-500 font-mono mb-3">Identity · DID + 私钥 + 公钥 + 助记词</div>
+          <div class="text-sm text-slate-300 space-y-2">
+            <div>• <span class="text-white">generate_did()</span> → did</div>
+            <div>• <span class="text-white">sign(data)</span> → signature</div>
+            <div>• <span class="text-white">verify(data, sig, did)</span> → bool</div>
+            <div>• <span class="text-white">recover_from_mnemonic()</span></div>
+          </div>
+          <div class="mt-3 text-xs text-slate-500">依赖：无（最底层）</div>
+        </div>
+
+        <!-- 面2: 记忆面 -->
+        <div class="glass rounded-2xl p-5 node ring-card" style="color: #38bdf8;">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="tag tag-blue font-mono">记忆面</span>
+            <span class="tag tag-emerald text-[10px]">✓ 优选落地</span>
+          </div>
+          <div class="text-xs text-slate-500 font-mono mb-3">Memory · 因果节点 + 原始块 + 三层架构</div>
+          <div class="text-sm text-slate-300 space-y-2">
+            <div>• <span class="text-white">add_node(node)</span> → node_id</div>
+            <div>• <span class="text-white">add_edge(from, to, relation)</span></div>
+            <div>• <span class="text-white">query_causal_chain(start, depth)</span></div>
+            <div>• <span class="text-white">import_raw_chunk(chunk)</span></div>
+          </div>
+          <div class="mt-3 text-xs text-slate-500">依赖：身份面</div>
+        </div>
+
+        <!-- 面3: 图谱引擎面 -->
+        <div class="glass rounded-2xl p-5 node ring-card" style="color: #f472b6;">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="tag tag-pink font-mono">图谱引擎面</span>
+            <span class="tag tag-emerald text-[10px]">✓ 优选落地</span>
+          </div>
+          <div class="text-xs text-slate-500 font-mono mb-3">Causal Engine · 多跳推理 + 冲突检测</div>
+          <div class="text-sm text-slate-300 space-y-2">
+            <div>• <span class="text-white">infer_causal_path(goal)</span> → paths</div>
+            <div>• <span class="text-white">detect_conflicts()</span> → pairs</div>
+            <div>• <span class="text-white">suggest_alternative_branches()</span></div>
+            <div>• <span class="text-white">compute_confidence(node)</span></div>
+          </div>
+          <div class="mt-3 text-xs text-slate-500">依赖：记忆面</div>
+        </div>
+
+        <!-- 面4: 决策面 -->
+        <div class="glass rounded-2xl p-5 node ring-card" style="color: #fcd34d;">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="tag tag-amber font-mono">决策面</span>
+            <span class="tag tag-emerald text-[10px]">✓ 优选落地</span>
+          </div>
+          <div class="text-xs text-slate-500 font-mono mb-3">Decision · 全局回溯 + 多分支推演</div>
+          <div class="text-sm text-slate-300 space-y-2">
+            <div>• <span class="text-white">precheck(goal, context)</span> → pass/warn</div>
+            <div>• <span class="text-white">generate_branches(goal)</span> → 3条</div>
+            <div>• <span class="text-white">score_branches()</span> → sorted</div>
+            <div>• <span class="text-white">reverse_verify(branch)</span></div>
+          </div>
+          <div class="mt-3 text-xs text-slate-500">依赖：图谱引擎面 + 身份面</div>
+        </div>
+
+        <!-- 面5: 操作面 -->
+        <div class="glass rounded-2xl p-5 node ring-card" style="color: #6ee7b7;">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="tag tag-emerald font-mono">操作面</span>
+            <span class="tag tag-emerald text-[10px]">✓ 优选落地</span>
+          </div>
+          <div class="text-xs text-slate-500 font-mono mb-3">Operation · Skill 注册 + 事件监听</div>
+          <div class="text-sm text-slate-300 space-y-2">
+            <div>• <span class="text-white">register_skill(skill_def, code)</span></div>
+            <div>• <span class="text-white">execute_skill(name, params)</span> → result, poe</div>
+            <div>• <span class="text-white">listen_event(type, callback)</span></div>
+          </div>
+          <div class="mt-3 text-xs text-slate-500">依赖：安全面 + 记忆面</div>
+        </div>
+
+        <!-- 面6: 桥接面 -->
+        <div class="glass rounded-2xl p-5 node ring-card" style="color: #7dd3fc;">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="tag tag-blue font-mono">桥接面</span>
+            <span class="tag tag-emerald text-[10px]">✓ 优选落地</span>
+          </div>
+          <div class="text-xs text-slate-500 font-mono mb-3">Bridge · MCP Server + A2A Adapter</div>
+          <div class="text-sm text-slate-300 space-y-2">
+            <div>• <span class="text-white">expose_mcp_tool(tool_def)</span></div>
+            <div>• <span class="text-white">call_remote_aid(did, payload)</span></div>
+            <div>• <span class="text-white">handle_a2a_message(msg)</span></div>
+          </div>
+          <div class="mt-3 text-xs text-slate-500">依赖：身份面 + 记忆面</div>
+        </div>
+
+        <!-- 面7: 展示面 -->
+        <div class="glass rounded-2xl p-5 node ring-card" style="color: #f9a8d4;">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="tag tag-pink font-mono">展示面</span>
+            <span class="tag tag-emerald text-[10px]">✓ 优选落地</span>
+          </div>
+          <div class="text-xs text-slate-500 font-mono mb-3">Display · 悬浮球 + 星链 + 语音</div>
+          <div class="text-sm text-slate-300 space-y-2">
+            <div>• <span class="text-white">set_ball_state(state)</span></div>
+            <div>• <span class="text-white">render_starlink(subgraph)</span></div>
+            <div>• <span class="text-white">voice_command_recognize(audio)</span></div>
+          </div>
+          <div class="mt-3 text-xs text-slate-500">依赖：桥接面 + 操作面</div>
+        </div>
+
+        <!-- 面8: 安全面 -->
+        <div class="glass rounded-2xl p-5 node ring-card" style="color: #fca5a5;">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="tag tag-rose font-mono">安全面</span>
+            <span class="tag tag-emerald text-[10px]">✓ 优选落地</span>
+          </div>
+          <div class="text-xs text-slate-500 font-mono mb-3">Safety · 硬编码规则 + fail-closed</div>
+          <div class="text-sm text-slate-300 space-y-2">
+            <div>• <span class="text-white">check_operation(action, params)</span></div>
+            <div>• <span class="text-white">log_violation()</span></div>
+            <div>• <span class="text-white">add_custom_rule(rule)</span></div>
+          </div>
+          <div class="mt-3 text-xs text-slate-500">初始规则：delete_file需确认 / 密码拦截 / rm -rf 拒绝</div>
+        </div>
+
+        <!-- 面9: 存储面 -->
+        <div class="glass rounded-2xl p-5 node ring-card" style="color: #c4b5fd;">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="tag font-mono">存储面</span>
+            <span class="tag tag-emerald text-[10px]">✓ 优选落地</span>
+          </div>
+          <div class="text-xs text-slate-500 font-mono mb-3">Storage · SQLite + YAML + Logs</div>
+          <div class="text-sm text-slate-300 space-y-2">
+            <div>• <span class="text-white">save(namespace, key, value)</span></div>
+            <div>• <span class="text-white">load(namespace, key)</span></div>
+            <div>• <span class="text-white">query(sql)</span></div>
+            <div>• <span class="text-white">migrate(target_schema)</span></div>
+          </div>
+          <div class="mt-3 text-xs text-slate-500">依赖：无 · 路径 ~/.alpha-id/data.db</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- === 球层（完整实例） === -->
+    <div class="mb-20 reveal">
+      <div class="flex items-end justify-between mb-8 flex-wrap gap-4">
+        <div>
+          <div class="text-xs text-nebula-300 font-mono tracking-wider mb-2">SPHERE · LAYER</div>
+          <h3 class="text-2xl md:text-3xl font-black text-white"><span class="text-nebula-300">球层</span> · 完整可运行的数字灵魂实例</h3>
+          <p class="text-sm text-slate-400 mt-2 max-w-2xl">将所有面按固定拓扑组装而成的完整实例。每个用户的 Alpha-ID 都是一个球。支持三种运行模式。</p>
+        </div>
+        <span class="tag tag-amber font-mono">1 SPHERE</span>
+      </div>
+
+      <!-- 球拓扑图 -->
+      <div class="glass rounded-3xl p-8 mb-6">
+        <div class="text-center mb-6">
+          <div class="text-xs text-slate-500 font-mono mb-4">球的内部拓扑（从内到外，向内依赖）</div>
+          <div class="flex flex-wrap justify-center gap-3">
+            <span class="tag font-mono">存储面</span> →
+            <span class="tag font-mono">身份面+安全面</span> →
+            <span class="tag tag-blue font-mono">记忆面+图谱+决策</span> →
+            <span class="tag tag-emerald font-mono">操作面</span> →
+            <span class="tag tag-pink font-mono">桥接面</span> →
+            <span class="tag tag-amber font-mono">展示面</span>
+          </div>
+        </div>
+
+        <!-- 三种运行模式 -->
+        <div class="grid md:grid-cols-3 gap-4">
+          <div class="glass-soft rounded-2xl p-5">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="tag tag-emerald font-mono">常规模式</span>
+              <span class="text-xs text-slate-500">收缩</span>
+            </div>
+            <div class="text-sm text-slate-300">用户有交互时执行：<span class="text-white font-semibold">Sense → 安全检查 → 记忆跟踪 → 图谱抽取 → 决策 → 操作 → 桥接 → 展示 → 存储</span></div>
+          </div>
+          <div class="glass-soft rounded-2xl p-5">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="tag tag-blue font-mono">学习模式</span>
+              <span class="text-xs text-slate-500">扩散</span>
+            </div>
+            <div class="text-sm text-slate-300">用户无交互 30 秒后：<span class="text-white font-semibold">扫描低置信度节点 → LLM 生成候选边 → 存入 pending → 下次交互询问用户</span></div>
+          </div>
+          <div class="glass-soft rounded-2xl p-5">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="tag tag-rose font-mono">紧急模式</span>
+              <span class="text-xs text-slate-500">fail-closed</span>
+            </div>
+            <div class="text-sm text-slate-300">安全拦截或依赖失效时：<span class="text-white font-semibold">暂停自动操作 → 弹出红色警告 → 记录 PoE → 等待用户确认</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 数字遗嘱 -->
+      <div class="glass rounded-2xl p-6 node">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="tag tag-amber font-mono">数字遗嘱</span>
+          <span class="text-xs text-slate-500">球的终局</span>
+        </div>
+        <div class="text-sm text-slate-300 mb-4">用户长期不活跃（90天）或主动触发时，执行记忆摘要导出、执行人通知、数据归档/删除。</div>
+        <div class="code-block rounded-xl p-4 text-xs font-mono text-slate-400">
+          <div>will:</div>
+          <div>  executor_dids: ["did:aid:friend1...", "did:aid:friend2..."]</div>
+          <div>  retention_days: 30</div>
+          <div>  delete_after_execution: true</div>
+          <div>  include_raw_memories: false</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- === 超球层（生态递归） === -->
+    <div class="reveal">
+      <div class="flex items-end justify-between mb-8 flex-wrap gap-4">
+        <div>
+          <div class="text-xs text-nebula-300 font-mono tracking-wider mb-2">HYPER · LAYER</div>
+          <h3 class="text-2xl md:text-3xl font-black text-white"><span class="text-nebula-300">超球层</span> · 生态递归扩散</h3>
+          <p class="text-sm text-slate-400 mt-2 max-w-2xl">单个球与其他球协作、汇聚，形成更高层级的数字存在。宇宙星链思维的直接体现。</p>
+        </div>
+        <span class="tag tag-emerald font-mono">HYPER</span>
+      </div>
+
+      <div class="grid md:grid-cols-4 gap-4">
+        <div class="glass-light rounded-2xl p-5 node text-center border border-nebula-500/15">
+          <div class="w-16 h-16 mx-auto rounded-full bg-nebula-500/10 border border-nebula-500/30 flex items-center justify-center mb-4">
+            <span class="text-nebula-300 text-2xl font-black">1</span>
+          </div>
+          <div class="text-sm font-bold text-white mb-2">个人球</div>
+          <div class="text-xs text-slate-500 font-mono">PERSONAL</div>
+          <div class="text-xs text-slate-400 mt-3">单个用户的完整数字灵魂</div>
+        </div>
+        <div class="glass-light rounded-2xl p-5 node text-center border border-nebula-500/15">
+          <div class="w-16 h-16 mx-auto rounded-full bg-nebula-500/10 border border-nebula-500/30 flex items-center justify-center mb-4">
+            <span class="text-nebula-300 text-2xl font-black">N</span>
+          </div>
+          <div class="text-sm font-bold text-white mb-2">团队球</div>
+          <div class="text-xs text-slate-500 font-mono">TEAM</div>
+          <div class="text-xs text-slate-400 mt-3">多人授权共享记忆面，形成集体数字存在</div>
+        </div>
+        <div class="glass-light rounded-2xl p-5 node text-center border border-nebula-500/15">
+          <div class="w-16 h-16 mx-auto rounded-full bg-nebula-500/10 border border-nebula-500/30 flex items-center justify-center mb-4">
+            <span class="text-nebula-300 text-2xl font-black">∞</span>
+          </div>
+          <div class="text-sm font-bold text-white mb-2">行业球</div>
+          <div class="text-xs text-slate-500 font-mono">INDUSTRY</div>
+          <div class="text-xs text-slate-400 mt-3">匿名贡献因果知识，形成最佳实践图谱</div>
+        </div>
+        <div class="glass-light rounded-2xl p-5 node text-center border border-nebula-500/15">
+          <div class="w-16 h-16 mx-auto rounded-full bg-nebula-500/10 border border-nebula-500/30 flex items-center justify-center mb-4">
+            <span class="text-nebula-300 text-xl font-black">文明</span>
+          </div>
+          <div class="text-sm font-bold text-white mb-2">文明球</div>
+          <div class="text-xs text-slate-500 font-mono">CIVILIZATION</div>
+          <div class="text-xs text-slate-400 mt-3">全人类因果知识库，突破语言模型天花板</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-divider max-w-4xl mx-auto"></div>
+
+<!-- ============ 03 · 六套思维框架 ============ -->
+<section id="framework" class="py-20 md:py-28 px-5 md:px-8">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-16 reveal">
+      <div class="inline-flex items-center gap-2 mb-4">
+        <span class="chapter-num text-sm">03 / FRAMEWORK</span>
+        <span class="h-px w-12 bg-nebula-500/30"></span>
+      </div>
+      <h2 class="text-4xl md:text-5xl font-black text-white mb-4">六套<span class="text-gradient">战略思维框架</span></h2>
+      <p class="text-slate-400 max-w-2xl mx-auto">每次战略决策前运行的六套思维工具：宇宙星链、第一性原理、反向推翻、递归降维、反脆弱设计、节律控制。</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <!-- 框架1 -->
+      <div class="glass-light rounded-3xl p-6 node">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-xl bg-nebula-500/15 border border-nebula-500/30 flex items-center justify-center">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-nebula-400"><circle cx="12" cy="12" r="2"/><circle cx="12" cy="12" r="6" stroke-dasharray="2 2"/><circle cx="12" cy="12" r="10" stroke-dasharray="3 3"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>
+          </div>
+          <div>
+            <div class="text-sm font-bold text-white">宇宙星链</div>
+            <div class="text-xs text-slate-500 font-mono">STARLINK</div>
+          </div>
+        </div>
+        <div class="text-sm text-slate-300 mb-3">以我为中心，从四面八方不同程度向外辐射。每个辐射点又成为新中心，视角呈<span class="text-nebula-300 font-semibold">指数级倍增</span>。</div>
+        <div class="text-xs text-slate-500 font-mono">七轨道：通用AI / 身份层 / 记忆层 / 执行层 / 协调层 / 社交层 / 平台层</div>
+      </div>
+
+      <!-- 框架2 -->
+      <div class="glass-light rounded-3xl p-6 node">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-xl bg-cosmic-500/15 border border-cosmic-500/30 flex items-center justify-center">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-cosmic-400"><path d="M10 2L2 7l8 5 8-5-8-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <div>
+            <div class="text-sm font-bold text-white">第一性原理</div>
+            <div class="text-xs text-slate-500 font-mono">FIRST PRINCIPLES</div>
+          </div>
+        </div>
+        <div class="text-sm text-slate-300 mb-3">不断压缩到不可再分，找到本质后<span class="text-cosmic-300 font-semibold">重新组装</span>。区分"事实"与"现状"，从零重建方案。</div>
+        <div class="text-xs text-slate-500 font-mono">四步法：识别假设 → 拆到不可分 → 从零重建 → 对比方案</div>
+      </div>
+
+      <!-- 框架3 -->
+      <div class="glass-light rounded-3xl p-6 node">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-xl bg-nebula-500/15 border border-nebula-500/30 flex items-center justify-center">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-nebula-400"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <div>
+            <div class="text-sm font-bold text-white">反向推翻</div>
+            <div class="text-xs text-slate-500 font-mono">REVERSE VERIFY</div>
+          </div>
+        </div>
+        <div class="text-sm text-slate-300 mb-3">全力证明方向是错的。如果所有证明失败的尝试都失败了，<span class="text-nebula-300 font-semibold">假设才成立</span>。</div>
+        <div class="text-xs text-slate-500 font-mono">五步法：陈述假设 → 找反例 → 评估致命度 → 对策 → 执行</div>
+      </div>
+
+      <!-- 框架4 -->
+      <div class="glass-light rounded-3xl p-6 node">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-xl bg-nebula-500/15 border border-nebula-500/30 flex items-center justify-center">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-nebula-400"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7" opacity="0.7"/><rect x="14" y="14" width="7" height="7" opacity="0.5"/><rect x="3" y="14" width="7" height="7" opacity="0.3"/></svg>
+          </div>
+          <div>
+            <div class="text-sm font-bold text-white">递归降维</div>
+            <div class="text-xs text-slate-500 font-mono">RECURSIVE</div>
+          </div>
+        </div>
+        <div class="text-sm text-slate-300 mb-3">复杂问题降一层，还复杂再降一层。直到降到<span class="text-nebula-300 font-semibold">可处理的程度</span>，处理完再升回去。</div>
+        <div class="text-xs text-slate-500 font-mono">三步法：识别维度 → 降维执行 → 升维验证</div>
+      </div>
+
+      <!-- 框架5 -->
+      <div class="glass-light rounded-3xl p-6 node">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-xl bg-cosmic-500/15 border border-cosmic-500/30 flex items-center justify-center">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-cosmic-400"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+          </div>
+          <div>
+            <div class="text-sm font-bold text-white">反脆弱设计</div>
+            <div class="text-xs text-slate-500 font-mono">ANTI-FRAGILE</div>
+          </div>
+        </div>
+        <div class="text-sm text-slate-300 mb-3">不是防止失败，而是设计<span class="text-cosmic-300 font-semibold">有益的失败路径</span>。每次失败自动补一条规则，系统越来越聪明。</div>
+        <div class="text-xs text-slate-500 font-mono">三层：脆弱 → 坚韧 → 反脆弱</div>
+      </div>
+
+      <!-- 框架6 -->
+      <div class="glass-light rounded-3xl p-6 node">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-xl bg-nebula-500/15 border border-nebula-500/30 flex items-center justify-center">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-nebula-400"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div>
+            <div class="text-sm font-bold text-white">节律控制</div>
+            <div class="text-xs text-slate-500 font-mono">RHYTHM</div>
+          </div>
+        </div>
+        <div class="text-sm text-slate-300 mb-3">每次扩散（吸收新信息）后必须跟上收缩（输出方案）。像<span class="text-nebula-300 font-semibold">呼吸一样交替</span>。</div>
+        <div class="text-xs text-slate-500 font-mono">状态：过度扩散 → 过度收缩 → 平衡</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-divider max-w-4xl mx-auto"></div>
+
+<!-- ============ 04 · 90天执行计划 ============ -->
+<section id="execution" class="py-20 md:py-28 px-5 md:px-8">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-16 reveal">
+      <div class="inline-flex items-center gap-2 mb-4">
+        <span class="chapter-num text-sm">04 / EXECUTION</span>
+        <span class="h-px w-12 bg-nebula-500/30"></span>
+      </div>
+      <h2 class="text-4xl md:text-5xl font-black text-white mb-4"><span class="text-gradient">90 天</span>冲刺计划</h2>
+      <p class="text-slate-400 max-w-2xl mx-auto">从 MVP 到 v1.0 的三阶段里程碑。每阶段有明确的交付物、验收标准和信心指标。</p>
+    </div>
+
+    <!-- 时间线 -->
+    <div class="relative reveal">
+      <div class="glass-light rounded-3xl p-8 md:p-10 border border-nebula-500/20">
+        <div class="space-y-8">
+          <!-- Milestone 1 -->
+          <div class="flex gap-4 md:gap-8">
+            <div class="flex flex-col items-center">
+              <div class="timeline-dot"></div>
+              <div class="w-px h-full bg-gradient-to-b from-nebula-500/30 to-transparent mt-2"></div>
+            </div>
+            <div class="glass-light rounded-2xl p-6 flex-1 border border-nebula-500/15">
+              <div class="flex items-center gap-3 mb-4">
+                <span class="tag font-mono">M1 · 身份与人格</span>
+                <span class="text-xs text-slate-500 font-mono">6/6 - 6/20</span>
+              </div>
+              <h4 class="text-lg font-bold text-white mb-3">Phase 0-1 完成</h4>
+              <div class="text-sm text-slate-300 space-y-2">
+                <div>• <span class="text-nebula-300">DID 身份生成</span> + Ed25519 私钥本地存储</div>
+                <div>• <span class="text-nebula-300">3 个采集器</span>：ChatGPT / Trae / Browser</div>
+                <div>• <span class="text-nebula-300">画像合并</span> + CLI 展示 + Daemon 悬浮球</div>
+                <div>• <span class="text-nebula-300">开机自启</span> + 去重 + 来源标注</div>
+              </div>
+              <div class="mt-4">
+                <div class="text-xs text-slate-500 font-mono mb-2">信心指标</div>
+                <div class="progress-track h-2">
+                  <div class="progress-fill nebula" style="width: 85%;"></div>
+                </div>
+                <div class="text-xs text-nebula-300 mt-1 font-mono">85% · 已完成</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Milestone 2 -->
+          <div class="flex gap-4 md:gap-8">
+            <div class="flex flex-col items-center">
+              <div class="timeline-dot" style="background: radial-gradient(circle, #8b5cf6, #6366f1);"></div>
+              <div class="w-px h-full bg-gradient-to-b from-nebula-500/30 to-transparent mt-2"></div>
+            </div>
+            <div class="glass-light rounded-2xl p-6 flex-1 border border-nebula-500/15">
+              <div class="flex items-center gap-3 mb-4">
+                <span class="tag font-mono">M2 · 桥接与语音</span>
+                <span class="text-xs text-slate-500 font-mono">6/20 - 7/15</span>
+              </div>
+              <h4 class="text-lg font-bold text-white mb-3">产品化与 PyPI 发布</h4>
+              <div class="text-sm text-slate-300 space-y-2">
+                <div>• <span class="text-nebula-300">PyPI v0.1.0</span> · pip install alpha-id 就能用</div>
+                <div>• <span class="text-nebula-300">MCP Server</span> · 身份注入 Claude/Cursor</div>
+                <div>• <span class="text-nebula-300">A2A 协议宣誓</span> · 200 行适配器</div>
+                <div>• <span class="text-nebula-300">Safety 层</span> · 3 条硬编码规则</div>
+                <div>• <span class="text-nebula-300">语音交互</span> · Whisper + Edge TTS</div>
+              </div>
+              <div class="mt-4">
+                <div class="text-xs text-slate-500 font-mono mb-2">信心指标</div>
+                <div class="progress-track h-2">
+                  <div class="progress-fill nebula" style="width: 60%;"></div>
+                </div>
+                <div class="text-xs text-nebula-300 mt-1 font-mono">60% · 进行中</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Milestone 3 -->
+          <div class="flex gap-4 md:gap-8">
+            <div class="flex flex-col items-center">
+              <div class="timeline-dot" style="background: radial-gradient(circle, #a78bfa, #8b5cf6);"></div>
+            </div>
+            <div class="glass-light rounded-2xl p-6 flex-1 border border-nebula-500/15">
+              <div class="flex items-center gap-3 mb-4">
+                <span class="tag font-mono">M3 · 推理与协作</span>
+                <span class="text-xs text-slate-500 font-mono">7/15 - 9/15</span>
+              </div>
+              <h4 class="text-lg font-bold text-white mb-3">Ghost Layer 雏形</h4>
+              <div class="text-sm text-slate-300 space-y-2">
+                <div>• <span class="text-nebula-300">因果图谱引擎</span> · 多跳推理 + 冲突检测</div>
+                <div>• <span class="text-nebula-300">全局回溯决策</span> · 3 分支推演</div>
+                <div>• <span class="text-nebula-300">Web 星链可视化</span> · Three.js 粒子</div>
+                <div>• <span class="text-nebula-300">内测反馈</span> · 5-10 名真实用户</div>
+                <div>• <span class="text-nebula-300">v1.0 发布</span> · 面试展示包</div>
+              </div>
+              <div class="mt-4">
+                <div class="text-xs text-slate-500 font-mono mb-2">信心指标</div>
+                <div class="progress-track h-2">
+                  <div class="progress-fill nebula" style="width: 40%;"></div>
+                </div>
+                <div class="text-xs text-nebula-300 mt-1 font-mono">40% · 规划中</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-divider max-w-4xl mx-auto"></div>
+
+<!-- ============ SYNTHESIS · 审计研判 ============ -->
+<section id="synthesis" class="py-20 md:py-28 px-5 md:px-8">
+  <div class="max-w-7xl mx-auto">
+
+    <div class="text-center mb-16 reveal">
+      <div class="inline-flex items-center gap-2 mb-4">
+        <span class="chapter-num text-sm">06 / SYNTHESIS</span>
+        <span class="h-px w-12 bg-nebula-500/30"></span>
+      </div>
+      <h2 class="text-4xl md:text-5xl font-black text-white mb-4">战略审计<span class="text-gradient">研判</span></h2>
+      <p class="text-slate-400 max-w-2xl mx-auto">2026-06-07 · 全量 MD 梳理 + 两次审计碰撞 + 独立判断</p>
+    </div>
+
+    <!-- 三层定义 -->
+    <div class="glass rounded-3xl p-7 md:p-10 mb-8 reveal">
+      <h3 class="text-2xl font-black text-white mb-6">数字灵魂 · 三层定义<span class="text-xs text-slate-500 font-mono ml-3">来自用户原话 #7</span></h3>
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="glass-soft rounded-2xl p-6 border-b-2 border-cosmic-400/40">
+          <div class="text-4xl mb-3">&#x1F50D;</div>
+          <h4 class="text-lg font-bold text-white mb-2">第一层 · 数据收集</h4>
+          <p class="text-sm text-slate-400 leading-relaxed">"我第一件事要做的肯定是收集他们在这些应用上面的一些信息什么的，这样才能组成我。"</p>
+          <div class="mt-4 space-y-1.5">
+            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-nebula-400"></span><span class="text-xs text-slate-300">5 采集器已统一</span></div>
+            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-nebula-400"></span><span class="text-xs text-slate-300">detect/collect/summary/info</span></div>
+            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-nebula-400"></span><span class="text-xs text-slate-300">aid collect scan 一键扫描</span></div>
+          </div>
+        </div>
+        <div class="glass-soft rounded-2xl p-6 border-b-2 border-nebula-400/40">
+          <div class="text-4xl mb-3">&#x1F441;</div>
+          <h4 class="text-lg font-bold text-white mb-2">第二层 · 无感感知</h4>
+          <p class="text-sm text-slate-400 leading-relaxed">"我一进场，不管在 Codex 还是在 Cursor 还是 Claude 里面……相当于我一出现就直接接管了我在这台电脑上的所有记忆。"</p>
+          <div class="mt-4 space-y-1.5">
+            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span><span class="text-xs text-slate-300">MCP 身份注入 — 待打通</span></div>
+            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span><span class="text-xs text-slate-300">三层记忆 — 待实现</span></div>
+            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span><span class="text-xs text-slate-300">profile 压缩 &le;200 tokens</span></div>
+          </div>
+        </div>
+        <div class="glass-soft rounded-2xl p-6 border-b-2 border-rose-400/40">
+          <div class="text-4xl mb-3">&#x1F590;</div>
+          <h4 class="text-lg font-bold text-white mb-2">第三层 · 代替操作</h4>
+          <p class="text-sm text-slate-400 leading-relaxed">"他除了知道我是我，他还得代替我直接在这个电脑上面操作。不加眼睛和手和脚，我怎么样一句话就让他去工作了？"</p>
+          <div class="mt-4 space-y-1.5">
+            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span><span class="text-xs text-slate-500">Computer Use — 规划中</span></div>
+            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span><span class="text-xs text-slate-500">Skill &rarr; Plan &rarr; Safety 闭环</span></div>
+            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span><span class="text-xs text-slate-500">A2A 社交协议 — 远期</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI 献策 · 各 AI 的智慧精华 -->
+    <div class="glass rounded-3xl p-7 mb-8 reveal">
+      <h3 class="text-2xl font-black text-white mb-2">AI 献策<span class="text-xs text-slate-500 font-mono ml-3">保留每一个值得记录的判断</span></h3>
+      <p class="text-slate-400 text-sm mb-6">以下是各 AI 在对话中提出的、经得起推敲的独立判断。不总结、不归并——让它们的思路各自说话。</p>
+      <div class="grid md:grid-cols-4 gap-4">
+        <!-- deep seek 专栏 -->
+        <div class="glass-soft rounded-2xl p-5 border-t-2 border-cosmic-400">
+          <div class="text-xs text-cosmic-300 font-bold font-mono mb-3">deep seek · 80轮对话</div>
+          <div class="text-sm text-slate-400 space-y-2.5">
+            <div><span class="text-white">"点线面球"建模方法：</span>用五层粒度（原子概念→关系→能力域→实例→生态）替代传统分层架构，使每个概念都可追溯可验证</div>
+            <div><span class="text-white">寄生策略验证：</span>从 MCP 协议下沉，不重新发明轮子，利用已有 9700 万月下载量做分发</div>
+            <div><span class="text-white">竞品矩阵分析：</span>6 个竞品按"需要你/需要平台"矩阵分类，确认 Alpha-ID 处于唯一空白象限</div>
+            <div><span class="text-white">反脆弱自检：</span>每个原则附"如果违反会怎样？"，七边形环每环带反向推翻验证</div>
+          </div>
+        </div>
+        <!-- AtomCode 上轮 -->
+        <div class="glass-soft rounded-2xl p-5 border-t-2 border-nebula-400">
+          <div class="text-xs text-nebula-300 font-bold font-mono mb-3">AtomCode · 上轮执行</div>
+          <div class="text-sm text-slate-400 space-y-2.5">
+            <div><span class="text-white">Collector 协议统一：</span>从"手工为每个数据源写采集逻辑"到 detect/collect/summary/info 四函数标准化</div>
+            <div><span class="text-white">一键扫描方案：</span>aid collect scan 自动探测全部数据源，2 秒完成画像合并</div>
+            <div><span class="text-white">Ghost Layer HTML 集成：</span>将静态可视化页面注入真实画像数据，从展示品变成产品功能</div>
+            <div><span class="text-white">画像压缩：</span>compress_profile ≤200 tokens 用于 MCP 上下文注入，让 AI 工具"认识你"</div>
+          </div>
+        </div>
+        <!-- 五路 AI 竞品分析 -->
+        <div class="glass-soft rounded-2xl p-5 border-t-2 border-pink-400">
+          <div class="text-xs text-pink-300 font-bold font-mono mb-3">五路 AI · 竞品研判</div>
+          <div class="text-sm text-slate-400 space-y-2.5">
+            <div><span class="text-white">全维度竞品检索报告：</span>星链级检索覆盖面广，每个竞品从技术/市场/生态三个维度评估</div>
+            <div><span class="text-white">技术债识别：</span>BCI 终局、寄生策略、不自己维护 LLM——三个被一致确认的去风险判断</div>
+            <div><span class="text-white">差异化确认：</span>"不做平台，做身份层"被多路 AI 独立判定为唯一可防守壁垒</div>
+            <div><span class="text-white">风险预警：</span>40% 幻觉率警告被证实——元宝的 piia-engram 确为幻觉，但竞品数据总体可靠</div>
+          </div>
+        </div>
+        <!-- 知识库生成 -->
+        <div class="glass-soft rounded-2xl p-5 border-t-2 border-emerald-400">
+          <div class="text-xs text-emerald-300 font-bold font-mono mb-3">知识库 · 架构贡献</div>
+          <div class="text-sm text-slate-400 space-y-2.5">
+            <div><span class="text-white">20 个原子点：</span>将系统概念拆到最小不可分割粒度，6 类 20 个，每点带类型/属性/验证方法</div>
+            <div><span class="text-white">10 种边类型：</span>不仅是"连接"，而是因果/归属/调用/触发/通信/存储/验证/展示/依赖/时序 10 种精确关系</div>
+            <div><span class="text-white">9 个能力面：</span>从身份面到协作面，每个面有明确输入/输出/依赖/验证标准</div>
+            <div><span class="text-white">面试展示包：</span>5 分钟 Demo 脚本 + 5 张 PPT 模板 + 投资人 3 问应答——项目外宣的全套素材</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 碰撞分析 -->
+    <div class="grid md:grid-cols-2 gap-6 reveal">
+      <div class="glass rounded-3xl p-7">
+        <h3 class="text-xl font-bold text-white mb-5">5 个关键碰撞</h3>
+        <div class="space-y-4">
+          <div class="flex gap-3">
+            <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">1</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">双大脑 vs 点线面球：</span>不矛盾。双大脑 = 运行时架构，点线面球 = 设计时建模。保留两套，各司其职</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">2</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">执行节奏：</span>Phase 循序（对内）+ 月度冲刺（对外）。PLAN.md 和知识库第 8 章共存</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">3</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">Computer Use 优先级：</span>已从 &#x1F7E1;40% 更正为 &#x1F534;P1。"手脚眼睛是最正确的"</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">4</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">两套 P0 清单：</span>审计 P0（文档卫生）+ 对话 P0（产品体验）。已统一执行 9/12</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">5</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">Collector 协议缺口：</span>已补齐 info() — 5 采集器全部四函数完整</div>
+          </div>
+        </div>
+      </div>
+      <div class="glass rounded-3xl p-7">
+        <h3 class="text-xl font-bold text-white mb-5">我的误判复盘</h3>
+        <div class="space-y-4">
+          <div class="flex gap-3">
+            <span class="text-rose-400 font-mono text-sm mt-0.5 shrink-0">&times;</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">Ghost Layer = 身份注入层？</span>不。数字灵魂 = 记忆 + 身份 + 代替操作。三位一体</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-rose-400 font-mono text-sm mt-0.5 shrink-0">&times;</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">A2A = 身份关系协议？</span>不。你的 AID 跟别的 AID 交朋友、协作。不是技术问题</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-rose-400 font-mono text-sm mt-0.5 shrink-0">&times;</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">Computer Use = 可选扩展？</span>不。没有手脚就没有"代替操作"，项目只剩身份层</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-rose-400 font-mono text-sm mt-0.5 shrink-0">&times;</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">手机端暂不考虑？</span>不。"一整个 Alpha ID 都该与手机端联通"</div>
+          </div>
+          <div class="mt-4 p-3 rounded-xl bg-rose-500/5 border border-rose-500/15">
+            <div class="text-xs text-slate-400">根因：我把文档当成了<span class="text-white">代码说明书</span>，而你把文档当成了<span class="text-nebula-300">意图的载体</span>。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 状态仪表盘 -->
+    <div class="mt-8 glass rounded-3xl p-7 reveal">
+      <h3 class="text-xl font-bold text-white mb-6">项目四层状态</h3>
+      <div class="grid md:grid-cols-4 gap-4">
+        <div class="text-center">
+          <div class="text-sm text-slate-500 mb-2">文档层</div>
+          <div class="text-3xl font-black text-gradient">52</div>
+          <div class="text-xs text-slate-500 mt-1">MD 文件</div>
+          <div class="progress-track h-1.5 mt-3"><div class="progress-fill nebula" style="width:90%"></div></div>
+          <div class="text-xs text-nebula-300 mt-1 font-mono">90% · 过密</div>
+        </div>
+        <div class="text-center">
+          <div class="text-sm text-slate-500 mb-2">设计层</div>
+          <div class="text-3xl font-black text-cosmic-400">2</div>
+          <div class="text-xs text-slate-500 mt-1">并存架构</div>
+          <div class="progress-track h-1.5 mt-3"><div class="progress-fill cosmic" style="width:65%"></div></div>
+          <div class="text-xs text-cosmic-300 mt-1 font-mono">65% · 待统一</div>
+        </div>
+        <div class="text-center">
+          <div class="text-sm text-slate-500 mb-2">代码层</div>
+          <div class="text-3xl font-black text-pink-400">5</div>
+          <div class="text-xs text-slate-500 mt-1">采集器统协</div>
+          <div class="progress-track h-1.5 mt-3"><div class="progress-fill pink" style="width:45%"></div></div>
+          <div class="text-xs text-pink-300 mt-1 font-mono">45% · 追赶中</div>
+        </div>
+        <div class="text-center">
+          <div class="text-sm text-slate-500 mb-2">体验层</div>
+          <div class="text-3xl font-black text-emerald-400">3</div>
+          <div class="text-xs text-slate-500 mt-1">可跑命令</div>
+          <div class="progress-track h-1.5 mt-3"><div class="progress-fill emerald" style="width:30%"></div></div>
+          <div class="text-xs text-emerald-300 mt-1 font-mono">30% · 最小闭环</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 下一步 -->
+    <div class="mt-8 glass rounded-3xl p-7 reveal">
+      <h3 class="text-xl font-bold text-white mb-6">下一步<span class="text-xs text-slate-500 font-mono ml-3">SYNTHESIS_2026-06-07.md</span></h3>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="glass-soft rounded-2xl p-5 border-t-2 border-rose-400">
+          <div class="text-xs text-rose-300 font-mono mb-2">&#x1F534; 立刻</div>
+          <div class="text-sm text-slate-300 space-y-1.5">
+            <div>&bull; 更新 ARCHITECTURE.md</div>
+            <div>&bull; 全局命名统一</div>
+            <div>&bull; 创建单一数据源</div>
+          </div>
+        </div>
+        <div class="glass-soft rounded-2xl p-5 border-t-2 border-amber-400">
+          <div class="text-xs text-amber-300 font-mono mb-2">&#x1F7E1; 本月</div>
+          <div class="text-sm text-slate-300 space-y-1.5">
+            <div>&bull; 三层记忆最小版本</div>
+            <div>&bull; MCP 身份注入打通</div>
+            <div>&bull; 重写 GAP.md</div>
+          </div>
+        </div>
+        <div class="glass-soft rounded-2xl p-5 border-t-2 border-emerald-400">
+          <div class="text-xs text-emerald-300 font-mono mb-2">&#x1F7E2; 远期</div>
+          <div class="text-sm text-slate-300 space-y-1.5">
+            <div>&bull; 因果图谱引擎</div>
+            <div>&bull; Computer Use 闭环</div>
+            <div>&bull; A2A + 手机端</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ 05 · 生态演化 ============ -->
+<section id="ecosystem" class="py-20 md:py-28 px-5 md:px-8">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-16 reveal">
+      <div class="inline-flex items-center gap-2 mb-4">
+        <span class="chapter-num text-sm">05 / ECOSYSTEM</span>
+        <span class="h-px w-12 bg-nebula-500/30"></span>
+      </div>
+      <h2 class="text-4xl md:text-5xl font-black text-white mb-4">生态<span class="text-gradient">演化路径</span></h2>
+      <p class="text-slate-400 max-w-2xl mx-auto">从寄生 MCP/A2A 协议到成为身份层插件，最终形成自主的数字灵魂生态。</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6 reveal">
+      <!-- 左：当前生态 -->
+      <div class="glass rounded-3xl p-7">
+        <div class="flex items-center gap-2 mb-5">
+          <span class="tag tag-blue font-mono">当前生态</span>
+          <span class="text-xs text-slate-500 font-mono">2026.06</span>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-6">寄生与桥接</h3>
+        <div class="space-y-4">
+          <div class="glass-soft rounded-xl p-4">
+            <div class="flex items-center gap-3 mb-2">
+              <span class="text-cosmic-400 font-bold">MCP 协议</span>
+              <span class="tag tag-emerald text-[10px]">9700万月下载</span>
+            </div>
+            <div class="text-sm text-slate-400">通过 MCP 暴露身份工具，让 Claude Desktop / Cursor / Windsurf 直接认识用户。</div>
+          </div>
+          <div class="glass-soft rounded-xl p-4">
+            <div class="flex items-center gap-3 mb-2">
+              <span class="text-pink-400 font-bold">A2A 协议</span>
+              <span class="tag tag-emerald text-[10px]">150+ 组织</span>
+            </div>
+            <div class="text-sm text-slate-400">Agent-to-Agent 通信标准。Alpha-ID 作为身份层插件，让 Agent 之间知道"谁在调用谁"。</div>
+          </div>
+          <div class="glass-soft rounded-xl p-4 border-l-2 border-rose-400/60">
+            <div class="flex items-center gap-3 mb-2">
+              <span class="text-nebula-400 font-bold">Computer Use</span>
+              <span class="tag tag-rose text-[10px] font-mono">🔴 P1 核心</span>
+              <span class="tag tag-emerald text-[10px]">微软 Fara1.5 开源</span>
+            </div>
+            <div class="text-sm text-slate-400">"手脚眼睛是最正确的" — 让 AI 直接操作电脑。Alpha-ID 提供操作背后的身份与记忆，不只是按键脚本。</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右：未来愿景 -->
+      <div class="glass rounded-3xl p-7 relative overflow-hidden">
+        <div class="absolute -top-20 -right-20 w-56 h-56 rounded-full bg-nebula-500/15 blur-3xl"></div>
+        <div class="flex items-center gap-2 mb-5">
+          <span class="tag tag-emerald font-mono">未来愿景</span>
+          <span class="text-xs text-slate-500 font-mono">BCI 时代</span>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-6">数字灵魂完全体</h3>
+        <div class="space-y-4">
+          <div class="flex gap-3">
+            <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">→</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">意图驱动：</span>用户一个意念，AID 执行。不需要对话框。</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">→</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">异步执行：</span>任务丢给它，做完叫你。不等。</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">→</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">持续在线：</span>你睡觉它醒着，自主探索、学习、社交。</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">→</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">默认信任：</span>80% 操作自动执行，只有风险操作才确认。</div>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">→</span>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">数字遗嘱：</span>你走了，AID 替你守护记忆，传递给指定执行人。</div>
+          </div>
+        </div>
+
+        <div class="mt-6 p-4 rounded-2xl bg-nebula-500/5 border border-emerald-500/20">
+          <div class="text-xs text-nebula-300 font-mono mb-1.5">终极形态</div>
+          <div class="text-sm text-slate-200 font-mono">AID 隐身了。你不再"打开" AID。你只在一些时刻感知到它——晨报、跨工具同步、新 AI 直接认识你。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-divider max-w-4xl mx-auto"></div>
+
+<!-- ============ Footer ============ -->
+<footer class="py-16 px-5 md:px-8">
+  <div class="max-w-7xl mx-auto">
+    <div class="glass rounded-3xl p-8 md:p-12 text-center">
+      <div class="text-3xl md:text-4xl font-black text-gradient mb-4">Alpha-ID</div>
+      <div class="text-lg text-slate-300 mb-6">你的数字灵魂。坐在所有 AI 工具之上的 Ghost Layer。</div>
+      <div class="flex flex-wrap justify-center gap-4 mb-8">
+        <span class="tag font-mono">DID:aid:xxx</span>
+        <span class="tag tag-blue font-mono">Ed25519</span>
+        <span class="tag tag-pink font-mono">因果图谱</span>
+        <span class="tag tag-emerald font-mono">三层记忆</span>
+        <span class="tag tag-amber font-mono">PoE 可验证</span>
+      </div>
+      <div class="text-xs text-slate-500 font-mono">
+        <div>Version 1.0 · 2026-06-06</div>
+        <div class="mt-2">MIT License · GitHub: wenwanqing1217/alpha-id</div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</main>
+
+<!-- 滚动显现脚本 -->
 <script>
-const { createApp, ref, computed, nextTick, onMounted } = Vue;
-
-createApp({
-  setup() {
-    const agent = ref({ alpha_id: null, friends: [], stats: {} });
-    const messages = ref([]);
-    const input = ref('');
-    const loading = ref(false);
-    const showLogin = ref(false);
-    const showIdentity = ref(false);
-    const deviceFp = ref('');
-    const existingAlphaId = ref('');
-    const loginError = ref('');
-    const identityJson = ref('');
-    const chatBox = ref(null);
-    const brainState = ref('sleep');
-    const activeTab = ref('chat');
-    const networkStats = ref({ peers: 0, chains: 0 });
-    const networkLoaded = ref(false);
-    const networkContainer = ref(null);
-    let networkInstance = null;
-
-    const stateLabels = { sleep: '休眠', awake: '活跃', idle: '空闲', error: '故障', thinking: '思考' };
-    const stateColors = { sleep: 'text-slate-400', awake: 'text-green-500', idle: 'text-amber-500', error: 'text-red-500', thinking: 'text-purple-500' };
-
-    const brainStateText = computed(() => stateLabels[brainState.value] || brainState.value);
-    const brainStateClass = computed(() => stateColors[brainState.value] || 'text-slate-400');
-    const isAwake = computed(() => brainState.value === 'awake' || brainState.value === 'idle');
-
-    function autoResize(e) {
-      e.target.style.height = 'auto';
-      e.target.style.height = Math.min(e.target.scrollHeight, 150) + 'px';
-    }
-
-    function scrollToBottom() {
-      nextTick(() => {
-        if (chatBox.value) chatBox.value.scrollTop = chatBox.value.scrollHeight;
-      });
-    }
-
-    async function send() {
-      const text = input.value.trim();
-      if (!text && !agent.value.alpha_id) return;
-
-      if (!agent.value.alpha_id) {
-        // 未登录：先弹出登录框
-        showLogin.value = true;
-        return;
-      }
-
-      messages.value.push({ role: 'user', content: text });
-      input.value = '';
-      loading.value = true;
-      scrollToBottom();
-
-      try {
-        const resp = await fetch('/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ alpha_id: agent.value.alpha_id, message: text }),
-        });
-        const data = await resp.json();
-        // 如果大脑回忆到了东西，显示在气泡上方
-        const msg = { role: 'agent', content: data.reply || data.error || '无响应' };
-        if (data.recalled_memories && data.recalled_memories.length) {
-          msg.memories = data.recalled_memories;
-        }
-        messages.value.push(msg);
-        // 更新统计数据
-        if (data.agent) {
-          Object.assign(agent.value, data.agent);
-          brainState.value = data.agent.brain_state || brainState.value;
-        }
-      } catch (e) {
-        messages.value.push({ role: 'agent', content: `[网络错误] ${e.message}` });
-      } finally {
-        loading.value = false;
-        scrollToBottom();
-      }
-    }
-
-    async function login() {
-      if (!deviceFp.value.trim()) {
-        loginError.value = '请输入设备指纹';
-        return;
-      }
-      loginError.value = '';
-      const body = { device_fingerprint: deviceFp.value.trim() };
-      if (existingAlphaId.value.trim()) {
-        body.alpha_id = existingAlphaId.value.trim();
-      }
-      try {
-        const resp = await fetch('/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        const data = await resp.json();
-        if (data.success) {
-          agent.value.alpha_id = data.alpha_id;
-          agent.value.friends = data.friends || [];
-          agent.value.stats = data.stats || {};
-          brainState.value = data.brain_state || 'awake';
-          const greeting = data.greeting || `已登录为 ${data.alpha_id}`;
-          const isNew = data.action === 'register';
-          messages.value.push({ role: 'agent', content: greeting, is_greeting: isNew });
-          showLogin.value = false;
-        } else {
-          loginError.value = data.error || '登录失败';
-        }
-      } catch (e) {
-        loginError.value = `[网络错误] ${e.message}`;
-      }
-    }
-
-    async function fetchIdentity() {
-      if (!agent.value.alpha_id) return;
-      try {
-        const resp = await fetch('/identity', {
-          headers: { 'X-Alpha-ID': agent.value.alpha_id },
-        });
-        const data = await resp.json();
-        identityJson.value = JSON.stringify(data, null, 2);
-        showIdentity.value = true;
-      } catch (e) {
-        identityJson.value = `错误: ${e.message}`;
-        showIdentity.value = true;
-      }
-    }
-
-    async function brainSleep() {
-      if (!agent.value.alpha_id) return;
-      try {
-        const resp = await fetch('/brain/sleep', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ alpha_id: agent.value.alpha_id }),
-        });
-        const data = await resp.json();
-        if (data.success) {
-          brainState.value = data.state;
-          messages.value.push({ role: 'agent', content: `💤 大脑已休眠` });
-        }
-      } catch (e) {
-        messages.value.push({ role: 'agent', content: `[错误] ${e.message}` });
-      }
-    }
-
-    async function brainThink() {
-      if (!agent.value.alpha_id) return;
-      messages.value.push({ role: 'user', content: '🧠 大脑主动思考' });
-      try {
-        const resp = await fetch('/brain/think', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ alpha_id: agent.value.alpha_id }),
-        });
-        const data = await resp.json();
-        if (data.success) {
-          brainState.value = data.state || brainState.value;
-          messages.value.push({ role: 'agent', content: `🧠 ${data.agent_thought || '思考完成'}` });
-        }
-      } catch (e) {
-        messages.value.push({ role: 'agent', content: `[错误] ${e.message}` });
-      }
-    }
-
-    async function fetchNetwork() {
-      try {
-        const resp = await fetch('/network/topology');
-        const data = await resp.json();
-        networkStats.value = data.stats || { peers: 0, chains: 0 };
-        networkLoaded.value = true;
-
-        // 等 DOM 渲染
-        await nextTick();
-        const container = networkContainer.value;
-        if (!container) return;
-
-        // 销毁旧实例
-        if (networkInstance) {
-          networkInstance.destroy();
-          networkInstance = null;
-        }
-
-        // vis-network 节点样式
-        const colors = { self: '#6366f1', peer: '#8b5cf6', poe: '#34d399' };
-        const shapes = { self: 'star', peer: 'dot', poe: 'diamond' };
-        const sizes = { self: 30, peer: 25, poe: 20 };
-
-        const nodes = new vis.DataSet(
-          (data.nodes || []).map(n => ({
-            id: n.id,
-            label: n.label,
-            group: n.group,
-            color: colors[n.group] || '#94a3b8',
-            shape: shapes[n.group] || 'dot',
-            size: sizes[n.group] || 20,
-            font: { color: document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#334155', size: 12 },
-            borderWidth: n.group === 'self' ? 3 : 2,
-            title: `<div style="font-size:12px">${n.did || n.poe_id || ''}<br>${n.alias ? '别名: '+n.alias : ''}</div>`,
-          }))
-        );
-
-        const edges = new vis.DataSet(
-          (data.edges || []).map(e => ({
-            from: e.from,
-            to: e.to,
-            label: e.label || '',
-            color: e.color || { color: '#94a3b8' },
-            font: { size: 10, color: '#94a3b8' },
-            arrows: 'to',
-            smooth: { type: 'curvedCW', roundness: 0.15 },
-            title: e.title || '',
-          }))
-        );
-
-        const options = {
-          physics: {
-            solver: 'forceAtlas2Based',
-            forceAtlas2Based: { gravitationalConstant: -40, centralGravity: 0.005, springLength: 150, springConstant: 0.08 },
-            stabilization: { iterations: 100 },
-          },
-          interaction: {
-            hover: true,
-            tooltipDelay: 200,
-            navigationButtons: true,
-            keyboard: true,
-          },
-          edges: {
-            smooth: { type: 'continuous' },
-          },
-          groups: {
-            self: { color: { background: '#6366f1', border: '#4338ca' } },
-            peer: { color: { background: '#8b5cf6', border: '#7c3aed' } },
-            poe: { color: { background: '#34d399', border: '#10b981' } },
-          },
-        };
-
-        networkInstance = new vis.Network(container, { nodes, edges }, options);
-      } catch (e) {
-        console.error('Network topology error:', e);
-        networkLoaded.value = true;
-      }
-    }
-
-    function toggleDark() {
-      document.documentElement.classList.toggle('dark');
-    }
-
-    // 自动检测系统深色模式
-    onMounted(() => {
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.classList.add('dark');
+document.addEventListener('DOMContentLoaded', function() {
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        // 每次进入视口都重新触发动画
+        entry.target.classList.remove('visible');
+        void entry.target.offsetWidth; // 强制重排
+        entry.target.classList.add('visible');
       }
     });
+  }, { threshold: 0.1, rootMargin: '-50px' });
+  reveals.forEach(el => observer.observe(el));
 
-    return {
-      agent, messages, input, loading, showLogin, showIdentity,
-      deviceFp, existingAlphaId, loginError, identityJson, chatBox,
-      brainState, brainStateText, brainStateClass, isAwake,
-      activeTab, networkStats, networkLoaded, networkContainer,
-      send, login, fetchIdentity, brainSleep, brainThink,
-      fetchNetwork, toggleDark, autoResize, scrollToBottom,
-    };
+  // ============ 小精灵互动系统 ============
+  const alphaSprite = document.getElementById('alpha-sprite');
+  const spriteBubble = document.getElementById('sprite-bubble');
+  const bubbleText = document.getElementById('bubble-text');
+  const rippleContainer = document.getElementById('ripple-container');
+
+  // 有趣文案库
+  const phrases = {
+    near: ['被你发现了~', '星尘围绕着你', '因果在此交汇', '意识在苏醒', '连接已建立'],
+    click: ['哇！你点我了！', '能量爆发~', '星轨在颤动', '灵魂在跳跃！', 'DID已激活'],
+    doubleClick: ['(*^▽^*)', '开心到转圈~', '星光在闪耀', '宇宙在回应'],
+    far: ['下次再见~', '星辰永不熄灭', '因果仍在延续', '我会在这里'],
+    idle: ['等待指令...', '星尘在汇聚', '意识在漂移', '守护中...'],
+    scroll: ['记忆在穿梭', '因果在编织', '探索更深的宇宙']
+  };
+
+  let bubbleTimeout;
+  let idleTimeout;
+  let lastClickTime = 0;
+  let isNear = false;
+  let isDragging = false;
+  let spriteCurrentX = 0, spriteCurrentY = 0;
+
+  // 显示气泡 - 在页面左上角或右上角区域安全显示，避免遮挡
+  function showBubble(category) {
+    const words = phrases[category];
+    const word = words[Math.floor(Math.random() * words.length)];
+    
+    // 创建文字，逐个从左到右出现
+    let html = '';
+    for (let i = 0; i < word.length; i++) {
+      html += `<span class="bubble-char" style="animation-delay: ${i * 0.15}s">${word[i]}</span>`;
+    }
+    bubbleText.innerHTML = html;
+    
+    const bubbleWidth = word.length * 20;
+    const bubbleHeight = 36;
+    
+    // 随机选择左上角或右上角区域
+    const isLeft = Math.random() > 0.5;
+    
+    // 获取当前滚动位置，确保气泡在可视区域内
+    const scrollY = window.scrollY;
+    const viewportHeight = window.innerHeight;
+    const safeTop = scrollY + 100;
+    const safeBottom = scrollY + viewportHeight - 100;
+    
+    if (isLeft) {
+      // 左上角区域：页面左边15%
+      spriteBubble.style.left = `${Math.random() * (window.innerWidth * 0.15 - bubbleWidth) + 20}px`;
+      spriteBubble.style.top = `${safeTop + Math.random() * Math.min(viewportHeight * 0.4, safeBottom - safeTop - bubbleHeight)}px`;
+      spriteBubble.style.right = 'auto';
+    } else {
+      // 右上角区域：页面右边15%
+      spriteBubble.style.right = `${Math.random() * (window.innerWidth * 0.15 - bubbleWidth) + 20}px`;
+      spriteBubble.style.top = `${safeTop + Math.random() * Math.min(viewportHeight * 0.4, safeBottom - safeTop - bubbleHeight)}px`;
+      spriteBubble.style.left = 'auto';
+    }
+    
+    spriteBubble.classList.add('visible');
+
+    clearTimeout(bubbleTimeout);
+    bubbleTimeout = setTimeout(() => {
+      spriteBubble.classList.remove('visible');
+    }, 5000);
   }
-}).mount('#app');
+
+  // 创建涟漪
+  function createRipple(x, y) {
+    const ripple = document.createElement('div');
+    ripple.className = 'ripple';
+    ripple.style.left = (x - 50) + 'px';
+    ripple.style.top = (y - 50) + 'px';
+    ripple.style.width = '100px';
+    ripple.style.height = '100px';
+    rippleContainer.appendChild(ripple);
+
+    setTimeout(() => {
+      ripple.remove();
+    }, 1000);
+  }
+
+  // 拖拽功能 - 支持随意拖拽并弹回原点
+  if (alphaSprite) {
+    let startX, startY;
+    let velocityX = 0, velocityY = 0;
+
+    alphaSprite.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      isDragging = true;
+      startX = e.clientX - spriteCurrentX;
+      startY = e.clientY - spriteCurrentY;
+      alphaSprite.style.transition = 'none';
+      alphaSprite.style.cursor = 'grabbing';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      
+      const newX = e.clientX - startX;
+      const newY = e.clientY - startY;
+      
+      velocityX = newX - spriteCurrentX;
+      velocityY = newY - spriteCurrentY;
+      
+      spriteCurrentX = newX;
+      spriteCurrentY = newY;
+      
+      alphaSprite.style.transform = `translate(${spriteCurrentX}px, ${spriteCurrentY}px)`;
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      alphaSprite.style.cursor = 'grab';
+      
+      // 弹回原点动画
+      alphaSprite.style.transition = 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      alphaSprite.style.transform = 'translate(0, 0)';
+      
+      spriteCurrentX = 0;
+      spriteCurrentY = 0;
+      
+      setTimeout(() => {
+        alphaSprite.style.transition = 'none';
+      }, 600);
+    });
+
+    document.addEventListener('mouseleave', () => {
+      if (isDragging) {
+        isDragging = false;
+        alphaSprite.style.cursor = 'grab';
+        alphaSprite.style.transition = 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        alphaSprite.style.transform = 'translate(0, 0)';
+        spriteCurrentX = 0;
+        spriteCurrentY = 0;
+        setTimeout(() => {
+          alphaSprite.style.transition = 'none';
+        }, 600);
+      }
+    });
+  }
+
+  // 鼠标靠近
+  alphaSprite.addEventListener('mouseenter', () => {
+    isNear = true;
+    alphaSprite.classList.add('shy');
+    alphaSprite.classList.add('attract');
+    showBubble('near');
+  });
+
+  // 鼠标离开
+  alphaSprite.addEventListener('mouseleave', () => {
+    isNear = false;
+    alphaSprite.classList.remove('shy');
+    alphaSprite.classList.remove('attract');
+    showBubble('far');
+  });
+
+  // 点击 - 幽灵跳跃 + 涟漪
+  alphaSprite.addEventListener('click', (e) => {
+    if (isDragging) return;
+    
+    const now = Date.now();
+    const timeDiff = now - lastClickTime;
+
+    if (timeDiff < 300) {
+      // 双击 - 幽灵跳跃
+      alphaSprite.classList.add('excited');
+      showBubble('doubleClick');
+      setTimeout(() => {
+        alphaSprite.classList.remove('excited');
+      }, 2000);
+    } else {
+      // 单击 - 幽灵跳跃
+      alphaSprite.classList.add('excited');
+      createRipple(e.clientX, e.clientY);
+      showBubble('click');
+      setTimeout(() => {
+        alphaSprite.classList.remove('excited');
+      }, 2000);
+    }
+
+    lastClickTime = now;
+  });
+
+  // 鼠标静止3秒 - 待机语
+  function resetIdleTimer() {
+    clearTimeout(idleTimeout);
+    idleTimeout = setTimeout(() => {
+      if (!isNear && !isDragging) {
+        showBubble('idle');
+      }
+    }, 3000);
+  }
+
+  document.addEventListener('mousemove', resetIdleTimer);
+  resetIdleTimer();
+
+  // 页面滚动 - 滚动语
+  let lastScrollY = 0;
+  window.addEventListener('scroll', () => {
+    const currentScrollY = window.scrollY;
+    if (Math.abs(currentScrollY - lastScrollY) > 50) {
+      showBubble('scroll');
+      lastScrollY = currentScrollY;
+    }
+  });
+
+  // 全局点击涟漪
+  document.addEventListener('click', (e) => {
+    if (!alphaSprite.contains(e.target)) {
+      createRipple(e.clientX, e.clientY);
+    }
+  });
+
+  // ============ Logo 拖拽摇晃效果 ============
+  const logoSprite = document.getElementById('logo-sprite');
+  let logoIsDragging = false;
+  let logoStartX, logoStartY;
+  let logoCurrentX = 0, logoCurrentY = 0;
+  let logoVelocityX = 0, logoVelocityY = 0;
+  let logoAnimating = false;
+
+  if (logoSprite) {
+    logoSprite.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      logoIsDragging = true;
+      logoStartX = e.clientX - logoCurrentX;
+      logoStartY = e.clientY - logoCurrentY;
+      logoSprite.style.transition = 'none';
+      logoAnimating = false;
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!logoIsDragging) return;
+      const newX = e.clientX - logoStartX;
+      const newY = e.clientY - logoStartY;
+      
+      // 计算速度（用于惯性）
+      logoVelocityX = newX - logoCurrentX;
+      logoVelocityY = newY - logoCurrentY;
+      
+      logoCurrentX = newX;
+      logoCurrentY = newY;
+      
+      // 应用摇晃旋转
+      const rotationX = logoCurrentY * 0.5;
+      const rotationY = -logoCurrentX * 0.5;
+      logoSprite.style.transform = `translate(${logoCurrentX}px, ${logoCurrentY}px) rotateX(${rotationX}deg) rotateY(${rotationY}deg) scale(1.05)`;
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (!logoIsDragging) return;
+      logoIsDragging = false;
+      
+      // 惯性动画
+      logoAnimating = true;
+      const startTime = Date.now();
+      const startX = logoCurrentX, startY = logoCurrentY;
+      const vx = logoVelocityX * 2, vy = logoVelocityY * 2;
+      
+      function animate() {
+        if (!logoAnimating) return;
+        
+        const elapsed = Date.now() - startTime;
+        const duration = 600;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        
+        // 指数衰减
+        const decay = Math.pow(0.9, elapsed / 16);
+        logoCurrentX = startX + vx * decay;
+        logoCurrentY = startY + vy * decay;
+        
+        // 回到原点
+        logoCurrentX = logoCurrentX * (1 - ease);
+        logoCurrentY = logoCurrentY * (1 - ease);
+        
+        const rotationX = logoCurrentY * 0.5;
+        const rotationY = -logoCurrentX * 0.5;
+        logoSprite.style.transform = `translate(${logoCurrentX}px, ${logoCurrentY}px) rotateX(${rotationX}deg) rotateY(${rotationY}deg)`;
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          logoSprite.style.transition = 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+          logoSprite.style.transform = 'translate(0, 0) rotateX(0) rotateY(0)';
+          logoCurrentX = 0;
+          logoCurrentY = 0;
+          setTimeout(() => {
+            logoSprite.style.transition = 'none';
+          }, 400);
+        }
+      }
+      
+      animate();
+    });
+  }
+
+  // ============ 在线演示系统 ============
+  const demoInit = document.getElementById('demo-init');
+  const demoGenerating = document.getElementById('demo-generating');
+  const demoComplete = document.getElementById('demo-complete');
+  const startDemoBtn = document.getElementById('start-demo-btn');
+  const resetDemoBtn = document.getElementById('reset-demo-btn');
+  const generateBtn = document.getElementById('generate-btn');
+  const demoDid = document.getElementById('demo-did');
+  const demoPubkey = document.getElementById('demo-pubkey');
+
+  function generateRandomHex(length) {
+    let result = '0x';
+    const chars = '0123456789abcdef';
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+
+  function generateDid() {
+    const part1 = generateRandomHex(8).slice(2);
+    const part2 = generateRandomHex(4).slice(2);
+    const part3 = generateRandomHex(4).slice(2);
+    const part4 = generateRandomHex(12).slice(2);
+    return `did:aid:${part1}-${part2}-${part3}-${part4}`;
+  }
+
+  function startDemo() {
+    demoInit.classList.add('hidden');
+    demoGenerating.classList.remove('hidden');
+
+    setTimeout(() => {
+      demoGenerating.classList.add('hidden');
+      demoComplete.classList.remove('hidden');
+
+      // 生成随机 DID 和公钥
+      demoDid.textContent = generateDid();
+      demoPubkey.textContent = generateRandomHex(40);
+    }, 2500);
+  }
+
+  function resetDemo() {
+    demoComplete.classList.add('hidden');
+    demoInit.classList.remove('hidden');
+  }
+
+  if (startDemoBtn) {
+    startDemoBtn.addEventListener('click', startDemo);
+  }
+
+  if (generateBtn) {
+    generateBtn.addEventListener('click', startDemo);
+  }
+
+  if (resetDemoBtn) {
+    resetDemoBtn.addEventListener('click', resetDemo);
+  }
+});
 </script>
+
 </body>
 </html>

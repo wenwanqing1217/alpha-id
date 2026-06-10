@@ -30,15 +30,23 @@ _DOC_FILE = _KEY_DIR / "identity.doc.json"
 _SIG_FILE = _KEY_DIR / ".last_sig"
 
 
+# 新增元数据文件路径
+_METADATA_FILE = _KEY_DIR / "metadata.json"
+
 def _ensure_dir():
     _KEY_DIR.mkdir(parents=True, exist_ok=True)
-
 
 def _load_registry() -> DIDRegistry:
     reg = DIDRegistry()
     if _PRIV_KEY_FILE.exists():
         priv_bytes = _PRIV_KEY_FILE.read_bytes()
         reg.from_private_key_bytes(priv_bytes)
+        # 新增：加载元数据
+        if _METADATA_FILE.exists():
+            try:
+                reg._metadata = json.loads(_METADATA_FILE.read_text())
+            except Exception as e:
+                print(f"⚠  元数据加载失败: {e}")
     return reg
 
 
@@ -49,6 +57,10 @@ def _save_registry(reg: DIDRegistry):
     _DID_FILE.write_text(reg.did)
     doc = reg.build_document()
     _DOC_FILE.write_text(doc.to_json())
+
+    # 新增：保存元数据
+    if hasattr(reg, "_metadata"):
+        _METADATA_FILE.write_text(json.dumps(reg._metadata, indent=2))
     print(f"  DID: {reg.did}")
     print(f"  Document: {_DOC_FILE}")
 
@@ -56,18 +68,45 @@ def _save_registry(reg: DIDRegistry):
 @identity_app.command()
 def init(
     force: bool = typer.Option(False, "--force", "-f", help="覆盖已有身份"),
+    interactive: bool = typer.Option(False, "--interactive", "-i", help="交互式配置向导"),
+    config: Optional[str] = typer.Option(None, "--config", help="从配置文件生成身份"),
 ):
     """生成新的 Agent DID 身份"""
     if _PRIV_KEY_FILE.exists() and not force:
-        existing = _DID_FILE.read_text().strip() if _DID_FILE.exists() else "?"
+        existing = _DID_FILE.read_text() if _DID_FILE.exists() else "未知"
         typer.echo(f"⚠  已有身份: {existing}")
         typer.echo("  使用 --force 重新生成（旧密钥将被覆盖）")
         raise typer.Exit(1)
 
+    metadata = None
+    if interactive:
+        metadata = _run_interactive_wizard()
+    elif config:
+        metadata = _load_config(config)
+
     reg = DIDRegistry()
-    reg.generate()
+    reg.generate(metadata=metadata)
     _save_registry(reg)
     typer.echo("✅ 新身份已创建")
+
+
+def _run_interactive_wizard() -> dict:
+    """交互式向导，收集人格画像信息"""
+    metadata = {}
+    typer.echo("\n🎭 请输入你的基本信息")
+    metadata["name"] = typer.prompt("1. 姓名/昵称")
+    metadata["bio"] = typer.prompt("2. 简要描述你的兴趣或职业", default="")
+    return metadata
+
+
+def _load_config(config_path: str) -> dict:
+    """从配置文件加载元数据"""
+    try:
+        with open(config_path, "r") as f:
+            return json.load(f)
+    except Exception as e:
+        typer.echo(f"❌ 配置文件加载失败: {e}")
+        raise typer.Exit(1)
 
 
 @identity_app.command()
@@ -578,7 +617,27 @@ def execute(
         typer.echo("⚠  请手动更新你的 DID Document 公钥为新密钥")
         typer.echo("   或用 aid identity init --force 导入新身份")
     else:
-        typer.echo(f"❌ {result.get('message', '执行失败')}")
+        typer.echo('❌ 身份恢复执行失败，请检查恢复请求状态')
+        return
+
+
+def _run_interactive_wizard() -> dict:
+    """交互式向导，收集人格画像信息"""
+    metadata = {}
+    typer.echo("\n🎭 请输入你的基本信息")
+    metadata["name"] = typer.prompt("1. 姓名/昵称")
+    metadata["bio"] = typer.prompt("2. 简要描述你的兴趣或职业", default="")
+    return metadata
+
+def _load_config(config_path: str) -> dict:
+    """从配置文件加载元数据"""
+    try:
+        with open(config_path, "r") as f:
+            return json.load(f)
+    except Exception as e:
+        typer.echo(f"❌ 配置文件加载失败: {e}")
+        raise typer.Exit(1)
+
 
 
 @recovery_app.command(name="list")
@@ -598,7 +657,6 @@ def recovery_list(
         return
 
     status_emoji = {
-        "pending": "⏳",
         "ready": "✅",
         "executable": "🚀",
         "executed": "🎉",

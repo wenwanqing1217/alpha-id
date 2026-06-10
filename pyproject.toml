@@ -1,8 +1,18 @@
 [project]
-name = "alpha-id"
-version = "0.3.0"
-description = "数字身份智能管理系统 — 含桌面精灵 (AID Fairy)"
+name = "alpha-id-zix"
+version = "0.2.0"
+description = "你的数字灵魂 — 用 ChatGPT 导出认识自己，让所有 AI 工具认识同一个你"
+readme = "README.md"
 requires-python = ">=3.12"
+license = "MIT"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: End Users/Desktop",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Utilities",
+]
 dependencies = [
     "psycopg2-binary>=2.9,<3",
     "sqlalchemy>=2.0",
@@ -13,8 +23,14 @@ dependencies = [
     "pydantic>=2.9",
     "typer>=0.12",
     "jinja2>=3.1",
+    "pyyaml>=6.0",
     "taskipy>=1.13",
 ]
+
+[project.urls]
+Homepage = "https://github.com/wenwanqing1217/alpha-id"
+Repository = "https://github.com/wenwanqing1217/alpha-id"
+Documentation = "https://github.com/wenwanqing1217/alpha-id#readme"
 
 [project.scripts]
 aid = "alpha_id.cli:app"
@@ -57,12 +73,13 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["aid*", "aid_*", "core*"]
+include = ["aid*", "aid_*", "alpha_id*", "core*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = "-q --tb=short --no-header"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.pytest.ini_options.junit_family]
 junit_family = "xunit2"

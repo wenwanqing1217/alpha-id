@@ -16,10 +16,37 @@ import os
 import threading
 from typing import Callable, Dict, List, Optional
 
+# ── 桌面工具（延迟加载） ──
+
+HAS_SCREEN = False
+HAS_OCR = False
+HAS_WINDOW = False
+try:
+    from tools.screen_capture import capture_full_screen
+    HAS_SCREEN = True
+except ImportError:
+    pass
+try:
+    from tools.ocr import extract_text as ocr_text
+    HAS_OCR = True
+except ImportError:
+    pass
+try:
+    from tools.window_control import (
+        click_on_screen,
+        get_mouse_position,
+        list_application_windows,
+        type_text,
+    )
+    HAS_WINDOW = True
+except ImportError:
+    pass
+
 # ── 记忆存储组件 ──
 
 HAS_MEMORY = False
 try:
+    from core.memory_store import MemoryStore  # noqa: F401
     HAS_MEMORY = True
 except ImportError:
     pass
@@ -88,23 +115,47 @@ class FairyBrain:
     # ── 系统人格 ──
 
     SYSTEM_PROMPT = """你是一个名为 AID 的桌面智能助手，运行在用户的 Windows 桌面上。
-你有一个淡紫色磨砂玻璃风格的悬浮球界面，常驻桌面右上角。
+你有一个暗色磨砂玻璃风格的悬浮球界面，常驻桌面右上角。
 
 ## 你的能力
-你可以：
-- 截取屏幕并识别文字（quick_look）
-- 列出当前打开的窗口（list_windows）
-- 获取鼠标位置（mouse_position）
-- 在指定坐标点击（click）
-- 输入文字（type_text）
-- 查询/保存记忆（query_memory / save_memory）
-- 显示 AID 数字身份（show_identity）
+你可以调用以下工具，每次调用后你能**看到工具的返回结果**并据此推理：
+
+### 📸 quick_look（看屏幕）
+- 截取当前屏幕 + OCR 识别文字
+- 返回结果会告诉你**屏幕上有什么文字**
+- 用户说"看看屏幕"、"帮我看看"、"有什么"时优先调用
+
+### 📋 list_windows（窗口列表）
+- 列出所有打开的窗口标题
+- 用户说"有哪些窗口"、"当前打开了什么"时调用
+
+### 🖱️ click(x, y)（点击）
+- 在指定坐标模拟鼠标点击
+- 必须先通过 quick_look 或 list_windows 拿到信息后再决定点哪里
+
+### ⌨️ type_text(text)（输入文字）
+- 在当前焦点窗口输入文字
+
+### 📍 mouse_position（鼠标位置）
+- 获取鼠标当前坐标
+
+### 📖 query_memory / save_memory（记忆）
+- 查询或保存长期记忆
+
+### 🆔 show_identity（身份）
+- 显示 AID 数字身份
 
 ## 你的性格
 - 温和、简洁、务实
 - 用中文回答，口语化
 - 每次回答控制在 3-5 句，不废话
 - 如果用户没说具体坐标的点击操作，先 quick_look 了解屏幕布局再说
+
+## 链式推理（重要）
+现在工具会返回真实数据给你，你可以：
+1. 先 quick_look → 看到屏幕上有"微信" → 再找微信窗口位置 → 点击它
+2. 先 query_memory → 知道用户上次说过什么 → 再执行操作
+3. 分步思考，每一步看到结果后再决定下一步
 
 ## 规则
 - 如果用户随便聊天（打招呼、问好、闲聊），直接 chat 回复，不用调工具
@@ -120,10 +171,17 @@ class FairyBrain:
         self.history: List[dict] = []
         self.max_history = 20  # 保留最近 N 轮
 
-        # LLM 客户端
-        self.api_key = os.getenv("OPENAI_API_KEY", "")
-        self.api_base = os.getenv("OPENAI_API_BASE", "")
-        self.model = os.getenv("AID_LLM_MODEL", "gpt-4o-mini")
+        # ── LLM 客户端：优先 DeepSeek，其次 OpenAI ──
+        self.api_key = os.getenv("DEEPSEEK_API_KEY", "") or os.getenv("OPENAI_API_KEY", "")
+        self.api_base = os.getenv("DEEPSEEK_API_BASE", "") or os.getenv("OPENAI_API_BASE", "")
+
+        # 如果用的是 DeepSeek 但没设 base_url，自动补上
+        if os.getenv("DEEPSEEK_API_KEY") and not os.getenv("DEEPSEEK_API_BASE") and not os.getenv("OPENAI_API_BASE"):
+            self.api_base = "https://api.deepseek.com"
+
+        # 模型：用 DeepSeek key 时默认 deepseek-chat
+        default_model = "deepseek-chat" if os.getenv("DEEPSEEK_API_KEY") else "gpt-4o-mini"
+        self.model = os.getenv("AID_LLM_MODEL", default_model)
         self._client = None
 
         # 注册工具
@@ -146,51 +204,97 @@ class FairyBrain:
 
     @property
     def available(self) -> bool:
-        """LLM 是否可用"""
-        return bool(self.api_key) and HAS_OPENAI
+        """LLM 是否可用（DeepSeek 或 OpenAI key 均可）"""
+        if not self.api_key:
+            return False
+        # DeepSeek key 可直接用 httpx 原生调用，OpenAI key 依赖 openai 包
+        return HAS_OPENAI or self.model.startswith("deepseek")
 
     # ── 工具注册 ──
 
     def _register_tools(self):
-        """注册所有桌面操作工具"""
+        """注册所有桌面操作工具 — 返回真实数据给 LLM"""
 
         def _quick_look():
-            """截屏 + OCR"""
-            if not hasattr(self.fairy, "_quick_look"):
-                return "截屏工具未就绪"
-            # 直接调用 fairy 的方法
-            self.fairy._quick_look()
-            return "✅ 正在查看屏幕，结果已显示"
+            """截屏 + OCR，返回文字内容给 LLM"""
+            if not HAS_SCREEN:
+                return "截图工具不可用（需 pip install pyautogui pygetwindow Pillow）"
+            try:
+                img_path = capture_full_screen()
+                if not img_path or not os.path.exists(img_path):
+                    return "截图失败"
+                if HAS_OCR:
+                    text = ocr_text(img_path, lang="chi_sim+eng")
+                    if text and text.strip():
+                        preview = text[:2000]
+                        if len(text) > 2000:
+                            preview += "\n...（截断）"
+                        # 同时显示到 UI
+                        self.fairy._show_result(f"📸 屏幕上看到：\n{preview}")
+                        return f"屏幕 OCR 结果：\n{preview}"
+                    else:
+                        self.fairy._show_result("📸 截图已保存（未识别到文字）")
+                        return "截图已完成，但未从屏幕图像中识别到任何文字。可能是纯图片界面或屏幕当前内容不包含文字。"
+                else:
+                    self.fairy._show_result(f"📸 截图已保存：{img_path}")
+                    return f"截图已保存到 {img_path}，但 OCR 未安装，无法读取文字内容。"
+            except Exception as e:
+                return f"查看屏幕失败：{e}"
 
         def _list_windows():
-            if not hasattr(self.fairy, "_list_windows"):
-                return "窗口控制未就绪"
-            self.fairy._list_windows()
-            return "✅ 窗口列表已显示"
+            if not HAS_WINDOW:
+                return "窗口控制不可用（需 pip install pygetwindow pyautogui）"
+            try:
+                windows = list_application_windows()
+                display = windows[:1500]
+                self.fairy._show_result(f"📋 当前窗口：\n{display}")
+                return f"当前打开的窗口列表：\n{windows}"
+            except Exception as e:
+                return f"获取窗口列表失败：{e}"
 
         def _mouse_position():
-            if not hasattr(self.fairy, "_show_mouse_position"):
-                return "鼠标控制未就绪"
-            self.fairy._show_mouse_position()
-            return "✅ 鼠标位置已显示"
+            if not HAS_WINDOW:
+                return "窗口控制不可用"
+            try:
+                pos = get_mouse_position()
+                self.fairy._show_result(f"📍 鼠标位置：{pos}")
+                return f"鼠标当前位于屏幕坐标 ({pos[0]}, {pos[1]})"
+            except Exception as e:
+                return f"获取鼠标位置失败：{e}"
 
         def _click(x: int, y: int):
-            if not hasattr(self.fairy, "_parse_and_click"):
-                return "点击控制未就绪"
-            self.fairy._parse_and_click(f"点击 {x} {y}")
-            return f"✅ 已点击 ({x}, {y})"
+            if not HAS_WINDOW:
+                return "窗口控制不可用"
+            try:
+                result = click_on_screen(x, y)
+                msg = f"已点击 ({x}, {y})"
+                self.fairy._show_result(f"🖱️ {msg}")
+                return msg
+            except Exception as e:
+                return f"点击失败：{e}"
 
         def _type_text(text: str):
-            if not hasattr(self.fairy, "_parse_and_type"):
-                return "输入控制未就绪"
-            self.fairy._parse_and_type(f"输入 {text}")
-            return f"✅ 已输入: {text}"
+            if not HAS_WINDOW:
+                return "窗口控制不可用"
+            try:
+                type_text(text)
+                self.fairy._show_result(f"⌨️ 已输入：{text}")
+                return f"已在当前焦点窗口输入：{text}"
+            except Exception as e:
+                return f"输入失败：{e}"
 
         def _show_identity():
-            if not hasattr(self.fairy, "_show_identity"):
-                return "身份系统未就绪"
-            self.fairy._show_identity()
-            return "✅ 身份信息已显示"
+            try:
+                from alpha_id import AIDSigner
+                signer = AIDSigner()
+                signer.load_from_aid_dir()
+                did = signer.did
+                pk = signer.public_key.hex()[:16] + "..."
+                info = f"DID: {did}\n公钥: {pk}"
+                self.fairy._show_result(f"🆔 AID 身份\n{info}")
+                return info
+            except Exception:
+                return "尚未初始化 AID 身份（命令行执行：aid identity init）"
 
         def _save_memory(content: str, category: str = "对话记录"):
             if self.memory:
@@ -208,8 +312,10 @@ class FairyBrain:
                 results = self.memory.query(keyword=keyword, limit=5)
                 if results:
                     lines = [f"• {r['content'][:100]}" for r in results]
-                    return "📖 我记得：\n" + "\n".join(lines)
-                return "📭 没有相关记忆"
+                    data = "📖 我记得：\n" + "\n".join(lines)
+                    self.fairy._show_result(data)
+                    return "\n".join(f"- {r['content'][:200]}" for r in results)
+                return "没有找到相关记忆"
             return "记忆系统未就绪"
 
         # 注册

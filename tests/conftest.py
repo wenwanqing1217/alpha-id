@@ -33,6 +33,28 @@ if "langchain" not in sys.modules:
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def setup_test_env(tmp_path):
+    """自动设置测试环境变量，将数据目录指向临时目录"""
+    old_alpha_id_dir = os.environ.get("ALPHA_ID_DIR")
+    old_aid_dir = os.environ.get("AID_DIR")
+    
+    os.environ["ALPHA_ID_DIR"] = str(tmp_path / "alpha-id")
+    os.environ["AID_DIR"] = str(tmp_path / "aid")
+    
+    yield
+    
+    if old_alpha_id_dir is not None:
+        os.environ["ALPHA_ID_DIR"] = old_alpha_id_dir
+    else:
+        os.environ.pop("ALPHA_ID_DIR", None)
+    
+    if old_aid_dir is not None:
+        os.environ["AID_DIR"] = old_aid_dir
+    else:
+        os.environ.pop("AID_DIR", None)
+
+
 @pytest.fixture
 def temp_json_db(tmp_path):
     """创建临时 JSON 数据库文件，用于测试 UserIdentityManager"""

@@ -19,9 +19,12 @@ Claude Desktop 配置（claude_desktop_config.json）：
     }
 """
 
+import json
 import os
 import sys
 from typing import Optional
+
+import typer
 
 # 确保能找到 src/
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__))))
@@ -467,6 +470,30 @@ def get_identity() -> str:
 
 
 @mcp.tool()
+def verify_identity(did: str, message: str, signature_hex: str) -> str:
+    """
+    验证另一个 Agent 的身份签名。A2A 信任的基础。
+
+    Args:
+        did: 对方的 DID 字符串
+        message: 被签名的原始消息
+        signature_hex: 签名的 hex 字符串
+
+    返回验证结果（valid: true/false）。
+    """
+    try:
+        from core.did import verify
+        sig = bytes.fromhex(signature_hex)
+        pub_hex = did[-64:] if len(did) > 64 else ""
+        if not pub_hex:
+            return json.dumps({"valid": False, "error": "无法从 DID 提取公钥"})
+        result = verify(sig, message.encode(), bytes.fromhex(pub_hex))
+        return json.dumps({"valid": bool(result), "did": did})
+    except Exception as e:
+        return json.dumps({"valid": False, "error": str(e)})
+
+
+@mcp.tool()
 def get_server_info() -> str:
     """
     获取 AID MCP Server 的版本信息和可用能力列表。
@@ -700,7 +727,6 @@ if HAS_MEMORY_GRAPH:
 def main():
     """AID MCP Server 入口点（CLI & pyproject entry point）"""
     import argparse
-    import io
 
     # Windows GBK → UTF-8: 确保 emoji 不会炸掉 stderr/stdout
     if sys.platform == "win32":
@@ -720,19 +746,8 @@ def main():
     args = parser.parse_args()
 
     if args.transport == "sse":
-        # host/port 是 FastMCP 构造参数（mcp >=1.27）
-        mcp_local = FastMCP(
-            "aid",
-            instructions=mcp.instructions,
-            host=args.host,
-            port=args.port,
-        )
-        print(f"AID MCP Server (SSE) -> http://{args.host}:{args.port}/sse")
-        mcp_local.run(transport="sse")
+        typer.echo(f"[Server] AID MCP Server (SSE) → http://{args.host}:{args.port}")
+        mcp.run(transport="sse", host=args.host, port=args.port)
     else:
-        print("AID MCP Server (stdio) - 等待 MCP 客户端连接...", file=sys.stderr)
+        typer.echo("[Server] AID MCP Server (stdio)")
         mcp.run(transport="stdio")
-
-
-if __name__ == "__main__":
-    main()

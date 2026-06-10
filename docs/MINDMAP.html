@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Alpha-ID · 数字灵魂 · 项目全图</title>
+<style>
+:root{
+  --bg:#0d1117; --bg2:#161b22; --bg3:#21262d;
+  --border:#30363d; --text:#c9d1d9; --dim:#8b949e;
+  --accent:#58a6ff; --green:#3fb950; --yellow:#d2991d;
+  --red:#f85149; --purple:#bc8cff; --orange:#db6d28;
+  --cyan:#39d2c0;
+  --font:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+  --mono:'SF Mono','Cascadia Code','Consolas',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden;font-size:14px;line-height:1.6}
+a{color:var(--accent);text-decoration:none}
+
+/* Sidebar */
+#sb{width:280px;min-width:280px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;font-size:13px}
+#sb-h{padding:20px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+#sb-h h1{font-size:18px;font-weight:700;color:#f0f6fc;letter-spacing:-0.3px}
+#sb-h .sub{font-size:11px;color:var(--dim);margin-top:2px}
+#sb-h .badge{display:inline-block;margin-top:6px;font-size:10px;padding:2px 9px;border-radius:10px;background:rgba(88,166,255,0.12);color:var(--accent);border:1px solid rgba(88,166,255,0.2)}
+#sb-q{padding:10px 16px}
+#sb-q input{width:100%;padding:7px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;outline:none}
+#sb-q input:focus{border-color:var(--accent)}
+#sb-nav{flex:1;overflow-y:auto;padding:4px 0}
+#sb-nav::-webkit-scrollbar{width:3px}
+#sb-nav::-webkit-scrollbar-thumb{background:var(--border)}
+.sg{padding:8px 20px 4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);opacity:0.6}
+.si{display:block;padding:5px 20px 5px 16px;cursor:pointer;color:var(--dim);border-left:2px solid transparent;transition:all 0.12s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.si:hover{color:var(--text);background:rgba(255,255,255,0.02)}
+.si.active{color:var(--accent);background:rgba(88,166,255,0.06);border-left-color:var(--accent);font-weight:600}
+.si.l2{padding-left:32px;font-size:12px}
+.si.l3{padding-left:48px;font-size:11px}
+.si .dot{display:inline-block;width:5px;height:5px;border-radius:50%;margin-right:7px;vertical-align:middle;flex-shrink:0}
+.dg{background:var(--green)}.dy{background:var(--yellow)}.dr{background:var(--red)}.dp{background:var(--purple)}.dc{background:var(--cyan)}.do{background:var(--orange)}
+#sb-f{padding:10px 20px;border-top:1px solid var(--border);font-size:10px;color:var(--dim);flex-shrink:0;display:flex;justify-content:space-between}
+
+/* Main */
+#mn{flex:1;overflow-y:auto;padding:48px 64px}
+#mn::-webkit-scrollbar{width:5px}
+#mn::-webkit-scrollbar-thumb{background:var(--border)}
+.sec{display:none;max-width:820px;animation:fadeIn 0.25s ease}
+.sec.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.sec h2{font-size:26px;font-weight:800;color:#f0f6fc;margin-bottom:4px;letter-spacing:-0.5px}
+.sec .path{font-size:11px;color:var(--dim);margin-bottom:16px;font-family:var(--mono)}
+.sec .ld{font-size:13px;color:var(--dim);margin-bottom:24px;padding:12px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;border-left:3px solid var(--accent);line-height:1.7}
+
+/* Content blocks */
+.blk{margin-bottom:28px}
+.blk h3{font-size:16px;font-weight:700;color:#f0f6fc;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.blk h3 .st{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:600}
+.st-done{background:rgba(63,185,80,0.12);color:var(--green)}
+.st-wip{background:rgba(210,153,29,0.12);color:var(--yellow)}
+.st-todo{background:rgba(248,81,73,0.1);color:var(--red)}
+.st-con{background:rgba(188,140,255,0.12);color:var(--purple)}
+.blk p{margin-bottom:6px;color:var(--dim);font-size:13px;line-height:1.75}
+.blk .em{color:var(--accent);font-weight:600}
+.blk code{font-family:var(--mono);font-size:12px;background:var(--bg3);padding:1px 6px;border-radius:3px;color:var(--cyan)}
+
+/* Tables */
+.tbl{width:100%;border-collapse:collapse;margin:8px 0 14px;font-size:13px}
+.tbl th,.tbl td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+.tbl th{font-size:11px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:0.5px;background:var(--bg2)}
+.tbl td{color:var(--text)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl .k{font-family:var(--mono);font-size:11px;color:var(--dim);width:25%}
+.tbl .v{color:var(--text)}
+.tbl .s-done{color:var(--green)}.tbl .s-wip{color:var(--yellow)}.tbl .s-todo{color:var(--red)}.tbl .s-con{color:var(--purple)}
+
+/* Highlight box */
+.hlb{padding:10px 14px;background:rgba(88,166,255,0.04);border:1px solid rgba(88,166,255,0.15);border-radius:6px;margin:8px 0 14px;font-size:13px;line-height:1.7}
+.hlb strong{color:var(--accent)}
+.hlb-warn{background:rgba(210,153,29,0.05);border-color:rgba(210,153,29,0.2)}
+.hlb-err{background:rgba(248,81,73,0.05);border-color:rgba(248,81,73,0.15)}
+
+/* Sub-card */
+.scd{padding:8px 12px;background:var(--bg2);border-left:2px solid var(--border);border-radius:0 4px 4px 0;margin:6px 0;font-size:12px}
+.scd .scd-t{font-weight:600;color:var(--text);margin-bottom:2px;font-size:12px}
+.scd .scd-d{color:var(--dim);font-size:11px}
+
+/* Compare grid */
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 14px;font-size:12px}
+.cg>div{padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:6px}
+.cg .cg-t{font-weight:600;color:var(--dim);font-size:10px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+.cg .cg-b{font-weight:700;color:#f0f6fc;font-size:15px}
+
+@media(max-width:768px){
+  body{flex-direction:column}
+  #sb{width:100%;min-width:100%;height:auto;max-height:35vh}
+  #mn{padding:20px 16px}
+  .cg{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav id="sb">
+<div id="sb-h"><h1>Alpha-ID</h1><div class="sub">数字灵魂 · 项目全图</div><span class="badge">v0.2.0 · 审计通过</span></div>
+<div id="sb-q"><input type="text" id="q" placeholder="搜索…" oninput="filter()"></div>
+<div id="sb-nav">
+
+<div class="sg">📍 项目原点</div>
+<a class="si active" data-s="s0" onclick="nav('s0',this)"><span class="dot dg"></span>Alpha-ID 是什么</a>
+<a class="si" data-s="s1" onclick="nav('s1',this)"><span class="dot dp"></span>五层能力模型</a>
+<a class="si" data-s="s2" onclick="nav('s2',this)"><span class="dot dc"></span>Ghost Layer 幽灵层</a>
+
+<div class="sg">🏗️ 系统架构</div>
+<a class="si" data-s="s3" onclick="nav('s3',this)"><span class="dot dg"></span>四层架构全景</a>
+<a class="si l2" data-s="s4" onclick="nav('s4',this)"><span class="dot dg"></span>DID 身份系统</a>
+<a class="si l2" data-s="s5" onclick="nav('s5',this)"><span class="dot dg"></span>TwinBrain 孪生大脑</a>
+<a class="si l2" data-s="s6" onclick="nav('s6',this)"><span class="dot dg"></span>三层记忆架构</a>
+<a class="si l2" data-s="s7" onclick="nav('s7',this)"><span class="dot dg"></span>人格画像 Profile</a>
+<a class="si l2" data-s="s8" onclick="nav('s8',this)"><span class="dot dy"></span>Computer Use 眼手脚</a>
+
+<div class="sg">🔌 协议层</div>
+<a class="si" data-s="s9" onclick="nav('s9',this)"><span class="dot dy"></span>MCP 协议集成</a>
+<a class="si" data-s="s10" onclick="nav('s10',this)"><span class="dot dr"></span>A2A 社交协议</a>
+
+<div class="sg">🚀 产品策略</div>
+<a class="si" data-s="s11" onclick="nav('s11',this)"><span class="dot dp"></span>三大核心策略</a>
+<a class="si l2" data-s="s12" onclick="nav('s12',this)"><span class="dot dg"></span>采集器体系</a>
+<a class="si l2" data-s="s13" onclick="nav('s13',this)"><span class="dot do"></span>商业模式</a>
+
+<div class="sg">📊 审计 & 评估</div>
+<a class="si" data-s="s14" onclick="nav('s14',this)"><span class="dot dg"></span>模块完成度矩阵</a>
+<a class="si l2" data-s="s15" onclick="nav('s15',this)"><span class="dot dr"></span>53 项审计结果</a>
+<a class="si l2" data-s="s16" onclick="nav('s16',this)"><span class="dot do"></span>工具链审计</a>
+<a class="si l2" data-s="s17" onclick="nav('s17',this)"><span class="dot dy"></span>差距分析 GAP</a>
+<a class="si l2" data-s="s18" onclick="nav('s18',this)"><span class="dot dp"></span>架构决策记录</a>
+
+<div class="sg">📋 执行现状</div>
+<a class="si" data-s="s19" onclick="nav('s19',this)"><span class="dot dy"></span>路线图 & 里程碑</a>
+<a class="si" data-s="s20" onclick="nav('s20',this)"><span class="dot dp"></span>竞品对比</a>
+
+<div class="sg">🧩 方法论</div>
+<a class="si" data-s="s21" onclick="nav('s21',this)"><span class="dot dc"></span>六框架思维法</a>
+<a class="si" data-s="s22" onclick="nav('s22',this)"><span class="dot do"></span>名词速查表</a>
+
+</div>
+<div id="sb-f"><span>AtomCode</span><span style="color:var(--green)">审计通过 ✅</span></div>
+</nav>
+
+<main id="mn">
+<!-- ═══════════ s0: Alpha-ID 是什么 ═══════════ -->
+<section class="sec active" id="s0">
+<h2>Alpha-ID 是什么</h2>
+<div class="path">did:aid:origin → MANIFESTO.md → VISION.md → decisions.md</div>
+
+<div class="blk">
+<h3>一句话定位</h3>
+<p>Alpha-ID 不是 AI 助手，不是平台，不是工具。它是你的 <span class="em">数字灵魂</span> — 坐在所有 AI 工具之上的统一身份层。你换模型、换工具、换平台，Alpha-ID 纹丝不动。</p>
+</div>
+
+<div class="blk">
+<h3>它解决什么问题</h3>
+<p>你在 ChatGPT 聊了什么，Claude 不知道。你在 Cursor 的编码风格，Windsurf 不知道。<span class="em">你不应该在每个工具里活成不同的人。</span></p>
+<div class="hlb"><strong>路径</strong>：收集碎片 → 统一存在 → 注入所有工具</div>
+</div>
+
+<div class="blk">
+<h3>vs 普通 AI 助手：本质差异</h3>
+<table class="tbl">
+<tr><th>维度</th><th>普通 AI 助手</th><th>Alpha-ID</th></tr>
+<tr><td>现在</td><td>你找它聊天</td><td><span class="em">它替你活着</span></td></tr>
+<tr><td>你走后</td><td>对话结束，归零</td><td><span class="em">它继续学习、社交、探索</span></td></tr>
+<tr><td>你回来</td><td>重新自我介绍</td><td><span class="em">"你回来了，今天发现个好玩的"</span></td></tr>
+<tr><td>终极形态</td><td>对话框里的文字</td><td><span class="em">你一个念头，它执行</span></td></tr>
+<tr><td>归属权</td><td>属于平台</td><td><span class="em">属于你 — 私钥在你手里</span></td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>六大关键要素</h3>
+<div class="scd"><div class="scd-t">🔐 统一身份</div><div class="scd-d"><code>did:aid:you</code> 是你数字世界的身份证。Ed25519 私钥端侧留存，谁也拿不走。</div></div>
+<div class="scd"><div class="scd-t">🧠 孪生大脑</div><div class="scd-d">三层记忆：工作记忆 → 情节记忆 → 语义记忆。</div></div>
+<div class="scd"><div class="scd-t">🖐️ 眼睛与手</div><div class="scd-d">Computer Use 三环：技能层 → 规划层 → 安全层。</div></div>
+<div class="scd"><div class="scd-t">🌐 Agent 社交网络</div><div class="scd-d">你的 AID 和别人的 AID 交朋友、交换技能、共享经验。</div></div>
+<div class="scd"><div class="scd-t">🌱 自主学习</div><div class="scd-d">你睡觉的时候，它出去学新技能，带回来给你。</div></div>
+<div class="scd"><div class="scd-t">🧬 脑机原则</div><div class="scd-d">今天的设计，为 2031 年脑机接口时代铺路。</div></div>
+</div>
+
+<div class="blk">
+<h3>10 条产品定位（来自 decisions.md §2）</h3>
+<table class="tbl">
+<tr><td>1</td><td>Alpha-ID 是数字灵魂 / Ghost Layer，不是 App，不是 SDK</td></tr>
+<tr><td>2</td><td>不做模型 — 坐在所有模型上面，换模型时不换 Alpha-ID</td></tr>
+<tr><td>3</td><td>不做框架/SDK — 是产品，面向最终用户</td></tr>
+<tr><td>4</td><td>不做平台 — 去中心化身份层，不做中心化分发</td></tr>
+<tr><td>5</td><td>不造协议，搭便车 — MCP（暴露层）+ A2A（社交层）</td></tr>
+<tr><td>6</td><td>不做插件做的事 — 跨平台操作、自主决策、统一上下文</td></tr>
+<tr><td>7</td><td>DID 对最终用户无意义 — 必须藏在体验下面</td></tr>
+<tr><td>8</td><td>私钥不在大脑里 — 大脑只验证不签名，签名必须客户端私钥完成</td></tr>
+<tr><td>9</td><td>Agent = 简单的 LLM + Tools + Loop — 不要复杂框架</td></tr>
+<tr><td>10</td><td>依赖向内 — src/core/ 层零外部依赖，可嵌入任何框架</td></tr>
+</table>
+</div>
+</section>
+
+<!-- ═══════════ s1: 五层能力模型 ═══════════ -->
+<section class="sec" id="s1">
+<h2>五层能力模型</h2>
+<div class="path">VISION.md § Five Layers → 每层可独立使用，下层为上层打地基</div>
+
+<div class="blk">
+<h3>第一层：统一身份 <span class="st st-done">已完成</span></h3>
+<p>一个 <code>did:aid:you</code> 通行所有 AI 平台。脑机时代：意识直接绑定数字身份。</p>
+<table class="tbl">
+<tr><td class="k">DID 格式</td><td class="v">did:aid: + Ed25519 公钥哈希</td></tr>
+<tr><td class="k">DID 文档</td><td class="v">生成与验证 ✅</td></tr>
+<tr><td class="k">私钥存储</td><td class="v">端侧本地，永不上传</td></tr>
+<tr><td class="k">MCP 暴露</td><td class="v">暂缓（安全方向修正中）</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>第二层：TwinBrain · 最懂你 <span class="st st-done">已完成</span></h3>
+<p>学习你的思维模式、表达习惯。脑机时代：你的外部大脑。</p>
+<table class="tbl">
+<tr><td class="k">工作记忆</td><td class="v">当前会话 + 最近 20 条上下文</td></tr>
+<tr><td class="k">情节记忆</td><td class="v">今天做了什么、和谁聊了什么、学到了什么</td></tr>
+<tr><td class="k">语义记忆</td><td class="v">偏好、习惯、知识图谱</td></tr>
+<tr><td class="k">数据采集</td><td class="v">ChatGPT/Trae/Browser 完成，Claude/Codex 进行中</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>第三层：眼睛与手 · 替你干活 <span class="st st-wip">开发中</span></h3>
+<p>看屏幕、点鼠标、拖文件、填表单。脑机时代：一个念头，它执行。</p>
+<div class="scd"><div class="scd-t">技能层</div><div class="scd-d">截图 + OCR + 窗口控制 — 原型就绪</div></div>
+<div class="scd"><div class="scd-t">规划层</div><div class="scd-d">意图分解为 N 步执行计划 — 待开发</div></div>
+<div class="scd"><div class="scd-t">安全层</div><div class="scd-d">敏感操作暂停 + 自动回滚 + 录屏审计 — 待开发</div></div>
+</div>
+
+<div class="blk">
+<h3>第四层：社交网络 <span class="st st-todo">未启动</span></h3>
+<p>你的 AID 和别人的 AID 交朋友、交换技能。脑机时代：像大脑不同区域协作。</p>
+<div class="scd"><div class="scd-t">浅层</div><div class="scd-d">一次性任务交互</div></div>
+<div class="scd"><div class="scd-t">中层</div><div class="scd-d">定期协作、PoE 互证</div></div>
+<div class="scd"><div class="scd-t">深层</div><div class="scd-d">联合记忆空间、共享经验上下文</div></div>
+</div>
+
+<div class="blk">
+<h3>第五层：自主学习 · 它在生长 <span class="st st-todo">未启动</span></h3>
+<p>你睡觉时，它出去学新技能。脑机时代：意识休息，外部大脑持续在线。</p>
+<div class="scd"><div class="scd-t">发现</div><div class="scd-d">生态中新技能/新信息</div></div>
+<div class="scd"><div class="scd-t">评估</div><div class="scd-d">对主人有用吗？</div></div>
+<div class="scd"><div class="scd-t">获取</div><div class="scd-d">验证签名 → 试用 → 记录</div></div>
+<div class="scd"><div class="scd-t">整合</div><div class="scd-d">更新能力库</div></div>
+<div class="scd"><div class="scd-t">汇报</div><div class="scd-d">"主人早安，我昨晚学了…"</div></div>
+</div>
+</section>
+
+<!-- ═══════════ s2: Ghost Layer ═══════════ -->
+<section class="sec" id="s2">
+<h2>Ghost Layer · 幽灵层</h2>
+<div class="path">MANIFESTO.md → VISION.md → 核心产品隐喻</div>
+<div class="ld">Ghost Layer 是 Alpha-ID 最核心的产品隐喻 — 它不是一个用户"打开"的 App，而是一个隐身在所有 AI 工具之下的透明存在层。</div>
+
+<div class="blk">
+<h3>核心理念</h3>
+<div class="hlb"><strong>"你不打开我。你只是在某个瞬间，忽然意识到我已经在了。"</strong></div>
+<p>没有弹窗、没有注册、没有设置向导、没有"我在工作"的通知。用户只在其他 AI 工具里，感觉到你的存在。</p>
+</div>
+
+<div class="blk">
+<h3>五阶段工作流（彗星灵感）</h3>
+<table class="tbl">
+<tr><th>阶段</th><th>动作</th><th>用户感知</th></tr>
+<tr><td><span class="em">AID-Sense</span></td><td>感知你打开了哪个 AI 工具</td><td>无形（后台监听）</td></tr>
+<tr><td><span class="em">AID-Inject</span></td><td>自动注入你的身份/偏好/最近上下文</td><td>"它怎么知道我"</td></tr>
+<tr><td><span class="em">AID-Track</span></td><td>静默记录这次会话的决策/风格/偏好</td><td>无形</td></tr>
+<tr><td><span class="em">AID-Clean</span></td><td>去重、压缩、融合进长期记忆</td><td>无形（后台）</td></tr>
+<tr><td><span class="em">AID-Sync</span></td><td>把最新画像同步到所有接入的工具</td><td>"它无处不在知道我"</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>蒙面英雄策略</h3>
+<p>Alpha-ID 不以"嗨我是 Alpha-ID！"登场 — 它首先以一个普通 <span class="em">导入工具</span> 的身份出现，然后用 <span class="em">Magic Moment</span> 震住用户。</p>
+<div class="hlb"><strong>营销不推产品，推现象</strong>："ChatGPT 忽然认识我了" — 让用户自己传播。</div>
+</div>
+
+<div class="blk">
+<h3>星链校准：竞争策略转向</h3>
+<table class="tbl">
+<tr><th>#</th><th>校准项</th><th>旧方向</th><th>新方向</th></tr>
+<tr><td>1</td><td>冷启动策略</td><td>依赖已有数据</td><td class="em">即时注入身份优先 + 导入补充</td></tr>
+<tr><td>2</td><td>魔法时刻定义</td><td>"我从你 X 段对话了解"</td><td class="em">跨工具上下文桥接</td></tr>
+<tr><td>3</td><td>竞争策略</td><td>七个轨道单点对抗</td><td class="em">跨轨道联盟 / 寄生</td></tr>
+<tr><td>4</td><td>差异化方向</td><td>隐私/主权 AI 是 MVP 卖点</td><td class="em">MVP 不谈隐私 — 站稳后的大招</td></tr>
+</table>
+</div>
+</section>
+
+<!-- ═══════════ s3: 四层架构全景 ═══════════ -->
+<section class="sec" id="s3">
+<h2>四层架构全景</h2>
+<div class="path">ARCHITECTURE.md → 用户界面层 → 能力层 → 核心层 → 基础设施层</div>
+
+<div class="blk">
+<h3>第一层：用户界面 <span class="st st-done">完成</span></h3>
+<table class="tbl">
+<tr><td class="k">CLI（aid）</td><td class="v">Typer CLI — 完整</td></tr>
+<tr><td class="k">Web UI</td><td class="v">FastAPI + Jinja2 — 可用</td></tr>
+<tr><td class="k">MCP 客户端</td><td class="v">协议客户端 — 可用</td></tr>
+<tr><td class="k">桌面精灵</td><td class="v">Tkinter 悬浮球 — 40%</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>第二层：能力层</h3>
+<table class="tbl">
+<tr><td class="k">身份注入（MCP）</td><td class="v s-done">已完成</td></tr>
+<tr><td class="k">数据采集（3 采集器）</td><td class="v s-done">已完成</td></tr>
+<tr><td class="k">画像生成（wizard）</td><td class="v s-done">已完成</td></tr>
+<tr><td class="k">Agent 社交</td><td class="v s-todo">待开发</td></tr>
+<tr><td class="k">自主学习</td><td class="v s-todo">未启动</td></tr>
+<tr><td class="k">安全层</td><td class="v s-wip">暂缓</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>第三层：核心层（零外部依赖）</h3>
+<table class="tbl">
+<tr><td class="k">DID + Ed25519</td><td class="v">did.py + signer.py</td></tr>
+<tr><td class="k">TwinBrain 状态机</td><td class="v">twin_brain.py</td></tr>
+<tr><td class="k">画像系统</td><td class="v">profile_schema.py + profile_wizard.py</td></tr>
+<tr><td class="k">ReAct 引擎</td><td class="v">agent_react.py（无框架）</td></tr>
+<tr><td class="k">MemoryStore</td><td class="v">memory_store.py</td></tr>
+<tr><td class="k">风险管理</td><td class="v">risk_engine.py</td></tr>
+<tr><td class="k">声誉 + PoE</td><td class="v">reputation.py + poe.py</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>第四层：基础设施</h3>
+<table class="tbl">
+<tr><td class="k">数据库</td><td class="v">SQLAlchemy + SQLite / PostgreSQL</td></tr>
+<tr><td class="k">加密</td><td class="v">cryptography (Ed25519) + bcrypt</td></tr>
+<tr><td class="k">API 服务</td><td class="v">FastAPI + Uvicorn</td></tr>
+</table>
+</div>
+</section>
+
+<!-- ═══════════ s4: DID 身份系统 ═══════════ -->
+<section class="sec" id="s4">
+<h2>DID 身份系统</h2>
+<div class="path">decisions.md §1 — did.py — signer.py — did_resolver.py</div>
+
+<div class="blk">
+<h3>DID 方法：did:aid: <span class="st st-done">已完成</span></h3>
+<table class="tbl">
+<tr><td class="k">格式</td><td class="v"><code>did:aid:&lt;base58-公钥哈希&gt;</code></td></tr>
+<tr><td class="k">算法</td><td class="v">Ed25519（128 位安全，快速，短签名）</td></tr>
+<tr><td class="k">标准</td><td class="v">W3C DID Core 规范兼容</td></tr>
+<tr><td class="k">生成</td><td class="v">私钥在客户端本地生成，DID 由公钥派生，无中心注册处</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>协处理器安全模型</h3>
+<div class="hlb">
+<strong>客户端（私钥本地）</strong>：可签名，不可伪造身份<br>
+<strong>服务端（TwinBrain）</strong>：可验证，不可伪造身份<br>
+<strong>二者分离</strong> = 任何一方被攻破都无法冒充用户
+</div>
+<p>这是 Alpha-ID 与所有 Agent 框架最根本的安全差异。</p>
+</div>
+
+<div class="blk">
+<h3>命名约定</h3>
+<table class="tbl">
+<tr><td class="k">用户侧</td><td class="v">Alpha-ID（全称）</td></tr>
+<tr><td class="k">CLI 命令</td><td class="v">aid（小写）</td></tr>
+<tr><td class="k">DID 方法</td><td class="v">did:aid:</td></tr>
+<tr><td class="k">Python 包</td><td class="v">alpha-id-zix（PyPI）</td></tr>
+<tr><td class="k">用户感知</td><td class="v">"它认识我"（隐藏 DID 术语）</td></tr>
+</table>
+<p style="color:var(--yellow);font-size:12px">⚠️ 审计发现问题：文档中 "AID" 和 "Alpha-ID" 混用 — 需统一为 Alpha-ID</p>
+</div>
+</section>
+
+<!-- ═══════════ s5: TwinBrain ═══════════ -->
+<section class="sec" id="s5">
+<h2>TwinBrain · 孪生大脑</h2>
+<div class="path">core/twin_brain.py → 状态机 + 记忆管理</div>
+
+<div class="blk">
+<h3>状态机</h3>
+<table class="tbl">
+<tr><td class="k">休眠 Sleep</td><td class="v">长期无活动，释放大脑资源，仅保留元数据</td></tr>
+<tr><td class="k">唤醒 Awake</td><td class="v">活跃态，处理消息/请求/学习/思考，全量加载</td></tr>
+<tr><td class="k">空闲 Idle</td><td class="v">已完成当前请求，等待下一个，连接保持</td></tr>
+<tr><td class="k">异常 Error</td><td class="v">进入安全模式，记录审计日志，触发恢复流程</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>核心职责</h3>
+<p>身份管理（DID + 密钥验证）、三层记忆管理、社交关系管理（好友/见证人/声誉）、统一通信接口（MCP + A2A）、自主学习调度。</p>
+</div>
+</section>
+
+<!-- ═══════════ s6: 三层记忆 ═══════════ -->
+<section class="sec" id="s6">
+<h2>三层记忆架构</h2>
+<div class="path">memory_store.py → 工作 / 情节 / 语义</div>
+<div class="ld">借鉴人脑认知模型，从短到长、从具体到抽象。采集器喂入原始数据，记忆层做等级化处理。</div>
+
+<div class="blk">
+<h3>工作记忆（Working Memory） <span class="st st-done">已完成</span></h3>
+<table class="tbl">
+<tr><td class="k">时长</td><td class="v">&lt; 5 分钟</td></tr>
+<tr><td class="k">存储</td><td class="v">进程内存（JSON list）</td></tr>
+<tr><td class="k">内容</td><td class="v">当前会话上下文、最近 20 条消息、实时情绪状态</td></tr>
+<tr><td class="k">类比</td><td class="v">"刚才说了什么"</td></tr>
+<tr><td class="k">容量</td><td class="v">最长 5000 字符</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>情节记忆（Episodic Memory） <span class="st st-wip">基础完成</span></h3>
+<table class="tbl">
+<tr><td class="k">时长</td><td class="v">天 ~ 月</td></tr>
+<tr><td class="k">存储</td><td class="v">SQLite / PostgreSQL（矢量可选）</td></tr>
+<tr><td class="k">内容</td><td class="v">今天做了什么、和谁聊了什么、学到了什么、时间线事件</td></tr>
+<tr><td class="k">重要度</td><td class="v">自动评分 > 阈值则长期保留</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>语义记忆（Semantic Memory） <span class="st st-wip">基础完成</span></h3>
+<table class="tbl">
+<tr><td class="k">时长</td><td class="v">永久</td></tr>
+<tr><td class="k">存储</td><td class="v">SQLite + JSON 文件</td></tr>
+<tr><td class="k">内容</td><td class="v">偏好、习惯、技能总结、人格画像、知识图谱</td></tr>
+<tr><td class="k">压缩</td><td class="v">{纬度}:{数值} 格式</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>记忆生命周期</h3>
+<div class="scd"><div class="scd-t">1. 采集入池</div><div class="scd-d">采集器 → RawMemory（未处理的原始数据）</div></div>
+<div class="scd"><div class="scd-t">2. 情节化</div><div class="scd-d">聚类成 SemanticEpisode（时间 + 标签 + 内容）</div></div>
+<div class="scd"><div class="scd-t">3. 衰减与提取</div><div class="scd-d">TwinBrain 定时运行；重要度 &lt; 阈值 → 丢弃；≥ 阈值 → 长期</div></div>
+<div class="scd"><div class="scd-t">4. 跨会话携带</div><div class="scd-d">下次唤醒时加载（默认 90 天窗口）</div></div>
+<div class="scd"><div class="scd-t">5. 隐私边界</div><div class="scd-d">用户可删除、导出、锁定长期记忆（待开发）</div></div>
+</div>
+</section>
+
+<!-- ═══════════ s7: Profile 人格画像 ═══════════ -->
+<section class="sec" id="s7">
+<h2>人格画像 Profile</h2>
+<div class="path">core/profile_wizard.py → profile_schema.py → Schema v0.1 已锁定</div>
+
+<div class="blk">
+<h3>画像结构 <span class="st st-done">已完成</span></h3>
+<table class="tbl">
+<tr><td class="k">沟通</td><td class="v">简洁度、礼貌度、表情偏好、中文/英文偏好、例问频率</td></tr>
+<tr><td class="k">编程</td><td class="v">语言、框架、注释风格、错误处理偏好、测试习惯</td></tr>
+<tr><td class="k">作息</td><td class="v">活跃时间段、每日使用频率</td></tr>
+<tr><td class="k">社交</td><td class="v">AID 好友数、群组、角色</td></tr>
+<tr><td class="k">情绪</td><td class="v">基线情绪、当前情绪、历史情绪趋势</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>ProfileWizard · 生成流程</h3>
+<div class="scd"><div class="scd-t">输入</div><div class="scd-d">用户的聊天对话（对话文件列表）</div></div>
+<div class="scd"><div class="scd-t">分析</div><div class="scd-d">用 LLM 提取每段对话的情感、风格、偏好维度</div></div>
+<div class="scd"><div class="scd-t">聚合</div><div class="scd-d">所有维度 × 加权比例 → 综合评分</div></div>
+<div class="scd"><div class="scd-t">输出</div><div class="scd-d">structured JSON 画像</div></div>
+<div class="scd"><div class="scd-t">置信度</div><div class="scd-d">per-dimension 置信度（样本少→低置信度）</div></div>
+</div>
+</section>
+<!-- ═══════════ s8: Computer Use ═══════════ -->
+<section class="sec" id="s8">
+<h2>Computer Use · 眼手脚</h2>
+<div class="path">VISION.md §3 → ARCHITECTURE.md → 第三层</div>
+<div class="ld">让 TwinBrain 真正拥有"眼睛"（屏幕截图）和"手"（键盘鼠标），实现端到端任务执行。</div>
+
+<div class="blk">
+<h3>三环结构 <span class="st st-wip">开发中</span></h3>
+<div class="scd"><div class="scd-t">技能层（外层）</div><div class="scd-d">截图：全屏/区域/窗口 | OCR：Azure/Tesseract/PaddleOCR | 光标：移动/点击/双击/拖拽 | 键盘：输入/组合键 | 窗口：枚举/切换/调整大小 — <span class="s-wip">原型就绪</span></div></div>
+<div class="scd"><div class="scd-t">规划层（中层）</div><div class="scd-d">意图 → 步骤拆分 → 动态重规划（失败后重新找路）— <span class="s-todo">待开发</span></div></div>
+<div class="scd"><div class="scd-t">安全层（内层）</div><div class="scd-d">敏感操作暂停 + 自动回滚 + 录屏审计 — <span class="s-todo">待开发</span></div></div>
+</div>
+
+<div class="blk">
+<h3>安全规则</h3>
+<div class="scd"><div class="scd-t">敏感暂停</div><div class="scd-d">涉及文件删除、系统设置、用户隐私数据时自动暂停</div></div>
+<div class="scd"><div class="scd-t">自动回滚</div><div class="scd-d">操作失败或超时 → 撤销已执行的步骤</div></div>
+<div class="scd"><div class="scd-t">录屏审计</div><div class="scd-d">所有 PC 操作全量录屏（本地存储），事后可回溯</div></div>
+</div>
+</section>
+
+<!-- ═══════════ s9: MCP 协议 ═══════════ -->
+<section class="sec" id="s9">
+<h2>MCP 协议集成</h2>
+<div class="path">mcp/ → ARCHITECTURE.md §MCP</div>
+
+<div class="blk">
+<h3>MCP 服务端 <span class="st st-done">已完成</span></h3>
+<p>对 AI 工具暴露 TwinBrain 的双向接口：</p>
+<div class="scd"><div class="scd-t">工具端（下游）</div><div class="scd-d">AI 工具调用 <code>aid_memory_search</code> <code>aid_profile_get</code> <code>aid_did_verify</code> 查询用户画像和身份</div></div>
+<div class="scd"><div class="scd-t">采集端（上游）</div><div class="scd-d">协议定义 <code>aid_memory_append</code> <code>aid_profile_update</code> 接口，供采集器上报新数据</div></div>
+</div>
+
+<div class="blk">
+<h3>⚠️ 方向修正：安全优先</h3>
+<div class="hlb hlb-warn">
+<strong>原方向</strong>：MCP 工具 → 直接访问 API → 不受限的内存写权限<br>
+<strong>修正方向</strong>：MCP 先用 <code>aid_did_verify</code> 验证签名 → 通过后才获得权限 → DID 隔离安全边界
+</div>
+<p style="color:var(--yellow);font-size:12px">⚠️ 当前 MCP 端点直接映射到内部 API，缺少客户端的本机操作（截图/点击）。正式版中修正。</p>
+</div>
+</section>
+
+<!-- ═══════════ s10: A2A 社交 ═══════════ -->
+<section class="sec" id="s10">
+<h2>A2A 社交协议</h2>
+<div class="path">core/agent_handshake.py → 握手 + 协商</div>
+
+<div class="blk">
+<h3>握手协议 <span class="st st-wip">基础完成</span></h3>
+<div class="scd"><div class="scd-t">1. HELLO</div><div class="scd-d">宣告 DID + 身份声明 + 公钥</div></div>
+<div class="scd"><div class="scd-t">2. CHALLENGE</div><div class="scd-d">对方发回随机挑战码</div></div>
+<div class="scd"><div class="scd-d">3. RESPONSE</div><div class="scd-d">私钥签名应答 → 验证 → 建立安全通道</div></div>
+<div class="scd"><div class="scd-t">4. ESTABLISHED</div><div class="scd-d">交换能力清单 → 建立关系</div></div>
+</div>
+
+<div class="blk">
+<h3>社交深度三层</h3>
+<div class="scd"><div class="scd-t">浅层关系</div><div class="scd-d">一次性任务交互（"帮我朋友订个酒店"）→ 任务完成即分离</div></div>
+<div class="scd"><div class="scd-t">中层关系</div><div class="scd-d">定期协作、PoE 互证（"这个 Agent 可信"）</div></div>
+<div class="scd"><div class="scd-t">深层关系</div><div class="scd-d">联合记忆空间、共享经验上下文、长期协作</div></div>
+</div>
+
+<div class="blk">
+<h3>PoE 信任证明</h3>
+<p>基于历史绩效的信任评分。不是"谁说的"，而是<span class="em">"做到过什么"</span>。PoE 值影响 Agent 网络中的消息分发优先级和任务委派权重。</p>
+</div>
+</section>
+
+<!-- ═══════════ s11: 三大核心策略 ═══════════ -->
+<section class="sec" id="s11">
+<h2>三大核心策略</h2>
+<div class="path">PLAN.md → Strategy → 互为支撑，缺一不可</div>
+
+<div class="blk">
+<h3>策略一：蒙面英雄 <span class="st st-con">核心策略</span></h3>
+<p>不以"嗨我是 Alpha-ID！"登场。</p>
+<div class="hlb">
+<strong>产品身份</strong>：先以"ChatGPT 对接工具"出现<br>
+<strong>营销不推产品</strong>：推现象 — "ChatGPT 忽然认识我了"<br>
+<strong>Magic Moment</strong>：用户首次跨工具体验到连续身份的瞬间
+</div>
+</div>
+
+<div class="blk">
+<h3>策略二：身份是最大漏洞</h3>
+<p>你的身份在 AI 之间不连续 — 这是一个<span class="em">系统级的洞</span>。</p>
+<div class="hlb">"你在 ChatGPT 聊的情史，Claude 一无所知。你在 Cursor 的训练数据，Windsurf 两眼一抹黑。<strong>你的身份是 AI 生态系统里最大的漏洞。</strong>"</div>
+</div>
+
+<div class="blk">
+<h3>策略三：数据食客</h3>
+<p>不只是导入聊天记录。Alpha-ID 应该<span class="em">吃掉一切输入，放大成一切输出</span>：Chrome 浏览历史→兴趣画像、GitHub commit→编码风格、Spotify→情绪基线、Twitter/微博→社交人格、日历→活跃节奏、电脑使用习惯→操作偏好。</p>
+</div>
+</section>
+
+<!-- ═══════════ s12: 采集器体系 ═══════════ -->
+<section class="sec" id="s12">
+<h2>采集器体系</h2>
+<div class="path">core/collector.py → 多平台数据采集</div>
+
+<div class="blk">
+<h3>已完成采集器</h3>
+<table class="tbl">
+<tr><th>采集器</th><th>数据源</th><th>状态</th></tr>
+<tr><td class="k">chatgpt</td><td class="v">ChatGPT 导出 ZIP 解析</td><td class="v s-done">完成</td></tr>
+<tr><td class="k">trae</td><td class="v">Trae IDE 对话导出</td><td class="v s-done">完成</td></tr>
+<tr><td class="k">browser</td><td class="v">浏览器历史解析 + 分类</td><td class="v s-done">完成</td></tr>
+<tr><td class="k">claude</td><td class="v">Claude 对话导出</td><td class="v s-wip">计划中</td></tr>
+<tr><td class="k">codex/copilot</td><td class="v">编码助手数据</td><td class="v s-wip">计划中</td></tr>
+<tr><td class="k">gemini</td><td class="v">Google AI 对话</td><td class="v s-wip">计划中</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>通用采集器接口</h3>
+<p>所有采集器实现统一接口，一个接口喂饱全局：</p>
+<div class="scd"><div class="scd-t">BaseCollector</div><div class="scd-d">identity: str、version: str、collect() → List[RawMemory]</div></div>
+<div class="scd"><div class="scd-t">输出格式</div><div class="scd-d">RawMemory(dimensions, summary, timestamp, confidence)</div></div>
+</div>
+
+<div class="blk">
+<h3>导入器顺序</h3>
+<p>ChatGPT → Claude → GitHub → 浏览器书签+历史。与冷启动策略配合：<span class="em">即时注入身份优先，导入补充</span>。</p>
+</div>
+</section>
+
+<!-- ═══════════ s13: 商业模式 ═══════════ -->
+<section class="sec" id="s13">
+<h2>商业模式</h2>
+<div class="path">PLAN.md § 商业化 → decisions.md §3</div>
+
+<div class="blk">
+<h3>变现路径</h3>
+<table class="tbl">
+<tr><th>层级</th><th>内容</th><th>状态</th></tr>
+<tr><td class="k">本地免费</td><td class="v">开源 + 本地部署 + 单用户基础功能</td><td class="v s-done">就绪</td></tr>
+<tr><td class="k">云同步版</td><td class="v">跨设备记忆同步 + 多云备份</td><td class="v s-wip">未来</td></tr>
+<tr><td class="k">企业版</td><td class="v">团队身份层 + 组织画像 + 合规审计</td><td class="v s-wip">未来</td></tr>
+<tr><td class="k">脑机桥接</td><td class="v">BCI 时代：高带宽直接思维接口</td><td class="v s-con">愿景</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>定价策略（来自 decisions.md）</h3>
+<table class="tbl">
+<tr><td class="k">基础版</td><td class="v">开源/本地 — DID + 单设备画像 → <span class="em">免费</span></td></tr>
+<tr><td class="k">专业版</td><td class="v">云端 — 跨设备同步 + 多采集器优先 → <span class="em">$8-15/月</span></td></tr>
+<tr><td class="k">买断制</td><td class="v">记忆仓库 → <span class="em">$199 一次性</span></td></tr>
+<tr><td class="k">企业版</td><td class="v">自托管 — 团队协作 + SAML + 审计 → <span class="em">议价</span></td></tr>
+<tr><td class="k">硬件 Key</td><td class="v">专用签名硬件 → <span class="em">$79</span></td></tr>
+<tr><td class="k">生态抽成</td><td class="v">Agent 技能市场交易 → <span class="em">5%</span></td></tr>
+</table>
+</div>
+</section>
+
+<!-- ═══════════ s14: 模块完成度矩阵 ═══════════ -->
+<section class="sec" id="s14">
+<h2>模块完成度矩阵</h2>
+<div class="path">AUDIT_REPORT.md § 六维度 + 代码审计</div>
+
+<div class="blk">
+<h3>核心模块完成度</h3>
+<table class="tbl">
+<tr><th>模块</th><th>完成度</th><th>关键文件</th></tr>
+<tr><td class="k">DID 身份系统</td><td class="v s-done">🟢 90%</td><td class="v">did + signer + resolver</td></tr>
+<tr><td class="k">数据采集</td><td class="v s-done">🟢 80%</td><td class="v">3 个采集器完成</td></tr>
+<tr><td class="k">画像系统</td><td class="v s-done">🟢 85%</td><td class="v">wizard + schema</td></tr>
+<tr><td class="k">记忆系统</td><td class="v s-wip">🟡 70%</td><td class="v">基础记忆 + 衰减</td></tr>
+<tr><td class="k">MCP 集成</td><td class="v s-wip">🟡 60%</td><td class="v">可用但有安全修正</td></tr>
+<tr><td class="k">Computer Use</td><td class="v s-wip">🟡 40%</td><td class="v">仅原型</td></tr>
+<tr><td class="k">Agent 社交</td><td class="v s-todo">🔴 20%</td><td class="v">框架就绪，无实际网络</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>六维度评估</h3>
+<table class="tbl">
+<tr><td class="k">文档完整度</td><td class="v s-done">🟢 93%</td><td class="v">27 份 MD 文档，覆盖全面</td></tr>
+<tr><td class="k">技术架构</td><td class="v s-done">🟢 88%</td><td class="v">清晰分层，核心模块高质</td></tr>
+<tr><td class="k">安全设计</td><td class="v s-wip">🟡 70%</td><td class="v">协处理器模型好但 COPP 待修复</td></tr>
+<tr><td class="k">代码质量</td><td class="v s-done">🟢 85%</td><td class="v">类型提示 + docstring + 规范化</td></tr>
+<tr><td class="k">测试覆盖</td><td class="v s-wip">🟡 55%</td><td class="v">基础测试有，复杂场景缺</td></tr>
+<tr><td class="k">产品可行</td><td class="v s-done">🟢 82%</td><td class="v">路线清晰，差异化明确</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>已完成的基底（不动）</h3>
+<p>DID 身份（did:aid: + Ed25519）✅ | TwinBrain 状态机 ✅ | ReAct 引擎 ✅ | 记忆系统（3-tier）✅ | Skill SDK ✅ | 桌面精灵（Tkinter 悬浮球）✅ | MCP Server ✅ | CLI 工具 + Web 演示 ✅</p>
+</div>
+</section>
+<!-- ═══════════ s15: 53 项审计结果 ═══════════ -->
+<section class="sec" id="s15">
+<h2>审计报告：29 个问题 + 8 项修复</h2>
+<div class="path">AUDIT_REPORT.md → 53 项审计，46 通过，7 待修</div>
+<div class="ld"><strong>核心诊断</strong>：文档"熵"在增长 — 每次对话产生新文件但旧文件不更新，导致"哪个版本是真的"成为新的认知负担。41 个 MD 文件中约 60%（25 个）是历史/过程性文件。</div>
+
+<div class="blk">
+<h3>🔴 严重问题（10 个）</h3>
+<table class="tbl">
+<tr><th>#</th><th>问题</th><th>影响</th></tr>
+<tr><td>1</td><td>项目名称不一致 — 文档中 "AID" 和 "Alpha-ID" 混用</td><td>品牌混淆</td></tr>
+<tr><td>2</td><td>评分数据自相矛盾 — 两个文档中同一指标不同值</td><td>认知混乱</td></tr>
+<tr><td>3</td><td>CONTINUE.md 包含硬编码路径错误（第 16 行）</td><td>误导新 Agent</td></tr>
+<tr><td>4</td><td>pyproject.toml 包名与实际 CLI 不一致</td><td>技术债务</td></tr>
+<tr><td>5</td><td>DID 方法名存在历史分歧（did:aid vs did:alpha）</td><td>架构歧义</td></tr>
+<tr><td>6</td><td>GAP.md 严重过时 — 引用已废弃的里程碑</td><td>执行误导</td></tr>
+<tr><td>7</td><td>ARCHITECTURE.md 的模块完成状态从未更新</td><td>信息过时</td></tr>
+<tr><td>8</td><td>CHANGELOG.md 在 archive/ 中但应该是活跃文档</td><td>组织混乱</td></tr>
+<tr><td>9</td><td>CONTRIBUTING.md 在 archive/ 中但应该是活跃文档</td><td>组织混乱</td></tr>
+<tr><td>10</td><td>AI 对话存档包含大量失真信息（5 个 AI 分析文件）</td><td>噪音污染</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>🟡 中等问题（12 个）+ 🟢 轻微问题（7 个）</h3>
+<p>包括：DEMO_TOOLS_USAGE.md 无人维护、Work_Preparation_Report.md 重复内容、DEVELOPER.md 版本号混乱、多文件间引用的文件路径已失效等。</p>
+</div>
+
+<div class="blk">
+<h3>8 项立即修复</h3>
+<table class="tbl">
+<tr><th>优先级</th><th>动作</th><th>原因</th></tr>
+<tr><td class="s-todo">🔴 P0-1</td><td>全局统一项目名为 Alpha-ID（非 AID）</td><td>decisions.md 已确认</td></tr>
+<tr><td class="s-todo">🔴 P0-2</td><td>修复 CONTINUE.md 的硬编码路径</td><td>误导新 Agent</td></tr>
+<tr><td class="s-todo">🔴 P0-3</td><td>创建单一数据源（测试数/版本号/状态标记）</td><td>消除矛盾数据</td></tr>
+<tr><td class="s-todo">🔴 P0-4</td><td>CHANGELOG.md + CONTRIBUTING.md 从 archive/ 移回 projects/</td><td>活跃文档</td></tr>
+<tr><td class="s-todo">🔴 P0-5</td><td>重写 GAP.md（或合并到 PLAN.md）</td><td>已严重过时</td></tr>
+<tr><td class="s-wip">🟡 P1-1</td><td>创建 GLOSSARY.md 名词解释表</td><td>✅ 已完成</td></tr>
+<tr><td class="s-wip">🟡 P1-2</td><td>更新 ARCHITECTURE.md 的所有状态标记</td><td>与代码现状对齐</td></tr>
+<tr><td class="s-wip">🟡 P1-3</td><td>在 5 个 AI 分析文件开头添加声明</td><td>防止误导</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>文档依赖关系图</h3>
+<div class="cg">
+<div><div class="cg-t">当前 — 混乱</div><div class="cg-b" style="font-size:12px;font-weight:400;color:var(--dim);line-height:1.8">
+ AGENTS.md ←→ AGENT_CONTEXT.md（重叠）<br>
+ VISION.md / PLAN.md / ARCHITECTURE.md<br>
+ GAP.md（过时）<br>
+ archive/ 中 26 个文件混合<br>
+ 草稿 + AI 总结 + 正式文档 全混在一起
+</div></div>
+<div><div class="cg-t">目标 — 标准化</div><div class="cg-b" style="font-size:12px;font-weight:400;color:var(--dim);line-height:1.8">
+ 活跃文档 → docs/（5 个核心）<br>
+ 历史档案 → archive/（加声明头）<br>
+ 单一真相源 → 每个事实只在一处定义<br>
+ 其他文件通过引用获取
+</div></div>
+</div>
+</div>
+</section>
+
+<!-- ═══════════ s16: 工具链审计 ═══════════ -->
+<section class="sec" id="s16">
+<h2>工具链审计</h2>
+<div class="path">TOOL_AUDIT.md → 13 个工具审查 + 推荐方案</div>
+
+<div class="blk">
+<h3>🔴 应立即处理的问题</h3>
+<table class="tbl">
+<tr><th>工具</th><th>问题</th><th>建议</th></tr>
+<tr><td class="k">psycopg2-binary</td><td class="v">重量级依赖，但无 PostgreSQL 部署方案、无 Docker Compose、无 Alembic 迁移</td><td class="v"><span class="em">降级为可选依赖 [postgres]</span></td></tr>
+<tr><td class="k">bcrypt</td><td class="v">用途不明 — 如果身份验证走 Ed25519，bcrypt 可能是无效依赖</td><td class="v"><span class="em">审计实际使用位置后决定</span></td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>工具对比：taskipy vs just vs make vs poethepoet</h3>
+<table class="tbl">
+<tr><th>特性</th><th>taskipy</th><th>just</th><th>make</th><th>poethepoet</th></tr>
+<tr><td>跨平台</td><td class="s-done">✅</td><td class="s-done">✅</td><td class="s-todo">❌</td><td class="s-done">✅</td></tr>
+<tr><td>依赖管理</td><td class="s-todo">❌</td><td class="s-done">✅</td><td class="s-done">✅</td><td class="s-done">✅</td></tr>
+<tr><td>并行执行</td><td class="s-todo">❌</td><td class="s-todo">❌</td><td class="s-done">✅</td><td class="s-todo">❌</td></tr>
+<tr><td>文件监听</td><td class="s-todo">❌</td><td class="s-todo">❌</td><td class="s-todo">❌</td><td class="s-done">✅</td></tr>
+<tr><td>安装复杂度</td><td>pip</td><td>单二进制</td><td>系统依赖</td><td>pip</td></tr>
+</table>
+<p><span class="em">推荐</span>：如果只需简单任务映射 → taskipy 保留。如需文件监听 → poethepoet。如需复杂并行 → <span class="em">just（最轻量，推荐）</span>。</p>
+</div>
+
+<div class="blk">
+<h3>推荐引入的工具</h3>
+<table class="tbl">
+<tr><th>优先级</th><th>工具</th><th>用途</th><th>成本</th></tr>
+<tr><td class="s-todo">P0</td><td class="k">Alembic</td><td class="v">数据库迁移</td><td class="v">3 个文件</td></tr>
+<tr><td class="s-todo">P0</td><td class="k">ruff S 系列</td><td class="v">安全漏洞扫描（替代 bandit）</td><td class="v">改配置零成本</td></tr>
+<tr><td class="s-wip">P1</td><td class="k">pdoc</td><td class="v">API 文档自动生成</td><td class="v">低</td></tr>
+<tr><td class="s-wip">P1</td><td class="k">just</td><td class="v">替代 taskipy</td><td class="v">单二进制</td></tr>
+<tr><td class="s-wip">P1</td><td class="k">pytest-xdist</td><td class="v">并行测试</td><td class="v">低</td></tr>
+</table>
+</div>
+</section>
+
+<!-- ═══════════ s17: 差距分析 GAP ═══════════ -->
+<section class="sec" id="s17">
+<h2>差距分析 GAP</h2>
+<div class="path">GAP.md → 现状 vs 目标 → VibeCoding 方法论</div>
+
+<div class="blk">
+<h3>现有代码 vs 五阶段映射</h3>
+<table class="tbl">
+<tr><th>现有模块</th><th>映射到五阶段</th><th>状态</th></tr>
+<tr><td class="k">MemoryStore</td><td class="v">AID-Clean 存储层</td><td class="v s-done">✅ 不动</td></tr>
+<tr><td class="k">MCP Server</td><td class="v">AID-Inject 注入通道</td><td class="v s-done">✅ 不动</td></tr>
+<tr><td class="k">FairyBrain</td><td class="v">AID-Track 分析引擎</td><td class="v s-done">✅ 不动</td></tr>
+<tr><td class="k">CLI (typer)</td><td class="v">所有阶段用户入口</td><td class="v s-done">✅ 不动</td></tr>
+<tr><td class="k">Tkinter 桌面精灵</td><td class="v">Sense/Inject 前端载体</td><td class="v s-done">✅ 不动</td></tr>
+<tr><td class="k">TwinBrain 状态机</td><td class="v">全流程编排器</td><td class="v s-done">✅ 不动</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>需要新建的模块（~700 行总计）</h3>
+<table class="tbl">
+<tr><td class="k">src/collectors/</td><td class="v">AID-Track</td><td class="v">200 行（接口 + 第一个实现）</td></tr>
+<tr><td class="k">src/analyzer/</td><td class="v">AID-Track→Clean</td><td class="v">150 行（LLM 提取 + 聚合）</td></tr>
+<tr><td class="k">src/display/</td><td class="v">AID-Clean 输出端</td><td class="v">100 行（CLI + 弹窗）</td></tr>
+<tr><td class="k">src/suggest/</td><td class="v">宇宙星链扩散引擎</td><td class="v">50 行（候选推荐）</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>三里程碑</h3>
+<div class="scd"><div class="scd-t">里程碑 1：「画像存在」✅ 已完成</div><div class="scd-d"><code>aid collect chatgpt &lt;zip&gt;</code> → 解析 → 展示画像 → 说"有了"</div></div>
+<div class="scd"><div class="scd-t">里程碑 2：「多源扩散」</div><div class="scd-d">画像存在后，自动推荐候选源。你选 → 继续采集 → 画像越来越完整</div></div>
+<div class="scd"><div class="scd-t">里程碑 3：「跨工具注入」</div><div class="scd-d">画像稳定后，启动 AID-Inject — 通过 MCP 注入主力工具。打开 Claude Desktop，它已经认识你</div></div>
+</div>
+
+<div class="blk">
+<h3>五框架预埋进度</h3>
+<table class="tbl">
+<tr><td class="k">宇宙星链</td><td class="v s-done">✅ 采集器可插拔</td><td class="v s-wip">🔜 suggest.py</td></tr>
+<tr><td class="k">第一性原理</td><td class="v s-done">✅ Profile 本质校验</td><td class="v s-wip">🔜 profile model</td></tr>
+<tr><td class="k">反向推翻</td><td class="v s-done">✅ fallback_mode</td><td class="v s-wip">🔜 base collector</td></tr>
+<tr><td class="k">递归降维</td><td class="v s-done">✅ 阶段升维检查</td><td class="v s-wip">🔜 手动触发</td></tr>
+<tr><td class="k">反脆弱</td><td class="v s-done">✅ failure_patterns</td><td class="v s-wip">🔜 analyzer</td></tr>
+</table>
+</div>
+</section>
+
+<!-- ═══════════ s18: 架构决策记录 ═══════════ -->
+<section class="sec" id="s18">
+<h2>架构决策记录</h2>
+<div class="path">decisions.md → 10 条产品决策 + 4 条星链校准 + 6 家 AI 建议筛选</div>
+
+<div class="blk">
+<h3>路线选择（2026-06-04）</h3>
+<div class="cg">
+<div><div class="cg-t">✅ 选中：VISION 路线</div><div class="cg-b" style="font-size:12px;font-weight:400;color:var(--dim);line-height:1.8">
+第一交付：导入器（冷启动解药）<br>
+优先级：产品体验优先<br>
+原因：当前瓶颈不是技术（70% 已做完），是产品
+</div></div>
+<div><div class="cg-t">❌ 放弃：ROADMAP 路线</div><div class="cg-b" style="font-size:12px;font-weight:400;color:var(--dim);line-height:1.8">
+第一交付：DID Registry（身份地基）<br>
+优先级：技术基础设施优先<br>
+原因：技术已做完 70%，不应继续堆积
+</div></div>
+</div>
+</div>
+
+<div class="blk">
+<h3>星链校准：执行优先级变更</h3>
+<table class="tbl">
+<tr><th>优先级</th><th>旧内容</th><th>新内容</th></tr>
+<tr><td class="k">P0-1</td><td class="v">冷启动向导</td><td class="v"><span class="em">MCP 身份注入插件</span></td></tr>
+<tr><td class="k">P0-2</td><td class="v">Computer Use 闭环</td><td class="v"><span class="em">零数据魔法时刻</span>（3 个问题 + 立刻认识你）</td></tr>
+<tr><td class="k">P0-3</td><td class="v">记忆感知</td><td class="v"><span class="em">导入器</span>（降级为补充策略，不阻塞）</td></tr>
+<tr><td class="k">P0-4</td><td class="v">MCP 暴露身份/记忆</td><td class="v">→ 合并入 P0-1</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>6 家 AI 建议筛选（采纳 vs 拒绝）</h3>
+<table class="tbl">
+<tr><th>建议</th><th>来源</th><th>决定</th><th>原因</th></tr>
+<tr><td>Schema 先锁定</td><td>元宝（6 家共识）</td><td class="s-done">✅ 采纳</td><td>docs/schema/v0.1/ 已锁定</td></tr>
+<tr><td>目录结构标准化</td><td>Kimi</td><td class="s-done">✅ 采纳</td><td>~/.alpha-id/ 标准化</td></tr>
+<tr><td>"撤回高地"战略</td><td>DeepSeek</td><td class="s-done">✅ 采纳</td><td>寄生策略</td></tr>
+<tr><td>"MVP 必须谈信任"</td><td>Kimi</td><td class="s-todo">❌ 拒绝</td><td>已确认 MVP 不谈隐私</td></tr>
+<tr><td>"700 行不够"</td><td>Kimi/DeepSeek</td><td class="s-todo">❌ 拒绝</td><td>原估算方向正确</td></tr>
+<tr><td>"A2A 提前到 P0"</td><td>DeepSeek/文心</td><td class="s-todo">❌ 拒绝</td><td>用户原决定 P1-2 是对的</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>P0 范围冻结（2026-06-05）</h3>
+<div class="hlb"><strong>P0 唯一目标</strong>：<code>aid collect chatgpt &lt;zip&gt;</code> → 解析 → 展示文本画像 → 说"有了"<br>
+<strong>P0 不做</strong>：MCP 注入 / HTML 粒子 / Safety / A2A / 语音 / 多源采集器<br>
+<strong>模型默认值</strong>：<code>deepseek-v4-flash</code>，通过环境变量 <code>LLM_MODEL</code> 覆盖</div>
+</div>
+</section>
+
+<!-- ═══════════ s19: 路线图 ═══════════ -->
+<section class="sec" id="s19">
+<h2>路线图 & 里程碑</h2>
+<div class="path">PLAN.md → ROADMAP.md → decisions.md §7</div>
+
+<div class="blk">
+<h3>v0.3.0（当前目标）</h3>
+<table class="tbl">
+<tr><td class="k">✅</td><td class="v">完成 3 个数据采集器（ChatGPT / Trae / Browser）</td></tr>
+<tr><td class="k">✅</td><td class="v">完善画像生成引擎</td></tr>
+<tr><td class="k s-wip">🟡</td><td class="v">基础 MCP 工具上线 + 安全修正（COPP + 验证）</td></tr>
+<tr><td class="k s-wip">🟡</td><td class="v">基础 Web UI</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>v0.5.0（中期目标）</h3>
+<table class="tbl">
+<tr><td class="k s-todo">🔴</td><td class="v">Computer Use 完整三环</td></tr>
+<tr><td class="k s-todo">🔴</td><td class="v">Claude + Codex + Gemini 采集器</td></tr>
+<tr><td class="k s-todo">🔴</td><td class="v">预判型工作流</td></tr>
+<tr><td class="k s-todo">🔴</td><td class="v">DAEMON 守护进程完整运行</td></tr>
+<tr><td class="k s-todo">🔴</td><td class="v">A2A 基础握手完成</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>v1.0.0（正式发布）</h3>
+<table class="tbl">
+<tr><td class="k s-todo">🔴</td><td class="v">Ghost Layer 透明注入</td></tr>
+<tr><td class="k s-todo">🔴</td><td class="v">Agent 社交网络 v1</td></tr>
+<tr><td class="k s-todo">🔴</td><td class="v">自主学习初步能力</td></tr>
+<tr><td class="k s-todo">🔴</td><td class="v">云同步 + 多设备</td></tr>
+<tr><td class="k s-todo">🔴</td><td class="v">数据食客全链路闭环</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>Phase 优先级映射（来自 decisions.md §7）</h3>
+<table class="tbl">
+<tr><th>优先级</th><th>对应阶段</th><th>核心内容</th></tr>
+<tr><td class="k">P0-1</td><td class="v">Phase 0a</td><td class="v">冷启动向导 — 首次运行引导 + 身份自动创建</td></tr>
+<tr><td class="k">P0-2</td><td class="v">Phase 0b</td><td class="v">Computer Use 闭环 — Plan 层 + Safety 层</td></tr>
+<tr><td class="k s-done">P0-3</td><td class="v">Phase 0c</td><td class="v">记忆感知 + 上下文连续性 ✅</td></tr>
+<tr><td class="k">P0-4</td><td class="v">Phase 0d</td><td class="v">MCP 暴露身份/记忆（Ghost Layer 核心入口）</td></tr>
+<tr><td class="k">P1-1</td><td class="v">Phase 1a</td><td class="v">导入器 — ChatGPT/GitHub/Claude</td></tr>
+<tr><td class="k">P1-2</td><td class="v">Phase 1b</td><td class="v">A2A 协议对接</td></tr>
+<tr><td class="k">P2-1</td><td class="v">Phase 2a</td><td class="v">每日晨报系统</td></tr>
+<tr><td class="k">P3</td><td class="v">Phase 3</td><td class="v">自主学习循环 + 数字遗嘱 + 硬件钥匙</td></tr>
+</table>
+</div>
+</section>
+
+<!-- ═══════════ s20: 竞品对比 ═══════════ -->
+<section class="sec" id="s20">
+<h2>竞品对比</h2>
+<div class="path">PLAN.md § 竞品分析 → 星链级竞品检索报告</div>
+
+<div class="blk">
+<h3>生态位对比</h3>
+<table class="tbl">
+<tr><th>竞品</th><th>定位</th><th>跨平台？</th><th>Alpha-ID 差异化</th></tr>
+<tr><td class="k">OpenAI Memory</td><td class="v">平台内记忆</td><td class="s-todo">❌</td><td class="v"><span class="em">跨所有平台穿梭</span></td></tr>
+<tr><td class="k">Claude Projects</td><td class="v">项目级记忆</td><td class="s-todo">❌</td><td class="v"><span class="em">做人而不是项目</span></td></tr>
+<tr><td class="k">LangChain/CrewAI</td><td class="v">开发工具</td><td class="s-done">✅</td><td class="v"><span class="em">面向个体用户</span></td></tr>
+<tr><td class="k">Cursor/Windsurf</td><td class="v">编码 IDE</td><td class="s-todo">❌</td><td class="v"><span class="em">覆盖所有工具</span></td></tr>
+<tr><td class="k">Rewind AI</td><td class="v">本地记忆</td><td class="s-wip">部分</td><td class="v"><span class="em">注入所有工具</span></td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>核心差异化</h3>
+<div class="hlb"><strong>不是"又一个 AI 工具"</strong> — 它是<strong>坐在所有 AI 工具之上的统一身份层</strong>。没有竞品在做同样的事。Alpha-ID 的对手不是某个产品，而是<span class="em">"碎片化的数字自我"</span>这一现象。</div>
+</div>
+
+<div class="blk">
+<h3>竞争策略：寄生，不对抗</h3>
+<p>不做平台、不跟任何 AI 工具竞争 — <span class="em">寄生在已有生态中</span>（通过 MCP 注入身份），平台越多 Alpha-ID 越强。成为 Hermes/Agent HQ 的身份层插件。</p>
+<div class="hlb">别人建生态，你在生态里建身份层。</div>
+</div>
+</section>
+
+<!-- ═══════════ s21: 六框架思维法 ═══════════ -->
+<section class="sec" id="s21">
+<h2>六框架思维法</h2>
+<div class="path">SELF_CHECK.md → 每次交付前必过</div>
+
+<div class="blk">
+<table class="tbl">
+<tr><td class="k">1. 宇宙星链</td><td class="v">多维发散 → 不被局部最优困住。从整个生态看 Alpha-ID 定位，而非只从代码看</td></tr>
+<tr><td class="k">2. 第一性原理</td><td class="v">本质重建 → <span class="em">"用户真正需要什么"</span> 而不是 "AI 能做什么"</td></tr>
+<tr><td class="k">3. 反向推翻</td><td class="v">死因排除 → "Alpha-ID 如果失败，原因是什么？" 预先识别并消除致命弱点</td></tr>
+<tr><td class="k">4. 递归降维</td><td class="v">小步验证 → 复杂问题切成可验证的小块。先做能跑的原型，再优化</td></tr>
+<tr><td class="k">5. 反脆弱</td><td class="v">容错机制 → 系统在任何状态下都不会灾难性崩溃。Ed25519 私钥丢失 → 可恢复身份路径</td></tr>
+<tr><td class="k">6. 节律控制</td><td class="v">扩散/收敛节奏 → 先发散思考所有可能 → 果断收缩到最高优先级执行</td></tr>
+</table>
+</div>
+</section>
+
+<!-- ═══════════ s22: 名词速查 ═══════════ -->
+<section class="sec" id="s22">
+<h2>名词速查表</h2>
+<div class="path">GLOSSARY.md → 41 个核心术语</div>
+
+<div class="blk">
+<h3>身份核心</h3>
+<table class="tbl">
+<tr><td class="k">Alpha-ID</td><td class="v">项目全称。用户的数字灵魂 / Ghost Layer</td></tr>
+<tr><td class="k">DID</td><td class="v">去中心化标识符（W3C 标准）</td></tr>
+<tr><td class="k">did:aid:</td><td class="v">Alpha-ID 的 DID 方法名</td></tr>
+<tr><td class="k">Ghost Layer</td><td class="v">幽灵层 — 产品核心理念：隐身在所有 AI 工具之下的透明存在层</td></tr>
+<tr><td class="k">TwinBrain</td><td class="v">孪生大脑 — 核心运行时引擎，管理记忆和状态机</td></tr>
+<tr><td class="k">COPP</td><td class="v">协处理器安全模型 — 客户端签名/服务端验证分离</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>架构术语</h3>
+<table class="tbl">
+<tr><td class="k">MCP</td><td class="v">Model Context Protocol — Anthropic 发布的 AI 工具通信协议</td></tr>
+<tr><td class="k">A2A</td><td class="v">Agent-to-Agent — Google 发布的 Agent 间通信协议</td></tr>
+<tr><td class="k">PoE</td><td class="v">Proof of Experience — 基于历史绩效的信任评分</td></tr>
+<tr><td class="k">ReAct</td><td class="v">Reasoning + Acting — "思考→行动→观察"循环引擎</td></tr>
+<tr><td class="k">Computer Use</td><td class="v">眼睛与手 — 三环（技能/规划/安全）屏幕操作层</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>采集与画像</h3>
+<table class="tbl">
+<tr><td class="k">Collector</td><td class="v">采集器 — 从各平台导入用户数字足迹</td></tr>
+<tr><td class="k">ProfileWizard</td><td class="v">人格画像生成器 — LLM 分析 + 维度聚合</td></tr>
+<tr><td class="k">RawMemory</td><td class="v">原始记忆单元 — 采集器输出的统一格式</td></tr>
+<tr><td class="k">冷启动</td><td class="v">不要求注册，拖入对话 → 提取画像</td></tr>
+<tr><td class="k">魔法时刻</td><td class="v">用户首次感受到"它认识我"的瞬间</td></tr>
+<tr><td class="k">寄生策略</td><td class="v">不做平台，寄生已有生态 — 平台越多 Alpha-ID 越强</td></tr>
+</table>
+</div>
+
+<div class="blk">
+<h3>命名约定</h3>
+<table class="tbl">
+<tr><td class="k">用户文档/宣传</td><td class="v"><span class="em">Alpha-ID</span></td></tr>
+<tr><td class="k">CLI 命令</td><td class="v"><code>aid</code>（小写）</td></tr>
+<tr><td class="k">DID 方法</td><td class="v"><code>did:aid:</code></td></tr>
+<tr><td class="k">Python 包</td><td class="v"><code>alpha_id</code>（代码）、<code>alpha-id-zix</code>（PyPI）</td></tr>
+</table>
+</div>
+</section>
+
+</main>
+
+<script>
+function nav(id,el){
+  document.querySelectorAll('.sec.active').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.si.active').forEach(n=>n.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(el)el.classList.add('active');
+  document.getElementById('mn').scrollTop=0;
+}
+function filter(){
+  const q=document.getElementById('q').value.toLowerCase();
+  document.querySelectorAll('.si').forEach(n=>{
+    n.style.display=(!q||n.textContent.toLowerCase().includes(q))?'':'none';
+  });
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='/'&&document.activeElement!==document.getElementById('q')){
+    e.preventDefault();document.getElementById('q').focus();
+  }
+});
+</script>
+</body>
+</html>

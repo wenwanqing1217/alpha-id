@@ -68,7 +68,7 @@ class BrainSettings:
     idle_timeout: int = 300  # 空闲超时（秒），默认 5 分钟转入 idle
     sleep_timeout: int = 1800  # 待机超时（秒），默认 30 分钟转入 sleep
     use_agent_chat: bool = True  # 聊天时是否使用 AgentLoop 智能回复
-    agent_model: str = "gpt-4o-mini"  # AgentLoop 使用的模型
+    agent_model: str = "deepseek-v4-flash"  # AgentLoop 使用的模型
     use_react: bool = True  # 是否使用 ReActEngine 替代 AgentLoop
 
 

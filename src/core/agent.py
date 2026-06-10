@@ -17,6 +17,13 @@ import re
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
+try:
+    import httpx
+    HAS_HTTPX = True
+except ImportError:
+    httpx = None
+    HAS_HTTPX = False
+
 logger = logging.getLogger(__name__)
 
 from alpha_id.container import Container  # noqa: E402
@@ -396,20 +403,34 @@ def _make_tools(alpha_id: str, signer=None) -> List[Tool]:
 # ── LLM 调用（text→text，纯 HTTP） ──
 
 
-def _call_llm(messages: List[Dict[str, str]], tools_schema: List[Dict[str, Any]], model: str = "gpt-4o-mini") -> str:
+# ── 全局 httpx 客户端（连接复用，避免每次 TLS 握手） ──
+_llm_client: Optional["httpx.Client"] = None
+
+
+def _get_llm_client() -> "httpx.Client":
+    global _llm_client
+    if _llm_client is None:
+        _llm_client = httpx.Client(
+            timeout=60.0, limits=httpx.Limits(max_keepalive_connections=5, keepalive_expiry=30.0)
+        )
+    return _llm_client
+
+
+def _call_llm(messages: List[Dict[str, str]], tools_schema: List[Dict[str, Any]], model: str = "") -> str:
     """
     调用 LLM，返回文本响应。
-    零框架依赖——直接用 httpx 或标准库 urllib。
+    优先使用 httpx（连接复用），未安装时回退到 urllib。
     """
     import os
-    import urllib.error
-    import urllib.request
 
     api_key = os.getenv("OPENAI_API_KEY") or os.getenv("COZE_WORKLOAD_IDENTITY_API_KEY")
     base_url = os.getenv("OPENAI_BASE_URL") or "https://api.openai.com/v1"
 
     if not api_key:
         return "[LLM 未配置：请设置 OPENAI_API_KEY 环境变量]"
+
+    if not model:
+        model = os.getenv("LLM_MODEL", "deepseek-v4-flash")
 
     body = {
         "model": model,
@@ -420,35 +441,45 @@ def _call_llm(messages: List[Dict[str, str]], tools_schema: List[Dict[str, Any]]
     if tools_schema:
         body["tools"] = [{"type": "function", "function": t} for t in tools_schema]
 
-    data = json.dumps(body).encode("utf-8")
-    req = urllib.request.Request(
-        f"{base_url.rstrip('/')}/chat/completions",
-        data=data,
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}",
-        },
-        method="POST",
-    )
     try:
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            result = json.loads(resp.read().decode("utf-8"))
+        if HAS_HTTPX:
+            client = _get_llm_client()
+            resp = client.post(
+                f"{base_url.rstrip('/')}/chat/completions",
+                json=body,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {api_key}",
+                },
+            )
+            resp.raise_for_status()
+            result = resp.json()
+        else:
+            import urllib.error
+            import urllib.request
+            req = urllib.request.Request(
+                f"{base_url.rstrip('/')}/chat/completions",
+                data=json.dumps(body).encode("utf-8"),
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {api_key}",
+                },
+            )
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                result = json.loads(resp.read().decode("utf-8"))
+
         choice = result["choices"][0]
         msg = choice["message"]
 
-        # 如果有 tool_calls，格式化为特殊标记
         if msg.get("tool_calls"):
             lines = []
             for tc in msg["tool_calls"]:
                 fn = tc["function"]
-                lines.append(f"__TOOL_CALL__ {fn['name']}({fn['arguments']})")
+                lines.append(f"__TOOL_CALL__ id:{tc['id']} {fn['name']}({fn['arguments']})")
             return "\n".join(lines)
 
         return msg.get("content", "") or ""
 
-    except urllib.error.HTTPError as e:
-        detail = e.read().decode("utf-8", errors="replace")
-        return f"[LLM 请求失败 {e.code}] {detail[:200]}"
     except Exception as e:
         return f"[LLM 调用异常] {e}"
 
@@ -457,16 +488,17 @@ def _call_llm(messages: List[Dict[str, str]], tools_schema: List[Dict[str, Any]]
 
 
 def _parse_tool_call(text: str) -> Optional[tuple]:
-    """解析 __TOOL_CALL__ 工具名({...}) 标记"""
-    m = re.search(r"__TOOL_CALL__\s+(\w+)\s*\(([\s\S]*?)\)", text)
+    """解析 __TOOL_CALL__ id:xxx name({...}) 标记，返回 (tool_call_id, name, args)"""
+    m = re.search(r"__TOOL_CALL__\s+(?:id:(\S+)\s+)?(\w+)\s*\(([\s\S]*?)\)\s*$", text, re.MULTILINE)
     if not m:
         return None
-    name = m.group(1)
+    tool_call_id = m.group(1) or ''
+    name = m.group(2)
     try:
-        args = json.loads(m.group(2)) if m.group(2).strip() else {}
+        args = json.loads(m.group(3)) if m.group(3).strip() else {}
     except json.JSONDecodeError:
         args = {}
-    return name, args
+    return tool_call_id, name, args
 
 
 # ── 主循环 ──
@@ -507,7 +539,7 @@ class AgentLoop:
         reply = loop.run("帮我查一下我的身份信息")
     """
 
-    def __init__(self, alpha_id: str, model: str = "gpt-4o-mini", max_turns: int = 10, signer=None):
+    def __init__(self, alpha_id: str, model: str = "deepseek-v4-flash", max_turns: int = 3, signer=None):
         self.alpha_id = alpha_id
         self.model = model
         self.max_turns = max_turns
@@ -593,16 +625,15 @@ class AgentLoop:
                 raise
 
             # 2. 检查是否是工具调用
-            tool_call = _parse_tool_call(reply)
-            if tool_call is None:
-                # 最终回答
-                logger.info(f"最终回复: {reply[:200]}")
+            tool_result = _parse_tool_call(reply)
+            if tool_result is None:
                 self.history.append({"role": "user", "content": user_input})
                 self.history.append({"role": "assistant", "content": reply})
                 return reply
 
+            tool_call_id, name, args = tool_result
+
             # 3. 执行工具
-            name, args = tool_call
             logger.info(f"工具调用: {name}({args})")
             tool = self.tool_map.get(name)
             if tool is None:
@@ -615,9 +646,9 @@ class AgentLoop:
                     logger.warning(f"工具执行异常 {name}: {e}")
                     result = f"[工具错误] {e}"
 
-            # 4. 追加到消息列表
+            # 4. 追加到消息列表（OpenAI API 要求 role=tool + tool_call_id）
             messages.append({"role": "assistant", "content": reply})
-            messages.append({"role": "tool", "content": result, "name": name})
+            messages.append({"role": "tool", "tool_call_id": tool_call_id, "content": result})
 
         # 超时返回
         final = f"[达到最大轮次 {self.max_turns}，未完成]"

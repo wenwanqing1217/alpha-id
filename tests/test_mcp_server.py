@@ -327,7 +327,7 @@ async def test_all_tools_listed():
         "ocr_image", "analyze_image",
         "focus_window", "click_screen", "click_double", "click_right",
         "type_text", "type_at", "press_key", "press_enter", "scroll", "mouse_position",
-        "get_identity", "get_server_info",
+        "get_identity", "verify_identity", "get_server_info",
         "read_code", "search_code", "edit_code", "run_python", "list_code_files",
         "count_code_lines",
         "memory_graph_stats", "memory_graph_html", "memory_graph_search",

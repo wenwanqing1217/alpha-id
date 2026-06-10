@@ -62,7 +62,7 @@ class ReActEngine:
         self.brain = brain  # Optional[TwinBrain]
         self.api_key = llm_api_key or os.environ.get("LLM_API_KEY", "") or os.environ.get("OPENAI_API_KEY", "")
         self.base_url = llm_base_url or os.environ.get("LLM_BASE_URL", "")
-        self.model = model or os.environ.get("LLM_MODEL", "gpt-4o-mini")
+        self.model = model or os.environ.get("LLM_MODEL", "deepseek-v4-flash")
         self.max_turns = int(os.environ.get("REACT_MAX_TURNS", "5"))
         self.tools: List[Tool] = []
         self._register_tools()
@@ -317,7 +317,7 @@ class ReActEngine:
                 }
 
             # 4. 执行工具
-            name, args = tool_call
+            _, name, args = tool_call
             tool_calls += 1
             tool = {t.name: t for t in self.tools}.get(name)
             if tool is None:
@@ -330,9 +330,9 @@ class ReActEngine:
 
             observations.append(result)
 
-            # 5. 追加到消息
+            # 5. 追加到消息（用 user role 避免 DeepSeek 要求 tool_call_id）
             messages.append({"role": "assistant", "content": reply})
-            messages.append({"role": "tool", "content": str(result), "name": name})
+            messages.append({"role": "user", "content": f"[工具 {name} 执行结果]\n{result}"})
 
         # 超时
         return {

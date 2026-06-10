@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "description": "浏览器自动化 — Alpha-ID Computer Use 加速方案 (智谱建议已采纳)",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp"]
+    },
+    "context7": {
+      "description": "实时文档查询 — cryptography/fastapi/sqlalchemy/mcp 等库快速查",
+      "command": "npx",
+      "args": ["-y", "context7"]
+    },
+    "github": {
+      "description": "GitHub Issues/PRs 管理 — 对接 github.com/wenwanqing1217/alpha-id",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"]
+    },
+    "filesystem": {
+      "description": "安全的文件系统访问 — 替代直接 bash 读写",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "D:\\AID\\projects"]
+    }
+  }
+}

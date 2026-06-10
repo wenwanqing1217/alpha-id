@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from fastapi import FastAPI, Query, Request
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 
@@ -13,7 +13,6 @@ from alpha_id.signer import AIDSigner
 from alpha_id.skill_signer import SkillRegistry
 from core.message import Message
 from core.twin_brain import BrainRegistry
-
 
 # ── 全局缓存 ──
 
@@ -36,6 +35,7 @@ def _get_network() -> Optional[Any]:
         return net
     except Exception:
         return None
+
 
 # ── 数据模型 ──
 
@@ -205,6 +205,110 @@ async def chat(req: ChatRequest):
     }
 
 
+# ── 流式聊天（延迟导入，可选依赖） ──
+
+import json  # noqa: E402
+import os  # noqa: E402
+
+import httpx  # noqa: E402
+from starlette.responses import StreamingResponse  # noqa: E402
+
+
+async def _stream_llm(messages: list, model: str = "deepseek-v4-flash"):
+    """调用 DeepSeek API 并流式返回 token"""
+    api_key = os.getenv("OPENAI_API_KEY") or os.getenv("LLM_API_KEY", "")
+    base_url = os.getenv("OPENAI_BASE_URL") or "https://api.deepseek.com/v1"
+
+    if not api_key:
+        yield f"data: {json.dumps({'error': 'LLM 未配置'})}\n\n"
+        yield "data: [DONE]\n\n"
+        return
+
+    body = {
+        "model": model,
+        "messages": messages,
+        "temperature": 0.7,
+        "max_tokens": 2048,
+        "stream": True,
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            async with client.stream(
+                "POST",
+                f"{base_url.rstrip('/')}/chat/completions",
+                json=body,
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {api_key}",
+                },
+            ) as resp:
+                async for line in resp.aiter_lines():
+                    if line.startswith("data: "):
+                        data_str = line[6:]
+                        if data_str.strip() == "[DONE]":
+                            yield "data: [DONE]\n\n"
+                            return
+                        try:
+                            data = json.loads(data_str)
+                            delta = data.get("choices", [{}])[0].get("delta", {})
+                            content = delta.get("content", "")
+                            if content:
+                                yield f"data: {json.dumps({'token': content})}\n\n"
+                        except json.JSONDecodeError:
+                            pass
+    except Exception as e:
+        yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        yield "data: [DONE]\n\n"
+
+
+@app.post("/chat/stream")
+async def chat_stream(req: ChatRequest):
+    if not req.alpha_id.strip() or not req.message.strip():
+        return JSONResponse(status_code=400, content={"error": "参数不全"})
+
+    container = _get_container()
+    if not _user_exists(req.alpha_id):
+        return JSONResponse(status_code=401, content={"error": "未认证"})
+
+    brain = _get_or_create_brain(req.alpha_id)
+    brain.awake()
+
+    # 构建消息（简化版：不经过完整的 ReAct 循环，仅做纯 LLM 对话）
+    system_prompt = (
+        f"你是 {req.alpha_id} 的孪生大脑（TwinBrain），一个有温度、有记忆的数字灵魂。\n"
+        f"你现在在跟「自己」对话——用户就是你本人。\n"
+        f"回答简短、自然、有温度，像在跟自己的内心对话。\n"
+        f"不要像客服一样说话，不要说「很高兴为您服务」这种话。\n"
+    )
+
+    # 尝试注入记忆
+    try:
+        recalled = container.memory.query(query_text=req.message, max_sensitivity=70, limit=3)
+        if recalled:
+            system_prompt += "\n\n## 我记得的关于这件事的回忆"
+            for m in recalled:
+                content = m.get("content", "")
+                system_prompt += f"\n- {content}"
+    except Exception:
+        pass
+
+    messages_for_llm = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": req.message},
+    ]
+
+    return StreamingResponse(
+        _stream_llm(messages_for_llm),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
 @app.get("/identity")
 async def get_identity(request: Request):
     alpha_id = request.headers.get("X-Alpha-ID")
@@ -305,27 +409,31 @@ async def network_topology():
     for p in peers:
         nid = p.did[-20:]  # 短的节点 ID
         label = p.alias or p.did[-12:]
-        nodes.append({
-            "id": nid,
-            "label": f"🤖 {label}\n信任:{p.trust_level}",
-            "group": "peer",
-            "did": p.did,
-            "alias": p.alias or "",
-            "trust_level": p.trust_level,
-        })
+        nodes.append(
+            {
+                "id": nid,
+                "label": f"🤖 {label}\n信任:{p.trust_level}",
+                "group": "peer",
+                "did": p.did,
+                "alias": p.alias or "",
+                "trust_level": p.trust_level,
+            }
+        )
 
     # ── 构建边 ──
     edges: List[dict] = []
     # 自己到每个对等节点的连接
     for p in peers:
         nid = p.did[-20:]
-        edges.append({
-            "from": "self",
-            "to": nid,
-            "label": "🔗",
-            "title": f"信任: {p.trust_level}",
-            "color": {"color": "#818cf8", "opacity": 0.6},
-        })
+        edges.append(
+            {
+                "from": "self",
+                "to": nid,
+                "label": "🔗",
+                "title": f"信任: {p.trust_level}",
+                "color": {"color": "#818cf8", "opacity": 0.6},
+            }
+        )
 
     # 尝试加载最近的 PoE 调用链
     chains_found = 0
@@ -334,21 +442,25 @@ async def network_topology():
         for poe in poe_store.list_all():
             if chains_found >= 10:
                 break
-            nodes.append({
-                "id": f"poe-{poe.poe_id[-12:]}",
-                "label": f"📜 {poe.skill_name}",
-                "group": "poe",
-                "poe_id": poe.poe_id,
-            })
+            nodes.append(
+                {
+                    "id": f"poe-{poe.poe_id[-12:]}",
+                    "label": f"📜 {poe.skill_name}",
+                    "group": "poe",
+                    "poe_id": poe.poe_id,
+                }
+            )
             # 谁执行的这个 PoE
             executor_short = poe.executor_did[-20:] if len(poe.executor_did) > 20 else poe.executor_did
-            edges.append({
-                "from": executor_short if any(n["id"] == executor_short for n in nodes) else "self",
-                "to": f"poe-{poe.poe_id[-12:]}",
-                "label": poe.skill_name[:10],
-                "color": {"color": "#34d399"},
-                "title": f"技能: {poe.skill_name}\n成功: {poe.success}",
-            })
+            edges.append(
+                {
+                    "from": executor_short if any(n["id"] == executor_short for n in nodes) else "self",
+                    "to": f"poe-{poe.poe_id[-12:]}",
+                    "label": poe.skill_name[:10],
+                    "color": {"color": "#34d399"},
+                    "title": f"技能: {poe.skill_name}\n成功: {poe.success}",
+                }
+            )
             chains_found += 1
     except Exception:
         pass

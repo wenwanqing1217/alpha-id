@@ -1,0 +1,26 @@
+[
+  {
+    "title": "讨论 MCP 协议",
+    "create_time": "2026-06-02T14:30:00Z",
+    "messages": [
+      {"role": "user", "content": "你觉得 MCP 协议的未来怎么样？我想了解一下它的设计思路。"},
+      {"role": "assistant", "content": "MCP 是 Anthropic 发起的开放协议，已经被 Linux 基金会接管。"}
+    ]
+  },
+  {
+    "title": "Python 异步编程",
+    "create_time": "2026-06-01T22:00:00Z",
+    "messages": [
+      {"role": "user", "content": "asyncio 和 trio 有什么区别？我在写一个 Python FastAPI 应用。"},
+      {"role": "assistant", "content": "asyncio 是标准库，trio 更简洁但生态较小。"}
+    ]
+  },
+  {
+    "title": "深夜代码审查",
+    "create_time": "2026-06-01T01:30:00Z",
+    "messages": [
+      {"role": "user", "content": "帮我 review 这段 Rust 代码，用 functional 风格重构。"},
+      {"role": "assistant", "content": "好的，我看到你用了很多 map 和 filter，风格不错。"}
+    ]
+  }
+]

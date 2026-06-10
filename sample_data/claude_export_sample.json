@@ -1,0 +1,26 @@
+[
+  {
+    "name": "系统架构讨论",
+    "created_at": "2026-06-02T14:30:00Z",
+    "messages": [
+      {"role": "human", "content": "帮我设计一个微服务架构，用 Python FastAPI 和 PostgreSQL。"},
+      {"role": "assistant", "content": "好的，这是一个典型的三层架构方案。"}
+    ]
+  },
+  {
+    "name": "前端技术选型",
+    "created_at": "2026-06-01T22:00:00Z",
+    "messages": [
+      {"role": "human", "content": "React 和 Vue 我该怎么选？团队之前用的是 JavaScript。"},
+      {"role": "assistant", "content": "如果你团队熟悉 JS，Vue 上手更快。"}
+    ]
+  },
+  {
+    "name": "深夜调试",
+    "created_at": "2026-06-01T02:15:00Z",
+    "messages": [
+      {"role": "human", "content": "这个 Rust 的内存泄漏问题搞了一晚上了，用 functional 风格重写会不会好点？"},
+      {"role": "assistant", "content": "Rust 的所有权系统已经帮你避免了大部分内存问题。"}
+    ]
+  }
+]

@@ -128,7 +128,7 @@ class TestWebIndex:
         resp = client.get("/")
         assert resp.status_code == 200
         assert resp.headers["content-type"].startswith("text/html")
-        assert "Alpha-ID Agent" in resp.text
+        assert "Alpha-ID" in resp.text
 
 
 class TestWebBrainControl:
