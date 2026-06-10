@@ -43,3 +43,7 @@ _build/
 _*.py
 .vue_app_script.txt
 test_output.html
+
+# Atomcode
+.atomcode/
+41/
