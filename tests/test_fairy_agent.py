@@ -1,14 +1,10 @@
 """Tests for fairy_agent.py — FairyTool + FairyBrain (no LLM API key needed)."""
 
-import json
-import os
-import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from fairy_agent import FairyBrain, FairyTool, HAS_OPENAI
-
+from fairy_agent import HAS_OPENAI, FairyBrain, FairyTool
 
 # ═══════════════════════════════════════════════
 # FairyTool tests
@@ -114,6 +110,7 @@ class TestFairyBrainInit:
         assert len(brain.tools) == 8
 
     def test_init_with_env(self, monkeypatch):
+        monkeypatch.setenv("DEEPSEEK_API_KEY", "")
         monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
         monkeypatch.setenv("OPENAI_API_BASE", "https://example.com/v1")
         monkeypatch.setenv("AID_LLM_MODEL", "gpt-4")
@@ -346,13 +343,14 @@ class TestFairyBrainRegisterTools:
 
     @pytest.fixture
     def brain(self, monkeypatch):
+        monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         return FairyBrain(MockFairy())
 
     def test_quick_look_ok(self, brain):
         tool = brain.tools["quick_look"]
         result = tool()
-        assert "正在查看" in result
+        assert "查看屏幕" in result
 
     def test_quick_look_not_ready(self, brain):
         brain.fairy = object()  # no _quick_look method
@@ -363,7 +361,7 @@ class TestFairyBrainRegisterTools:
     def test_list_windows_ok(self, brain):
         tool = brain.tools["list_windows"]
         result = tool()
-        assert "窗口列表" in result
+        assert "当前打开的窗口列表" in result
 
     def test_list_windows_not_ready(self, brain):
         brain.fairy = object()
@@ -374,7 +372,7 @@ class TestFairyBrainRegisterTools:
     def test_mouse_position_ok(self, brain):
         tool = brain.tools["mouse_position"]
         result = tool()
-        assert "鼠标位置" in result
+        assert "鼠标当前位于屏幕坐标" in result
 
     def test_mouse_position_not_ready(self, brain):
         brain.fairy = object()
@@ -407,7 +405,7 @@ class TestFairyBrainRegisterTools:
     def test_show_identity_ok(self, brain):
         tool = brain.tools["show_identity"]
         result = tool()
-        assert "身份信息" in result
+        assert "AID 身份" in result
 
     def test_show_identity_not_ready(self, brain):
         brain.fairy = object()

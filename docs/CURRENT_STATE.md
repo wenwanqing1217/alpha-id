@@ -27,3 +27,10 @@
 - 画像质量：置信度 + 脱敏 + 多轮合并
 - 测试修复：剩余 20 个历史失败用例
 - Web/MCP：采集结果到个人空间与 MCP 资源
+
+## 本次推进
+
+- Web profile 数据层：新增 `/api/profile`，个人空间可展示 collected sources + provenance。
+- Git 采集器：新增 `aid collect git --path .` 手工命令，scan 也会自动纳入 Git 检测。
+- 测试一致性：修复 `tests/test_codex.py`、`tests/test_fairy_agent.py` 的 wording/availability 回归。
+- 面试包：README 增加当前主链路、并行推进策略、公开状态说明。

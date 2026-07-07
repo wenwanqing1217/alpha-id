@@ -23,3 +23,7 @@ python scripts/demo.py
    - `aid profile web` 打开个人空间 + 模拟盘入口。
    - `python scripts/demo.py` 让 MCP 客户端读取 `profile://identity`。
 4. 壁垒：用户的数字历史关系不可复制，本地优先 + 私钥自持不可复制。
+
+## 公开 README 一句话
+
+> 不是另一个 AI 助理，是坐在所有 AI 工具之上的 Ghost Layer。先看本机有什么，再决定采集什么；换工具、换平台，Alpha-ID 不换。

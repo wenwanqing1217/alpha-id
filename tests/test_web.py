@@ -3,8 +3,8 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from alpha_id.web import app
 from alpha_id.container import Container
+from alpha_id.web import app
 
 
 @pytest.fixture
@@ -178,3 +178,27 @@ class TestWebBrainControl:
         assert resp.status_code == 200
         data = resp.json()
         assert data["success"]
+
+class TestWebProfileApi:
+    def test_api_profile_returns_empty_profile(self, client):
+        resp = client.get("/api/profile")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "profile" in data
+        assert "collected_sources" in data
+        assert "provenance" in data
+        assert data["collected_sources"] == []
+        assert data["provenance"] == {}
+
+    def test_api_profile_reflects_collected_sources(self, client):
+        from alpha_id.profile_schema import AlphaIDProfile, save_profile
+        profile = AlphaIDProfile(did="did:aid:test", created_at="2026-01-01T00:00:00Z")
+        profile.extra["x_collected_sources"] = ["git", "browser"]
+        profile.extra["x_provenance"] = {"tone": {"source": "cursor", "confidence": 0.8}}
+        save_profile(profile)
+        resp = client.get("/api/profile")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["profile"]["did"] == "did:aid:test"
+        assert data["collected_sources"] == ["git", "browser"]
+        assert data["provenance"]["tone"]["source"] == "cursor"

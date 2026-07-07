@@ -105,9 +105,7 @@ class TestBrowserHistory:
 class TestGitCollector:
     """Git 仓库采集器测试"""
 
-    def test_detect_finds_repo(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("alpha_id.collectors.git.Path.home", lambda: tmp_path)
-        monkeypatch.setattr("alpha_id.collectors.git.Path.cwd", lambda: tmp_path)
+    def test_detect_finds_repo(self, tmp_path):
         repo = tmp_path / "projects" / "myapp"
         repo.mkdir(parents=True)
         (repo / ".git").mkdir()
@@ -115,11 +113,9 @@ class TestGitCollector:
 
         from alpha_id.collectors.git import GitCollector
 
-        assert GitCollector().detect() is True
+        assert GitCollector().detect_for_path(repo) is True
 
-    def test_collect_returns_profile(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("alpha_id.collectors.git.Path.home", lambda: tmp_path)
-        monkeypatch.setattr("alpha_id.collectors.git.Path.cwd", lambda: tmp_path)
+    def test_collect_returns_profile(self, tmp_path):
         repo = tmp_path / "projects" / "myapp"
         repo.mkdir(parents=True)
         (repo / ".git").mkdir()
@@ -128,7 +124,7 @@ class TestGitCollector:
 
         from alpha_id.collectors.git import GitCollector
 
-        profile = GitCollector().collect()
+        profile = GitCollector().collect_for_path(repo)
         assert profile is not None
         assert "Python" in profile.persona.technical.primary_languages
         assert "TypeScript" in profile.persona.technical.primary_languages

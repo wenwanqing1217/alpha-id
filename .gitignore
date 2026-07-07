@@ -51,3 +51,5 @@ test_output.html
 .venv/
 
 pytest_temp/
+assets/
+

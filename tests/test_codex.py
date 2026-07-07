@@ -1,10 +1,10 @@
 """test_codex.py — Codex 模块测试"""
 
-import sys, os
+import os
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-import pytest
-from codex import Codex, read_code, search_code, count_loc
+from codex import Codex, count_loc, read_code, search_code
 
 
 def _src(*parts):
@@ -23,11 +23,11 @@ class TestCodex:
 
     def test_read_not_found(self):
         r = read_code("nonexist.py")
-        assert "Error" in r
+        assert "File not found" in r
 
     def test_list_files(self):
         c = Codex()
-        r = c.tools["list_files"]["fn"](_src(), "*.py")
+        r = c.tools["list_files"]["fn"](_src(".."), "*.py")
         assert "codex.py" in r
 
     def test_count_loc(self):

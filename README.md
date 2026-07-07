@@ -1,4 +1,4 @@
-<p align="center">
+﻿<p align="center">
   <img src="https://img.shields.io/badge/python-3.12%2B-blue" alt="Python">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
   <img src="https://img.shields.io/badge/status-alpha--showcase-ready-purple" alt="Status">
@@ -24,7 +24,6 @@ aid profile mine --path .
 aid profile show
 aid profile web
 python scripts/demo.py
-python scripts/demo.py
 ```
 
 一个命令生成 DID，一条命令从本机痕迹里认出你，Web 端看到你的数字灵魂，MCP 客户端直接读到同一个你。
@@ -49,7 +48,7 @@ python scripts/demo.py
 
 - **DID 身份层**：本地 Ed25519，`did:aid:`，私钥不离开本机。
 - **画像/记忆层**：三层记忆、画像 Schema、来源质量、合并策略。
-- **采集器层**：ChatGPT / Claude / Cursor / Trae / Browser 框架已就位。
+- **采集器层**：ChatGPT / Claude / Cursor / Trae / Browser / Git 框架已就位。
 - **CLI 层**：`aid init`、`aid collect ...`、`aid profile ...` 已有骨架。
 - **Web 层**：已有 FastAPI + Web 入口，可继续扩展 3D 宇宙和模拟盘。
 - **MCP 层**：已有 profile MCP server 骨架，可继续扩展注入链路。
@@ -86,7 +85,7 @@ projects/
 ## 路线图
 
 - **V1.0**：完整主链路 + Web 展示 + 模拟盘 MVP + 面试演示。
-- **V1.1**：采集扩展、MCP 自动注入、稳定性修复。
+- **V1.1**：Git/Browser/Trae/Cursor 采集扩展、Web profile API、稳定性修复。
 - **V2.0**：双大脑拆分、因果图谱、A2A 轻量接入、语音通路。
 - **V3.0**：I2I + A2A 完整闭环、数字遗产、生态标准组件。
 
@@ -96,7 +95,7 @@ projects/
 
 - **短期**：开源影响力 + 高端岗位叙事 + 本地主权 AI 顾问方案。
 - **中期**：面向重度 AI 用户的订阅能力：备份、同步、高级记忆分析。
-- **长期**：成为 A2A / Agent 生态里的“可信身份 + 记忆”标准层。
+- **长期**：成为 A2A / Agent 生态里的“可信身份 + 记忆”标准层；先拿 GitHub 影响力、高端岗位叙事、本地主权 AI 顾问方案落地。
 
 这个项目的价值不只是代码，而是：**谁能先定义“用户数字存在”的标准，谁就能占据下一波 AI 产品的基础设施位。**
 
@@ -105,3 +104,10 @@ projects/
 ## License
 
 MIT
+
+
+## 并行推进策略
+
+- 主链路与 Git 采集、Web 个人空间、MCP 资源同步迭代，避免单线程等太久。
+- 先保证 `Phase 1 demo` 能跑；同时修剩余历史测试，不把面试展示押在单点成功上。
+- 完整愿景保留，但用“最小可展示闭环”落地，再逐步补 DID/I2I/A2A 深度。

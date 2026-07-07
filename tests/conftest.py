@@ -38,9 +38,13 @@ def setup_test_env(tmp_path):
     """自动设置测试环境变量，将数据目录指向临时目录"""
     old_alpha_id_dir = os.environ.get("ALPHA_ID_DIR")
     old_aid_dir = os.environ.get("AID_DIR")
+    old_deepseek_key = os.environ.get("DEEPSEEK_API_KEY")
+    old_openai_key = os.environ.get("OPENAI_API_KEY")
 
     os.environ["ALPHA_ID_DIR"] = str(tmp_path / "alpha-id")
     os.environ["AID_DIR"] = str(tmp_path / "aid")
+    os.environ.pop("DEEPSEEK_API_KEY", None)
+    os.environ.pop("OPENAI_API_KEY", None)
 
     yield
 
@@ -53,6 +57,16 @@ def setup_test_env(tmp_path):
         os.environ["AID_DIR"] = old_aid_dir
     else:
         os.environ.pop("AID_DIR", None)
+
+    if old_deepseek_key is not None:
+        os.environ["DEEPSEEK_API_KEY"] = old_deepseek_key
+    else:
+        os.environ.pop("DEEPSEEK_API_KEY", None)
+
+    if old_openai_key is not None:
+        os.environ["OPENAI_API_KEY"] = old_openai_key
+    else:
+        os.environ.pop("OPENAI_API_KEY", None)
 
 
 @pytest.fixture

@@ -44,8 +44,14 @@ class GitCollector(BaseCollector):
     def detect(self) -> bool:
         return _find_repo() is not None
 
-    def collect(self, input_path=None) -> Optional[AlphaIDProfile]:
-        repo = _find_repo()
+    def detect_for_path(self, repo_path: Path) -> bool:
+        try:
+            return (Path(repo_path) / ".git").exists()
+        except Exception:
+            return False
+
+    def collect_for_path(self, repo_path: Path) -> Optional[AlphaIDProfile]:
+        repo = Path(repo_path)
         if repo is None:
             return None
 

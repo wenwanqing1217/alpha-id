@@ -299,6 +299,49 @@ def cmd_collect_browser():
     typer.echo("")
     typer.echo("  下一步:")
     typer.echo("     aid profile show              查看完整画像")
+    typer.echo("     aid profile web              浏览器查看画像")
+
+
+@collect_app.command("git")
+def cmd_collect_git(
+    repo_path: str = typer.Option(".", "--path", "-p", help="Git 仓库路径，默认当前目录"),
+):
+    """从本地 Git 仓库提取提交语言与框架偏好"""
+    target = Path(repo_path)
+    if not target.exists() or not target.is_dir():
+        typer.echo("[错误] 路径不存在或不是目录: %s" % target, err=True)
+        raise typer.Exit(1)
+
+    from alpha_id.collectors.git import GitCollector
+
+    collector = GitCollector()
+    if not collector.detect_for_path(target):
+        typer.echo("[错误] 未检测到 Git 仓库: %s" % target, err=True)
+        raise typer.Exit(1)
+
+    profile = collector.collect_for_path(target)
+    if profile is None:
+        typer.echo("[错误] Git 仓库采集失败", err=True)
+        raise typer.Exit(1)
+
+    old = load_profile()
+    if old and old.did:
+        profile.did = old.did
+    else:
+        reg = DIDRegistry()
+        profile.did = reg.generate()
+        key_dir = Path.home() / ".alpha-id" / "keys"
+        key_dir.mkdir(parents=True, exist_ok=True)
+        (key_dir / "private_key.bin").write_bytes(reg.export_private_key())
+
+    save_profile(merge_profile(profile, source="git", quality=QUALITY_LOCAL))
+    add_collected_source("git")
+    typer.echo("[OK] Git 仓库痕迹已采集")
+    typer.echo(collector.summary_for_path(target, load_profile()))
+    typer.echo("")
+    typer.echo("  下一步:")
+    typer.echo("     aid profile show              查看完整画像")
+    typer.echo("     aid profile web              浏览器查看画像")
 
 
 @collect_app.command("scan")
