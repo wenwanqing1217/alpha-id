@@ -9,7 +9,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-WORKSPACE = Path(os.getcwd())
+WORKSPACE = Path(__file__).resolve().parent
 
 
 def safe_path(path: str) -> Path:
