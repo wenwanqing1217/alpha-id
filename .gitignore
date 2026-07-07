@@ -47,3 +47,7 @@ test_output.html
 # Atomcode
 .atomcode/
 41/
+
+.venv/
+
+pytest_temp/
