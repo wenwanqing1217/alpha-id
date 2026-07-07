@@ -53,11 +53,13 @@ class UserIdentityManager:
     def __init__(self, storage: Optional[StorageBackend] = None):
         # 默认使用 JSON 存储
         if storage is None:
-            import tempfile
-
             from core.storage import JsonStorage
 
-            db_path = os.path.join(tempfile.gettempdir(), "alpha_id_users.json")
+            db_path = os.path.join(
+                os.environ.get("COZE_WORKSPACE_PATH", os.getcwd()),
+                "assets",
+                "alpha_id_users.json",
+            )
             storage = JsonStorage(db_path)
 
         self._storage = storage
