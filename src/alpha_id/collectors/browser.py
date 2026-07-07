@@ -43,10 +43,11 @@ def info():
 
 def detect() -> bool:
     """检测是否存在浏览器数据"""
-    for name, path in BROWSER_PATHS.items():
-        if path.exists():
-            return True
-    return False
+    hits = []
+    for name, profile_path in BROWSER_PATHS.items():
+        if profile_path.exists():
+            hits.append(name)
+    return bool(hits)
 
 
 def _read_bookmarks(path: Path) -> list:

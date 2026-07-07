@@ -469,6 +469,16 @@ def cmd_show(
     if w.work_rhythm:
         typer.echo("- 节奏: %s" % w.work_rhythm)
 
+    provenance = profile.extra.get("x_provenance") or {}
+    if provenance:
+        typer.echo("")
+        typer.echo("[来源追溯]")
+        for key, info in provenance.items():
+            confidence = info.get("confidence")
+            method = info.get("method")
+            source = info.get("source")
+            typer.echo("- %s: %s%% (%s / %s)" % (key, int((confidence or 0) * 100), method, source))
+
     typer.echo("")
     typer.echo("_由 Alpha-ID 生成_")
 

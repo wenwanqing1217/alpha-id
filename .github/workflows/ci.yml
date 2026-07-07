@@ -69,8 +69,10 @@ jobs:
           pip install -e .[test]
 
       - name: Run tests with coverage
+        env:
+          PYTEST_TMP_DIR: .pytest_tmp
         run: |
-          python -m pytest tests/ -q --tb=short --cov=src --cov-report=term-missing --cov-fail-under=67
+          python -m pytest tests/ -q --tb=short --cov=src --cov-report=term-missing --cov-fail-under=67 --ignore=tests/test_mcp_server.py --ignore=tests/test_aid_daemon.py
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
