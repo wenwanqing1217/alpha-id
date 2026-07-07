@@ -96,11 +96,14 @@ class TestListCount:
         assert len(items) == 2
 
     def test_list_with_filter(self, db):
-        db.save("people", {
-            "p1": {"name": "Alice", "age": 30},
-            "p2": {"name": "Bob", "age": 25},
-            "p3": {"name": "Charlie", "age": 30},
-        })
+        db.save(
+            "people",
+            {
+                "p1": {"name": "Alice", "age": 30},
+                "p2": {"name": "Bob", "age": 25},
+                "p3": {"name": "Charlie", "age": 30},
+            },
+        )
         items = db.list("people", {"age": 30})
         assert len(items) == 2
         assert all(i["age"] == 30 for i in items)

@@ -6,6 +6,7 @@
   - 历史访问频率（常用网站、活跃时段）
   - 无密码、无 cookie、无个人信息
 """
+
 import json
 import logging
 import os
@@ -105,14 +106,18 @@ def _read_history(path: Path, limit: int = 1000) -> list:
                 continue
             # Chrome/Edge 时间戳：1601-01-01 以来的微秒数
             try:
-                dt = datetime(1601, 1, 1, tzinfo=timezone.utc) + __import__("datetime").timedelta(microseconds=visit_time)
+                dt = datetime(1601, 1, 1, tzinfo=timezone.utc) + __import__("datetime").timedelta(
+                    microseconds=visit_time
+                )
             except (ValueError, OverflowError):
                 dt = datetime.now(timezone.utc)
-            results.append({
-                "url": url,
-                "title": (title or "")[:200],
-                "time": dt.isoformat(),
-            })
+            results.append(
+                {
+                    "url": url,
+                    "title": (title or "")[:200],
+                    "time": dt.isoformat(),
+                }
+            )
         return results
     except Exception:
         return []
@@ -238,9 +243,7 @@ def collect() -> Optional[AlphaIDProfile]:
     detected_langs = []
     for lang, keywords in lang_keywords.items():
         for kw in keywords:
-            if any(kw in bm["url"].lower() for bm in bookmarks) or any(
-                kw in h["url"].lower() for h in history
-            ):
+            if any(kw in bm["url"].lower() for bm in bookmarks) or any(kw in h["url"].lower() for h in history):
                 detected_langs.append(lang)
                 break
 

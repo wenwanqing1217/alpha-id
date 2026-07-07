@@ -2,7 +2,7 @@ import hashlib
 from datetime import datetime, timedelta
 from typing import Any
 
-from langchain.tools import ToolRuntime, tool
+from tools.tool_decorator import ToolRuntime, tool
 
 
 def _safe_str(value: Any) -> str:

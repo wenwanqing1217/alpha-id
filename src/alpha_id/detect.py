@@ -3,6 +3,7 @@ aid detect — 扫描本机 AI 工具与数据源
 
 不是让工具认识你，是把你散在各处的数字痕迹找回来。
 """
+
 import os
 import subprocess
 from pathlib import Path
@@ -36,9 +37,14 @@ def _check_codex() -> Optional[DataSource]:
     """OpenAI Codex - 微软商店版"""
     try:
         r = subprocess.run(
-            ["powershell", "-Command",
-             "Get-AppxPackage -Name 'OpenAI.Codex' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty PackageFullName"],
-            capture_output=True, text=True, timeout=5,
+            [
+                "powershell",
+                "-Command",
+                "Get-AppxPackage -Name 'OpenAI.Codex' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty PackageFullName",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         if r.stdout.strip():
             # Codex 数据在 LocalCache 里，但 LevelDB 格式目前不可读

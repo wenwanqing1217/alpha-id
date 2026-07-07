@@ -63,13 +63,33 @@ def detect_scene(window_title: Optional[str] = None, file_path: Optional[str] = 
     info = {}
 
     # 1. 窗口标题检测
-    ide_keywords = ["visual studio code", "pycharm", "intellij", "vim", "neovim",
-                    "cursor", "trae", "zed", "sublime", "atom", "d:"]
+    ide_keywords = [
+        "visual studio code",
+        "pycharm",
+        "intellij",
+        "vim",
+        "neovim",
+        "cursor",
+        "trae",
+        "zed",
+        "sublime",
+        "atom",
+        "d:",
+    ]
     email_keywords = ["outlook", "gmail", "mail", "thunderbird", "邮件"]
-    chat_keywords = ["slack", "discord", "wechat", "微信", "telegram", "signal",
-                     "chatgpt", "claude", "deepseek", "copilot"]
-    terminal_keywords = ["terminal", "powershell", "cmd", "bash", "zsh", "wsl",
-                         "命令提示符"]
+    chat_keywords = [
+        "slack",
+        "discord",
+        "wechat",
+        "微信",
+        "telegram",
+        "signal",
+        "chatgpt",
+        "claude",
+        "deepseek",
+        "copilot",
+    ]
+    terminal_keywords = ["terminal", "powershell", "cmd", "bash", "zsh", "wsl", "命令提示符"]
 
     for kw in ide_keywords:
         if kw in title:
@@ -89,8 +109,24 @@ def detect_scene(window_title: Optional[str] = None, file_path: Optional[str] = 
             return Scene.TERMINAL, info
 
     # 2. 文件后缀检测
-    code_extensions = {".py", ".ts", ".tsx", ".js", ".jsx", ".rs", ".go", ".java",
-                       ".c", ".cpp", ".h", ".vue", ".svelte", ".rb", ".php", ".swift"}
+    code_extensions = {
+        ".py",
+        ".ts",
+        ".tsx",
+        ".js",
+        ".jsx",
+        ".rs",
+        ".go",
+        ".java",
+        ".c",
+        ".cpp",
+        ".h",
+        ".vue",
+        ".svelte",
+        ".rb",
+        ".php",
+        ".swift",
+    }
     doc_extensions = {".md", ".txt", ".rst", ".doc", ".docx", ".pdf", ".tex", ".org"}
     email_extensions = {".eml", ".msg"}
 

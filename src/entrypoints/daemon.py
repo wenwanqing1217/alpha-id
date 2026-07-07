@@ -18,6 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # ── 版本 ──
 try:
     from alpha_id import __version__
+
     VERSION = __version__
 except ImportError:
     VERSION = "0.2.0"
@@ -27,6 +28,7 @@ HAS_DWM_ACRYLIC = False
 try:
     import ctypes
     from ctypes import wintypes
+
     HAS_DWM_ACRYLIC = True
 except Exception:
     pass
@@ -38,6 +40,7 @@ try:
     from core.memory_store import MemoryStore
     from core.storage_sqlite import SqliteStorage
     from fairy_agent import FairyBrain
+
     HAS_LLM = bool(os.getenv("DEEPSEEK_API_KEY", "") or os.getenv("OPENAI_API_KEY", ""))
     HAS_MEMORY = True
 except ImportError:
@@ -47,6 +50,7 @@ except ImportError:
 try:
     from alpha_id.profile_schema import load_profile, profile_exists
     from alpha_id.profile_schema import summary as profile_summary
+
     HAS_PROFILE = True
 except ImportError:
     HAS_PROFILE = False
@@ -58,21 +62,22 @@ HAS_WINDOW = False
 _cap_err = {}
 try:
     from tools.screen_capture import capture_full_screen
+
     HAS_SCREEN = True
 except ImportError as e:
     _cap_err["截图"] = str(e)
 try:
     from tools.ocr import extract_text as ocr_text
+
     HAS_OCR = True
 except ImportError as e:
     _cap_err["OCR"] = str(e)
 try:
     from tools.window_control import (
-        click_on_screen,
         get_mouse_position,
         list_application_windows,
-        type_text,
     )
+
     HAS_WINDOW = True
 except ImportError as e:
     _cap_err["窗口控制"] = str(e)
@@ -82,6 +87,7 @@ HAS_TTS = False
 _tts_engine = None
 try:
     import win32com.client
+
     _tts_engine = win32com.client.Dispatch("SAPI.SpVoice")
     voices = _tts_engine.GetVoices()
     for i in range(voices.Count):
@@ -96,7 +102,8 @@ except Exception:
 HAS_SPEECH = False
 HAS_SPEECH_RECOGNITION = False  # 别名，兼容测试
 try:
-    import speech_recognition as sr
+    import speech_recognition  # noqa: F401
+
     HAS_SPEECH = True
     HAS_SPEECH_RECOGNITION = True
 except ImportError:
@@ -105,7 +112,6 @@ except ImportError:
 # ── Tkinter ──
 try:
     import tkinter as tk
-    from tkinter import font as tkfont
 except ImportError:
     sys.exit("tkinter 不可用。请安装 Python 时勾选 'tcl/tk and IDLE'。")
 
@@ -113,6 +119,7 @@ except ImportError:
 # ══════════════════════════════════════════════════════════
 #  DWM 亚克力效果（Win10 1803+ / Win11）
 # ══════════════════════════════════════════════════════════
+
 
 def apply_acrylic(hwnd: int, tint_color: int = 0x1A1A2E, alpha: int = 180):
     """
@@ -123,6 +130,7 @@ def apply_acrylic(hwnd: int, tint_color: int = 0x1A1A2E, alpha: int = 180):
     if not HAS_DWM_ACRYLIC:
         return False
     try:
+
         class AccentPolicy(ctypes.Structure):
             _fields_ = [
                 ("AccentState", wintypes.DWORD),
@@ -134,7 +142,7 @@ def apply_acrylic(hwnd: int, tint_color: int = 0x1A1A2E, alpha: int = 180):
         class WINDOWCOMPOSITIONATTRIBDATA(ctypes.Structure):
             _fields_ = [
                 ("Attribute", wintypes.DWORD),
-                ("Data", ctypes.POINTER(ACCENT_POLICY)),
+                ("Data", ctypes.POINTER(AccentPolicy)),
                 ("SizeOfData", ctypes.c_size_t),
             ]
 
@@ -161,6 +169,7 @@ def apply_acrylic(hwnd: int, tint_color: int = 0x1A1A2E, alpha: int = 180):
 #  调色板
 # ══════════════════════════════════════════════════════════
 
+
 class Palette:
     BG_DARK = "#0F0F1A"
     BG_FROST = "#1A1A2E"
@@ -184,12 +193,13 @@ class Palette:
 #  AID 桌面精灵 v2
 # ══════════════════════════════════════════════════════════
 
+
 class AIDFairy:
     """AID 桌面精灵 — 亚克力小岛 + 持续对话面板 + 语音唤醒"""
 
     ISLAND_W = 140
     ISLAND_H = 44
-    ISLAND_R = 22       # 圆角半径（全圆角 = 高度/2）
+    ISLAND_R = 22  # 圆角半径（全圆角 = 高度/2）
     PANEL_W = 400
     PANEL_H = 560
     WAKE_WORDS = ["你好aid", "你好 aid", "嘿aid", "嘿 aid", "hey aid", "aid"]
@@ -281,12 +291,30 @@ class AIDFairy:
     def _create_pill_rect(self, canvas, x1, y1, x2, y2, r, **kwargs):
         """绘制圆角矩形（药丸形）"""
         points = [
-            x1+r, y1, x2-r, y1,
-            x2, y1, x2, y1+r,
-            x2, y2-r, x2, y2,
-            x2-r, y2, x1+r, y2,
-            x1, y2, x1, y2-r,
-            x1, y1+r, x1, y1,
+            x1 + r,
+            y1,
+            x2 - r,
+            y1,
+            x2,
+            y1,
+            x2,
+            y1 + r,
+            x2,
+            y2 - r,
+            x2,
+            y2,
+            x2 - r,
+            y2,
+            x1 + r,
+            y2,
+            x1,
+            y2,
+            x1,
+            y2 - r,
+            x1,
+            y1 + r,
+            x1,
+            y1,
         ]
         return canvas.create_polygon(points, smooth=True, **kwargs)
 
@@ -299,38 +327,61 @@ class AIDFairy:
 
         # ── 外发光层（呼吸光） ──
         self._glow = self._create_pill_rect(
-            c, m - 1, m - 1, w - m + 1, h - m + 1, r + 1,
-            fill="", outline=Palette.ACCENT_DIM, width=2,
+            c,
+            m - 1,
+            m - 1,
+            w - m + 1,
+            h - m + 1,
+            r + 1,
+            fill="",
+            outline=Palette.ACCENT_DIM,
+            width=2,
         )
 
         # ── 主体：磨砂玻璃 ──
         self._pill = self._create_pill_rect(
-            c, m, m, w - m, h - m, r,
-            fill=Palette.BG_FROST, outline=Palette.BORDER, width=1,
+            c,
+            m,
+            m,
+            w - m,
+            h - m,
+            r,
+            fill=Palette.BG_FROST,
+            outline=Palette.BORDER,
+            width=1,
         )
 
         # ── 内发光（左上高光弧） ──
-        c.create_arc(m + 6, m + 4, w - m - 6, h - m + 8,
-                     start=-30, extent=160, fill="",
-                     outline="white", width=1.2, style="arc")
+        c.create_arc(
+            m + 6, m + 4, w - m - 6, h - m + 8, start=-30, extent=160, fill="", outline="white", width=1.2, style="arc"
+        )
 
         # ── 底部反光 ──
-        c.create_arc(m + 12, m - 4, w - m - 12, h - m + 20,
-                     start=150, extent=100, fill="",
-                     outline=Palette.TEXT_SECONDARY, width=0.8, style="arc")
+        c.create_arc(
+            m + 12,
+            m - 4,
+            w - m - 12,
+            h - m + 20,
+            start=150,
+            extent=100,
+            fill="",
+            outline=Palette.TEXT_SECONDARY,
+            width=0.8,
+            style="arc",
+        )
 
         # ── 左侧：状态指示点 ──
-        self._dot = c.create_oval(14, h // 2 - 4, 14 + 8, h // 2 + 4,
-                                   fill=Palette.SUCCESS, outline="")
+        self._dot = c.create_oval(14, h // 2 - 4, 14 + 8, h // 2 + 4, fill=Palette.SUCCESS, outline="")
 
         # ── 中间：AID 文字 ──
-        c.create_text(w // 2 - 2, h // 2, text="AID",
-                      fill=Palette.ACCENT_GLOW, font=("Segoe UI", 13, "bold"),
-                      anchor="center")
+        c.create_text(
+            w // 2 - 2, h // 2, text="AID", fill=Palette.ACCENT_GLOW, font=("Segoe UI", 13, "bold"), anchor="center"
+        )
 
         # ── 右侧：状态指示环（脉动） ──
-        self._ring = c.create_oval(w - 24, h // 2 - 5, w - 14, h // 2 + 5,
-                                    fill="", outline=Palette.ACCENT_GLOW, width=1.5)
+        self._ring = c.create_oval(
+            w - 24, h // 2 - 5, w - 14, h // 2 + 5, fill="", outline=Palette.ACCENT_GLOW, width=1.5
+        )
 
         self._canvas = c
 
@@ -367,7 +418,9 @@ class AIDFairy:
             # 发光层透明度和颜色
             alpha_hex = f"{int(self._breath_val * 160):02x}"
             glow_color = Palette.ACCENT_GLOW + alpha_hex
-            self._canvas.itemconfig(self._glow, outline=glow_color if self._breath_val > 0.5 else Palette.ACCENT_DIM + alpha_hex)
+            self._canvas.itemconfig(
+                self._glow, outline=glow_color if self._breath_val > 0.5 else Palette.ACCENT_DIM + alpha_hex
+            )
 
             # 状态点亮度
             dot_br = int(100 + 155 * self._breath_val)
@@ -377,8 +430,7 @@ class AIDFairy:
             # 右侧环呼吸
             ring_size = 4 + int(2 * self._breath_val)
             cx, cy = self.ISLAND_W - 19, self.ISLAND_H // 2
-            self._canvas.coords(self._ring, cx - ring_size, cy - ring_size,
-                                 cx + ring_size, cy + ring_size)
+            self._canvas.coords(self._ring, cx - ring_size, cy - ring_size, cx + ring_size, cy + ring_size)
             ring_alpha = int(150 + 105 * self._breath_val)
             self._canvas.itemconfig(self._ring, outline=f"#{ring_alpha:02x}{ring_alpha:02x}ff")
 
@@ -412,10 +464,15 @@ class AIDFairy:
     # ── 右键菜单 ──
 
     def _create_menu(self):
-        self._menu = tk.Menu(self.ball, tearoff=0,
-                              bg=Palette.BG_DARK, fg=Palette.TEXT_PRIMARY,
-                              activebackground=Palette.ACCENT, activeforeground="white",
-                              font=("Microsoft YaHei", 10))
+        self._menu = tk.Menu(
+            self.ball,
+            tearoff=0,
+            bg=Palette.BG_DARK,
+            fg=Palette.TEXT_PRIMARY,
+            activebackground=Palette.ACCENT,
+            activeforeground="white",
+            font=("Microsoft YaHei", 10),
+        )
         self._menu.add_command(label="💬 打开对话", command=self._toggle_chat)
         self._menu.add_command(label="📸 看屏幕", command=lambda: self._quick_action("看屏幕"))
         self._menu.add_command(label="🧑 我的画像", command=self._show_profile)
@@ -476,25 +533,35 @@ class AIDFairy:
         title_bar.pack(fill="x")
         title_bar.pack_propagate(False)
 
-        tk.Label(title_bar, text="  AID", bg=Palette.BG_DARK,
-                 fg=Palette.ACCENT_GLOW, font=("Segoe UI", 11, "bold")).pack(side="left")
+        tk.Label(
+            title_bar, text="  AID", bg=Palette.BG_DARK, fg=Palette.ACCENT_GLOW, font=("Segoe UI", 11, "bold")
+        ).pack(side="left")
 
         # 按钮组
         btn_frame = tk.Frame(title_bar, bg=Palette.BG_DARK)
         btn_frame.pack(side="right", padx=6)
 
-        btn_style = dict(bg=Palette.BG_DARK, fg=Palette.TEXT_SECONDARY, bd=0,
-                         font=("Segoe UI", 10), padx=4, activebackground=Palette.BG_LIGHT,
-                         activeforeground=Palette.TEXT_PRIMARY, cursor="hand2")
+        btn_style = dict(
+            bg=Palette.BG_DARK,
+            fg=Palette.TEXT_SECONDARY,
+            bd=0,
+            font=("Segoe UI", 10),
+            padx=4,
+            activebackground=Palette.BG_LIGHT,
+            activeforeground=Palette.TEXT_PRIMARY,
+            cursor="hand2",
+        )
 
-        tk.Button(btn_frame, text="🗕", **btn_style,
-                  command=lambda: win.withdraw()).pack(side="left")
-        tk.Button(btn_frame, text="✕", **btn_style,
-                  command=self._close_chat).pack(side="left")
+        tk.Button(btn_frame, text="🗕", **btn_style, command=lambda: win.withdraw()).pack(side="left")
+        tk.Button(btn_frame, text="✕", **btn_style, command=self._close_chat).pack(side="left")
 
         # 标题栏拖拽
-        def _sm(e): win._dx, win._dy = e.x_root - win.winfo_x(), e.y_root - win.winfo_y()
-        def _dm(e): win.geometry(f"+{e.x_root - win._dx}+{e.y_root - win._dy}")
+        def _sm(e):
+            win._dx, win._dy = e.x_root - win.winfo_x(), e.y_root - win.winfo_y()
+
+        def _dm(e):
+            win.geometry(f"+{e.x_root - win._dx}+{e.y_root - win._dy}")
+
         title_bar.bind("<Button-1>", _sm)
         title_bar.bind("<B1-Motion>", _dm)
 
@@ -504,29 +571,45 @@ class AIDFairy:
 
         chat_bg = Palette.BG_CARD
         self._chat_text = tk.Text(
-            chat_frame, wrap="word", font=("Microsoft YaHei", 10),
-            bg=chat_bg, fg=Palette.TEXT_PRIMARY, bd=0, relief="flat",
-            padx=10, pady=8, spacing1=2, spacing3=4,
-            state="disabled", cursor="arrow",
+            chat_frame,
+            wrap="word",
+            font=("Microsoft YaHei", 10),
+            bg=chat_bg,
+            fg=Palette.TEXT_PRIMARY,
+            bd=0,
+            relief="flat",
+            padx=10,
+            pady=8,
+            spacing1=2,
+            spacing3=4,
+            state="disabled",
+            cursor="arrow",
             highlightthickness=0,
         )
         self._chat_text.pack(side="left", fill="both", expand=True)
 
         # 配置标签样式
-        self._chat_text.tag_config("user", foreground=Palette.ACCENT_GLOW,
-                                    font=("Microsoft YaHei", 9, "bold"), spacing1=4, lmargin1=40)
-        self._chat_text.tag_config("ai", foreground=Palette.TEXT_PRIMARY,
-                                    font=("Microsoft YaHei", 10), spacing1=4, lmargin2=10)
-        self._chat_text.tag_config("ai_name", foreground=Palette.ACCENT,
-                                    font=("Microsoft YaHei", 9, "bold"), spacing1=4)
+        self._chat_text.tag_config(
+            "user", foreground=Palette.ACCENT_GLOW, font=("Microsoft YaHei", 9, "bold"), spacing1=4, lmargin1=40
+        )
+        self._chat_text.tag_config(
+            "ai", foreground=Palette.TEXT_PRIMARY, font=("Microsoft YaHei", 10), spacing1=4, lmargin2=10
+        )
+        self._chat_text.tag_config(
+            "ai_name", foreground=Palette.ACCENT, font=("Microsoft YaHei", 9, "bold"), spacing1=4
+        )
         self._chat_text.tag_config("sep", foreground=Palette.BORDER, spacing1=2)
-        self._chat_text.tag_config("thinking", foreground=Palette.TEXT_DIM,
-                                    font=("Microsoft YaHei", 9), spacing1=2)
+        self._chat_text.tag_config("thinking", foreground=Palette.TEXT_DIM, font=("Microsoft YaHei", 9), spacing1=2)
 
         # 滚动条
-        scrollbar = tk.Scrollbar(chat_frame, command=self._chat_text.yview,
-                                  bg=Palette.BG_DARK, troughcolor=Palette.BG_DARK,
-                                  activebackground=Palette.ACCENT, width=6)
+        scrollbar = tk.Scrollbar(
+            chat_frame,
+            command=self._chat_text.yview,
+            bg=Palette.BG_DARK,
+            troughcolor=Palette.BG_DARK,
+            activebackground=Palette.ACCENT,
+            width=6,
+        )
         scrollbar.pack(side="right", fill="y")
         self._chat_text.configure(yscrollcommand=scrollbar.set)
 
@@ -534,31 +617,50 @@ class AIDFairy:
         quick_frame = tk.Frame(win, bg=Palette.BG_DARK)
         quick_frame.pack(fill="x", padx=8, pady=(0, 4))
 
-        q_style = dict(bg=Palette.BG_LIGHT, fg=Palette.TEXT_SECONDARY, bd=0,
-                       font=("Microsoft YaHei", 8), padx=8, pady=2, cursor="hand2",
-                       activebackground=Palette.ACCENT_DIM, activeforeground="white")
-        tk.Button(quick_frame, text="📸 看屏幕", **q_style,
-                  command=lambda: self._quick_action("看看屏幕上有什么")).pack(side="left", padx=2)
-        tk.Button(quick_frame, text="📋 窗口", **q_style,
-                  command=lambda: self._quick_action("有哪些窗口打开了")).pack(side="left", padx=2)
-        tk.Button(quick_frame, text="📍 鼠标", **q_style,
-                  command=lambda: self._quick_action("鼠标位置在哪")).pack(side="left", padx=2)
-        tk.Button(quick_frame, text="🧹 清屏", **q_style,
-                  command=self._clear_chat).pack(side="right", padx=2)
+        q_style = dict(
+            bg=Palette.BG_LIGHT,
+            fg=Palette.TEXT_SECONDARY,
+            bd=0,
+            font=("Microsoft YaHei", 8),
+            padx=8,
+            pady=2,
+            cursor="hand2",
+            activebackground=Palette.ACCENT_DIM,
+            activeforeground="white",
+        )
+        tk.Button(
+            quick_frame, text="📸 看屏幕", **q_style, command=lambda: self._quick_action("看看屏幕上有什么")
+        ).pack(side="left", padx=2)
+        tk.Button(quick_frame, text="📋 窗口", **q_style, command=lambda: self._quick_action("有哪些窗口打开了")).pack(
+            side="left", padx=2
+        )
+        tk.Button(quick_frame, text="📍 鼠标", **q_style, command=lambda: self._quick_action("鼠标位置在哪")).pack(
+            side="left", padx=2
+        )
+        tk.Button(quick_frame, text="🧹 清屏", **q_style, command=self._clear_chat).pack(side="right", padx=2)
 
         # ── 输入区域 ──
         input_frame = tk.Frame(win, bg=Palette.BG_DARK)
         input_frame.pack(fill="x", padx=8, pady=(0, 8))
 
         entry_bg = Palette.INPUT_BG
-        entry_frame = tk.Frame(input_frame, bg=Palette.BORDER, bd=0,
-                                highlightthickness=1, highlightcolor=Palette.ACCENT,
-                                highlightbackground=Palette.BORDER)
+        entry_frame = tk.Frame(
+            input_frame,
+            bg=Palette.BORDER,
+            bd=0,
+            highlightthickness=1,
+            highlightcolor=Palette.ACCENT,
+            highlightbackground=Palette.BORDER,
+        )
         entry_frame.pack(side="left", fill="x", expand=True)
 
         self._entry = tk.Entry(
-            entry_frame, font=("Microsoft YaHei", 11), bd=0, relief="flat",
-            bg=entry_bg, fg=Palette.TEXT_PRIMARY,
+            entry_frame,
+            font=("Microsoft YaHei", 11),
+            bd=0,
+            relief="flat",
+            bg=entry_bg,
+            fg=Palette.TEXT_PRIMARY,
             insertbackground=Palette.TEXT_PRIMARY,
         )
         self._entry.pack(fill="x", padx=10, pady=8, ipady=2)
@@ -573,18 +675,35 @@ class AIDFairy:
         self._entry.bind("<Return>", _on_enter)
 
         # 发送按钮
-        tk.Button(input_frame, text="➤", bg=Palette.ACCENT, fg="white", bd=0,
-                  padx=10, pady=6, font=("Segoe UI", 12), cursor="hand2",
-                  activebackground=Palette.ACCENT_DIM,
-                  command=lambda: _on_enter(None)).pack(side="right", padx=(6, 0))
+        tk.Button(
+            input_frame,
+            text="➤",
+            bg=Palette.ACCENT,
+            fg="white",
+            bd=0,
+            padx=10,
+            pady=6,
+            font=("Segoe UI", 12),
+            cursor="hand2",
+            activebackground=Palette.ACCENT_DIM,
+            command=lambda: _on_enter(None),
+        ).pack(side="right", padx=(6, 0))
 
         # 语音按钮
         if HAS_SPEECH:
-            self._mic_btn = tk.Button(input_frame, text="🎤", bg=Palette.BG_LIGHT,
-                                       fg=Palette.TEXT_PRIMARY, bd=0, padx=10, pady=6,
-                                       font=("Segoe UI", 12), cursor="hand2",
-                                       activebackground=Palette.ACCENT_DIM,
-                                       command=self._chat_voice_input)
+            self._mic_btn = tk.Button(
+                input_frame,
+                text="🎤",
+                bg=Palette.BG_LIGHT,
+                fg=Palette.TEXT_PRIMARY,
+                bd=0,
+                padx=10,
+                pady=6,
+                font=("Segoe UI", 12),
+                cursor="hand2",
+                activebackground=Palette.ACCENT_DIM,
+                command=self._chat_voice_input,
+            )
             self._mic_btn.pack(side="right", padx=(0, 6))
 
         # 关闭回调
@@ -592,6 +711,7 @@ class AIDFairy:
             self._chat_win = None
             self._chat_visible = False
             win.destroy()
+
         win.protocol("WM_DELETE_WINDOW", _on_close)
 
         self._chat_win = win
@@ -599,10 +719,13 @@ class AIDFairy:
 
         # 系统问候
         if not self._messages:
-            self._add_chat_message("ai", "你好，我是 **AID** — 你的桌面智能助手。\n\n"
-                                         "💬 打字或点击 🎤 语音跟我说话\n"
-                                         "📸 试试点「看屏幕」让我帮你看看桌面\n"
-                                         "或者直接叫我 「你好 AID」 唤醒我")
+            self._add_chat_message(
+                "ai",
+                "你好，我是 **AID** — 你的桌面智能助手。\n\n"
+                "💬 打字或点击 🎤 语音跟我说话\n"
+                "📸 试试点「看屏幕」让我帮你看看桌面\n"
+                "或者直接叫我 「你好 AID」 唤醒我",
+            )
 
     def _add_chat_message(self, role: str, content: str):
         """添加一条消息到聊天"""
@@ -617,7 +740,7 @@ class AIDFairy:
         elif role == "ai":
             self._chat_text.insert("end", "AID\n", "ai_name")
             # 支持简单 markdown **bold**
-            clean = re.sub(r'\*\*(.+?)\*\*', r'\1', content)
+            clean = re.sub(r"\*\*(.+?)\*\*", r"\1", content)
             self._chat_text.insert("end", f"{clean}\n", "ai")
         elif role == "thinking":
             self._chat_text.insert("end", f"{content}\n", "thinking")
@@ -684,6 +807,7 @@ class AIDFairy:
         def _do():
             try:
                 import speech_recognition as sr
+
                 r = sr.Recognizer()
                 with sr.Microphone() as source:
                     r.adjust_for_ambient_noise(source, duration=0.3)
@@ -697,7 +821,11 @@ class AIDFairy:
                 # 自动发送
                 self._safe_call(lambda: self._chat_send(text))
             except Exception as e:
-                err = f"🎤 没听清：{e}" if "UnknownValueError" in str(e) or "WaitTimeoutError" in str(e) else f"🎤 语音出错：{e}"
+                err = (
+                    f"🎤 没听清：{e}"
+                    if "UnknownValueError" in str(e) or "WaitTimeoutError" in str(e)
+                    else f"🎤 语音出错：{e}"
+                )
                 self._safe_call(lambda: self._remove_last_thinking())
                 self._safe_call(lambda: self._add_chat_message("error", err))
             finally:
@@ -719,8 +847,16 @@ class AIDFairy:
         win.transient(self.ball)
         win.resizable(False, False)
 
-        text_widget = tk.Text(win, wrap="word", bg=Palette.BG_DARK, fg=Palette.TEXT_PRIMARY,
-                              font=("Microsoft YaHei", 10), bd=0, padx=16, pady=12)
+        text_widget = tk.Text(
+            win,
+            wrap="word",
+            bg=Palette.BG_DARK,
+            fg=Palette.TEXT_PRIMARY,
+            font=("Microsoft YaHei", 10),
+            bd=0,
+            padx=16,
+            pady=12,
+        )
         text_widget.pack(fill="both", expand=True)
 
         try:
@@ -737,9 +873,19 @@ class AIDFairy:
 
         btn_frame = tk.Frame(win, bg=Palette.BG_DARK)
         btn_frame.pack(fill="x", pady=(0, 10))
-        tk.Button(btn_frame, text="关闭", bg=Palette.ACCENT, fg="white", bd=0,
-                  padx=20, pady=4, font=("Microsoft YaHei", 10), cursor="hand2",
-                  activebackground=Palette.ACCENT_DIM, command=win.destroy).pack()
+        tk.Button(
+            btn_frame,
+            text="关闭",
+            bg=Palette.ACCENT,
+            fg="white",
+            bd=0,
+            padx=20,
+            pady=4,
+            font=("Microsoft YaHei", 10),
+            cursor="hand2",
+            activebackground=Palette.ACCENT_DIM,
+            command=win.destroy,
+        ).pack()
 
     def _remove_last_thinking(self):
         """移除最后的"正在思考"提示"""
@@ -776,6 +922,7 @@ class AIDFairy:
                 return
             try:
                 import speech_recognition as sr
+
                 r = sr.Recognizer()
                 # 降低灵敏度以适应远场
                 r.energy_threshold = 3000
@@ -820,12 +967,14 @@ class AIDFairy:
         self._add_chat_message("thinking", "👋 我在呢！")
         # 语音回话
         if HAS_TTS:
+
             def _say():
                 try:
                     _tts_engine.Speak("在呢，有什么需要帮忙的？")
                 except Exception:
                     if self._debug:
                         traceback.print_exc()
+
             threading.Thread(target=_say, daemon=True).start()
         self._add_chat_message("ai", "在呢～有什么需要帮忙的？")
 
@@ -858,6 +1007,7 @@ class AIDFairy:
             try:
                 import json
                 import urllib.request
+
                 req = urllib.request.Request("http://localhost:11434/api/tags", method="GET")
                 with urllib.request.urlopen(req, timeout=2) as resp:
                     data = json.loads(resp.read().decode())
@@ -950,6 +1100,7 @@ class AIDFairy:
             except Exception as e:
                 self._safe_call(lambda: self._remove_last_thinking())
                 self._safe_call(lambda e=e: self._add_chat_message("error", f"看屏幕失败：{e}"))
+
         threading.Thread(target=_do, daemon=True).start()
 
     def _list_windows_result(self):
@@ -966,6 +1117,7 @@ class AIDFairy:
             except Exception as e:
                 self._safe_call(lambda: self._remove_last_thinking())
                 self._safe_call(lambda e=e: self._add_chat_message("error", f"获取窗口失败：{e}"))
+
         threading.Thread(target=_do, daemon=True).start()
 
     def _mouse_position_result(self):
@@ -978,6 +1130,7 @@ class AIDFairy:
                 self._safe_call(lambda: self._add_chat_message("ai", f"📍 鼠标位置：({pos[0]}, {pos[1]})"))
             except Exception:
                 pass
+
         threading.Thread(target=_do, daemon=True).start()
 
     # ── 兼容 FairyBrain 回调 ──
@@ -1018,10 +1171,12 @@ class AIDFairy:
                 script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "aid_mcp_server.py")
                 self._mcp_process = subprocess.Popen(
                     [sys.executable, script, "--transport", "sse", "--port", "8001"],
-                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
                 )
             except Exception:
                 pass
+
         threading.Thread(target=_run, daemon=True).start()
 
     def _quit(self):
@@ -1049,6 +1204,7 @@ class AIDFairy:
 #  入口
 # ══════════════════════════════════════════════════════════
 
+
 def _safe_print(*args, **kwargs):
     try:
         print(*args, **kwargs)
@@ -1065,6 +1221,7 @@ def _check_ollama() -> bool:
     try:
         import json
         import urllib.request
+
         req = urllib.request.Request("http://localhost:11434/api/tags", method="GET")
         with urllib.request.urlopen(req, timeout=2) as resp:
             data = json.loads(resp.read().decode())

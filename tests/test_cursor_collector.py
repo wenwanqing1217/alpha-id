@@ -1,4 +1,5 @@
 """测试 Cursor 采集器 - 边界情况"""
+
 import json, zipfile, pytest
 from pathlib import Path
 
@@ -29,9 +30,14 @@ def test_cursor_minimal_data(tmp_path):
     """最少 3 条对话才能生成画像"""
     z = tmp_path / "cursor.zip"
     with zipfile.ZipFile(z, "w") as f:
-        f.writestr("conversations.json", json.dumps([
-            {"text": "hello", "timestamp": "2026-01-01T10:00:00Z"},
-        ]))
+        f.writestr(
+            "conversations.json",
+            json.dumps(
+                [
+                    {"text": "hello", "timestamp": "2026-01-01T10:00:00Z"},
+                ]
+            ),
+        )
     assert collect(z) is None
 
 
@@ -39,11 +45,16 @@ def test_cursor_valid_data(tmp_path):
     """3 条以上对话应生成画像"""
     z = tmp_path / "cursor_valid.zip"
     with zipfile.ZipFile(z, "w") as f:
-        f.writestr("conversations.json", json.dumps([
-            {"text": "Python 和 Rust 怎么选？", "timestamp": "2026-01-01T10:00:00Z"},
-            {"text": "用 functional 风格重构", "timestamp": "2026-01-01T11:00:00Z"},
-            {"text": "这个 bug 调了一晚上了", "timestamp": "2026-01-01T22:00:00Z"},
-        ]))
+        f.writestr(
+            "conversations.json",
+            json.dumps(
+                [
+                    {"text": "Python 和 Rust 怎么选？", "timestamp": "2026-01-01T10:00:00Z"},
+                    {"text": "用 functional 风格重构", "timestamp": "2026-01-01T11:00:00Z"},
+                    {"text": "这个 bug 调了一晚上了", "timestamp": "2026-01-01T22:00:00Z"},
+                ]
+            ),
+        )
     p = collect(z)
     assert p is not None
     assert "Python" in p.persona.technical.primary_languages

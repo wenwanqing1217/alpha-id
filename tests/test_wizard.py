@@ -1,4 +1,5 @@
 """测试画像向导"""
+
 from typer.testing import CliRunner
 from alpha_id.profile_wizard import wizard_app
 

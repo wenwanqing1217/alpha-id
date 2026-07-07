@@ -21,14 +21,16 @@ class TestRiskAssessmentEngine:
         """已建立基线的引擎"""
         eng = RiskAssessmentEngine()
         # 首次调用建立基线
-        eng.calculate_behavior_score(BehaviorFingerprint(
-            typing_speed=5.0,
-            common_words=["你好", "谢谢", "好的"],
-            error_rate=0.02,
-            session_time="14:00",
-            word_count=20,
-            emoji_count=1,
-        ))
+        eng.calculate_behavior_score(
+            BehaviorFingerprint(
+                typing_speed=5.0,
+                common_words=["你好", "谢谢", "好的"],
+                error_rate=0.02,
+                session_time="14:00",
+                word_count=20,
+                emoji_count=1,
+            )
+        )
         return eng
 
     @pytest.fixture
@@ -165,63 +167,75 @@ class TestRiskAssessmentEngine:
 
     def test_voice_high_quality(self, engine):
         """声纹全维度高匹配应得高分"""
-        score = engine.calculate_voice_score({
-            "voice_match": 0.95,
-            "habit_match": 0.85,
-            "noise_level": 0.1,
-            "audio_quality": 0.8,
-        })
+        score = engine.calculate_voice_score(
+            {
+                "voice_match": 0.95,
+                "habit_match": 0.85,
+                "noise_level": 0.1,
+                "audio_quality": 0.8,
+            }
+        )
         # 100 - 0 - 0 - 0 - 0 = 100 (全部达标)
         assert score == 100.0
 
     def test_voice_low_match_deduct_60(self, engine):
         """声纹匹配度低于阈值扣60分"""
-        score = engine.calculate_voice_score({
-            "voice_match": 0.5,
-            "habit_match": 0.9,
-            "noise_level": 0.1,
-            "audio_quality": 0.9,
-        })
+        score = engine.calculate_voice_score(
+            {
+                "voice_match": 0.5,
+                "habit_match": 0.9,
+                "noise_level": 0.1,
+                "audio_quality": 0.9,
+            }
+        )
         assert score == 40.0
 
     def test_voice_low_habit_deduct_20(self, engine):
         """语音习惯低于阈值扣20分"""
-        score = engine.calculate_voice_score({
-            "voice_match": 0.95,
-            "habit_match": 0.5,
-            "noise_level": 0.1,
-            "audio_quality": 0.9,
-        })
+        score = engine.calculate_voice_score(
+            {
+                "voice_match": 0.95,
+                "habit_match": 0.5,
+                "noise_level": 0.1,
+                "audio_quality": 0.9,
+            }
+        )
         assert score == 80.0
 
     def test_voice_high_noise_deduct_10(self, engine):
         """噪音高于阈值扣10分"""
-        score = engine.calculate_voice_score({
-            "voice_match": 0.95,
-            "habit_match": 0.85,
-            "noise_level": 0.5,
-            "audio_quality": 0.9,
-        })
+        score = engine.calculate_voice_score(
+            {
+                "voice_match": 0.95,
+                "habit_match": 0.85,
+                "noise_level": 0.5,
+                "audio_quality": 0.9,
+            }
+        )
         assert score == 90.0
 
     def test_voice_low_quality_deduct_10(self, engine):
         """音频质量低于阈值扣10分"""
-        score = engine.calculate_voice_score({
-            "voice_match": 0.95,
-            "habit_match": 0.85,
-            "noise_level": 0.1,
-            "audio_quality": 0.5,
-        })
+        score = engine.calculate_voice_score(
+            {
+                "voice_match": 0.95,
+                "habit_match": 0.85,
+                "noise_level": 0.1,
+                "audio_quality": 0.5,
+            }
+        )
         assert score == 90.0
 
     def test_voice_all_issues_full_deduction(self, engine):
         """声纹全维度不达标，最低0分"""
-        score = engine.calculate_voice_score({
-            "voice_match": 0.0,
-            "habit_match": 0.0,
-            "noise_level": 1.0,
-            "audio_quality": 0.0,
-        })
+        score = engine.calculate_voice_score(
+            {
+                "voice_match": 0.0,
+                "habit_match": 0.0,
+                "noise_level": 1.0,
+                "audio_quality": 0.0,
+            }
+        )
         assert score == 0.0
 
     def test_high_trust_low_risk(self, engine):
@@ -292,14 +306,16 @@ class TestRiskAssessmentEngine:
         """常用词重叠度在50%-70%之间，扣10分"""
         # 建立新基线，3个词中2个重叠 ≈ 67%
         eng = RiskAssessmentEngine()
-        eng.calculate_behavior_score(BehaviorFingerprint(
-            typing_speed=5.0,
-            common_words=["你好", "谢谢", "好的"],
-            error_rate=0.02,
-            session_time="14:00",
-            word_count=20,
-            emoji_count=1,
-        ))
+        eng.calculate_behavior_score(
+            BehaviorFingerprint(
+                typing_speed=5.0,
+                common_words=["你好", "谢谢", "好的"],
+                error_rate=0.02,
+                session_time="14:00",
+                word_count=20,
+                emoji_count=1,
+            )
+        )
         current = BehaviorFingerprint(
             typing_speed=5.0,
             common_words=["你好", "谢谢", "再见"],  # 2/3 ≈ 67%

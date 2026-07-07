@@ -3,9 +3,9 @@ AgentLoop 纯循环单元测试
 """
 
 import json
-import pytest
-from unittest.mock import patch, MagicMock
-from core.agent import Tool, AgentLoop, _parse_tool_call, _make_tools
+from unittest.mock import MagicMock, patch
+
+from core.agent import AgentLoop, Tool, _make_tools, _parse_tool_call
 
 
 class TestTool:
@@ -242,6 +242,54 @@ class TestAgentLoop:
         finally:
             Container.instance()._identity = orig_id
 
+    def test_backend_injection(self):
+        """AgentLoop 接受注入的后端"""
+        from core.interfaces import AgentContainer
+
+        class MockBackends(AgentContainer):
+            @property
+            def identity(self):
+                mock = MagicMock()
+                mock.get_user_profile.return_value = {"alpha_id": "Alpha-Injected"}
+                return mock
+
+            @property
+            def social(self):
+                return MagicMock()
+
+            @property
+            def risk(self):
+                return MagicMock()
+
+            @property
+            def memory(self):
+                return MagicMock()
+
+            @property
+            def actions(self):
+                return MagicMock()
+
+            @property
+            def skill_registry(self):
+                return MagicMock()
+
+            @property
+            def skill_tracker(self):
+                return MagicMock()
+
+            @property
+            def skill_runtime(self):
+                return MagicMock()
+
+            @property
+            def poe_store(self):
+                return MagicMock()
+
+        backends = MockBackends()
+        loop = AgentLoop("Alpha-Injected-001", backends=backends)
+        assert loop._backends is backends
+        assert loop.tools is not None
+
 
 class TestCallLLM:
     """_call_llm 边界情况测试"""
@@ -292,17 +340,16 @@ class TestAgentSkillIntegration:
 
     def test_execute_skill_pass_executor_did(self, tmp_path):
         """execute_skill 传递 executor_did 实现归因"""
-        from alpha_id.skill_signer import (
-            SkillRegistry,
-            SkillAttributionTracker,
-            SkillRuntime,
-            sign_skill,
-            SkillPackage,
-        )
-        from alpha_id.signer import AIDSigner
-
         # 注入隔离的环境变量来改变 home 目录路径
         import os
+
+        from alpha_id.signer import AIDSigner
+        from alpha_id.skill_signer import (
+            SkillAttributionTracker,
+            SkillRegistry,
+            SkillRuntime,
+            sign_skill,
+        )
 
         old_home = os.environ.get("HOME")
         os.environ["HOME"] = str(tmp_path / "home")

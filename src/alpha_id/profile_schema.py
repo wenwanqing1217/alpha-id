@@ -92,6 +92,7 @@ class AlphaIDProfile:
 
 # ─── P0 目录管理 ───
 
+
 def ensure_profile_dir() -> Path:
     d = _alpha_id_dir() / "profile" / PROFILE_DIR
     d.mkdir(parents=True, exist_ok=True)
@@ -110,6 +111,7 @@ def load_profile() -> Optional[AlphaIDProfile]:
     if not profile_exists():
         return None
     import yaml
+
     with open(profile_path(), encoding="utf-8") as f:
         return AlphaIDProfile.from_dict(yaml.safe_load(f))
 
@@ -150,10 +152,16 @@ def merge_profile(new: AlphaIDProfile, source: str = "unknown", quality: int = Q
     oc, nc = old.persona.communication, new.persona.communication
 
     # 沟通风格（quality 决策）
-    _merge_field(new, "tone", oc.tone, nc.tone,
-                 _get_q(old, "tone"), quality, lambda v: setattr(nc, "tone", v))
-    _merge_field(new, "sentence_length", oc.sentence_length, nc.sentence_length,
-                 _get_q(old, "sentence_length"), quality, lambda v: setattr(nc, "sentence_length", v))
+    _merge_field(new, "tone", oc.tone, nc.tone, _get_q(old, "tone"), quality, lambda v: setattr(nc, "tone", v))
+    _merge_field(
+        new,
+        "sentence_length",
+        oc.sentence_length,
+        nc.sentence_length,
+        _get_q(old, "sentence_length"),
+        quality,
+        lambda v: setattr(nc, "sentence_length", v),
+    )
 
     # 活跃时段（合并去重）
     if oc.active_hours:
@@ -161,9 +169,9 @@ def merge_profile(new: AlphaIDProfile, source: str = "unknown", quality: int = Q
 
     # 技术语言（合并去重）
     if old.persona.technical.primary_languages:
-        nc.primary_languages = list(dict.fromkeys(
-            old.persona.technical.primary_languages + new.persona.technical.primary_languages
-        ))[:8]
+        nc.primary_languages = list(
+            dict.fromkeys(old.persona.technical.primary_languages + new.persona.technical.primary_languages)
+        )[:8]
 
     # 框架偏好（合并去重）
     ofp = old.persona.technical.framework_preferences or []
@@ -172,13 +180,27 @@ def merge_profile(new: AlphaIDProfile, source: str = "unknown", quality: int = Q
         nc.framework_preferences = list(dict.fromkeys(ofp + nfp))[:5]
 
     # 编码风格（quality 决策）
-    _merge_field(new, "coding_style", old.persona.technical.coding_style, new.persona.technical.coding_style,
-                 _get_q(old, "coding_style"), quality, lambda v: setattr(new.persona.technical, "coding_style", v))
+    _merge_field(
+        new,
+        "coding_style",
+        old.persona.technical.coding_style,
+        new.persona.technical.coding_style,
+        _get_q(old, "coding_style"),
+        quality,
+        lambda v: setattr(new.persona.technical, "coding_style", v),
+    )
 
     # 工作节奏（quality 决策）
     ot, nt = old.persona.temporal, new.persona.temporal
-    _merge_field(new, "work_rhythm", ot.work_rhythm, nt.work_rhythm,
-                 _get_q(old, "work_rhythm"), quality, lambda v: setattr(nt, "work_rhythm", v))
+    _merge_field(
+        new,
+        "work_rhythm",
+        ot.work_rhythm,
+        nt.work_rhythm,
+        _get_q(old, "work_rhythm"),
+        quality,
+        lambda v: setattr(nt, "work_rhythm", v),
+    )
 
     # extra 合并
     for k, v in old.extra.items():
@@ -241,9 +263,41 @@ def _set_q(profile, field, q):
     profile.extra["x_quality_map"] = qm
 
 
+def completeness(profile: AlphaIDProfile) -> Dict[str, Any]:
+    keys = [
+        "persona.communication.tone",
+        "persona.communication.sentence_length",
+        "persona.communication.active_hours",
+        "persona.technical.primary_languages",
+        "persona.technical.framework_preferences",
+        "persona.technical.coding_style",
+        "persona.temporal.work_rhythm",
+    ]
+    present = 0
+    missing = []
+    for key in keys:
+        obj = profile
+        for part in key.split("."):
+            obj = getattr(obj, part)
+        value = obj
+        if isinstance(value, (list, tuple)):
+            present += 1
+        elif value:
+            present += 1
+        else:
+            missing.append(key)
+    return {
+        "score": round(present / max(len(keys), 1), 2),
+        "present_count": present,
+        "field_count": len(keys),
+        "missing": missing,
+    }
+
+
 def save_profile(profile: AlphaIDProfile) -> Path:
     ensure_profile_dir()
     import yaml
+
     with open(profile_path(), "w", encoding="utf-8") as f:
         yaml.dump(profile.to_dict(), f, allow_unicode=True, default_flow_style=False, sort_keys=False)
     return profile_path()

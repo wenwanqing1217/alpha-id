@@ -37,7 +37,7 @@ def main():
     # 延迟导入 uvicorn + app，避免启动前加载全部依赖
     import uvicorn
 
-    from alpha_id.web import app
+    from alpha_id.web import app as web_app
 
     print(f"AID Web API 启动 -> http://{args.host}:{args.port}")
     print("   主页: GET /")
@@ -46,7 +46,7 @@ def main():
     print()
 
     uvicorn.run(
-        app,
+        web_app,
         host=args.host,
         port=args.port,
         reload=args.reload,

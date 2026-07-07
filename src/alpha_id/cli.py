@@ -10,6 +10,7 @@ AID CLI — 把你的数字痕迹收回来
     aid collect trae                 从 Trae 取回代码痕迹
     aid profile show                 查看你的数字画像
     aid profile web                  浏览器查看画像卡片
+    aid profile mine --path .        从本机痕迹扫描并生成画像
     aid wizard start                 3 个问题生成画像
 """
 

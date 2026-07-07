@@ -1,4 +1,5 @@
 """测试 Suggest 推荐"""
+
 from typer.testing import CliRunner
 from alpha_id.suggest_cli import app
 

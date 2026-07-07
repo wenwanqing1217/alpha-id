@@ -22,6 +22,7 @@ from typing import Any, Dict, List, Optional
 @dataclass
 class BenchmarkResult:
     """基准测试结果"""
+
     benchmark_name: str
     score: float  # 0-100
     metric: str  # "R@5", "QA_accuracy", "LLM_judge_score"
@@ -77,11 +78,11 @@ class LoCoMoAdapter(BenchmarkAdapter):
     def __init__(self, data_path: Optional[Path] = None):
         super().__init__("LoCoMo", data_path)
         self.categories = [
-            "single_hop",      # 单跳推理
-            "multi_hop",       # 多跳推理
-            "temporal",        # 时序推理
-            "open_domain",     # 开放域问答
-            "adversarial",     # 对抗性问答
+            "single_hop",  # 单跳推理
+            "multi_hop",  # 多跳推理
+            "temporal",  # 时序推理
+            "open_domain",  # 开放域问答
+            "adversarial",  # 对抗性问答
         ]
 
     def load_data(self) -> bool:
@@ -121,7 +122,7 @@ class LoCoMoAdapter(BenchmarkAdapter):
                 metric="R@5",
                 tokens_per_query=0,
                 latency_ms=0.0,
-                details={"error": "数据加载失败"}
+                details={"error": "数据加载失败"},
             )
 
         # 加载会话到记忆系统
@@ -164,7 +165,7 @@ class LoCoMoAdapter(BenchmarkAdapter):
                 "total": len(self.questions),
                 "load_time_s": load_time,
                 "categories": self._get_category_scores(memory_system),
-            }
+            },
         )
 
     def _get_category_scores(self, memory_system: Any) -> Dict[str, float]:
@@ -200,11 +201,11 @@ class LongMemEvalAdapter(BenchmarkAdapter):
     def __init__(self, data_path: Optional[Path] = None):
         super().__init__("LongMemEval", data_path)
         self.question_types = [
-            "knowledge_update",         # 知识更新（78 题）
-            "multi_session",            # 多会话（133 题）
-            "temporal_reasoning",       # 时序推理（133 题）
-            "single_session_user",      # 单会话用户（70 题）
-            "single_session_preference", # 单会话偏好（30 题）
+            "knowledge_update",  # 知识更新（78 题）
+            "multi_session",  # 多会话（133 题）
+            "temporal_reasoning",  # 时序推理（133 题）
+            "single_session_user",  # 单会话用户（70 题）
+            "single_session_preference",  # 单会话偏好（30 题）
             "single_session_assistant",  # 单会话助手（56 题）
         ]
 
@@ -230,7 +231,7 @@ class LongMemEvalAdapter(BenchmarkAdapter):
                 metric="R@5",
                 tokens_per_query=0,
                 latency_ms=0.0,
-                details={"error": "数据加载失败"}
+                details={"error": "数据加载失败"},
             )
 
         # 加载会话到记忆系统
@@ -267,7 +268,7 @@ class LongMemEvalAdapter(BenchmarkAdapter):
                 "correct": correct,
                 "total": len(self.questions),
                 "type_scores": self._get_type_scores(memory_system),
-            }
+            },
         )
 
     def _get_type_scores(self, memory_system: Any) -> Dict[str, float]:
@@ -330,7 +331,7 @@ class BEAMAdapter(BenchmarkAdapter):
             metric="QA_accuracy",
             tokens_per_query=0,
             latency_ms=0.0,
-            details={"error": "BEAM 数据集尚未实现"}
+            details={"error": "BEAM 数据集尚未实现"},
         )
 
     def get_question_types(self) -> List[str]:

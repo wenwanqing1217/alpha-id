@@ -13,7 +13,11 @@ import pytest
 
 from alpha_id.collectors.chatgpt import collect
 from alpha_id.profile_schema import (
-    ensure_profile_dir, load_profile, profile_exists, save_profile, summary,
+    ensure_profile_dir,
+    load_profile,
+    profile_exists,
+    save_profile,
+    summary,
 )
 
 # 构造一个最小 ChatGPT 导出 ZIP（3 条对话）

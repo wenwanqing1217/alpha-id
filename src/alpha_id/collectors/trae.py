@@ -6,6 +6,7 @@ Trae CN 采集器 — 从字节跳动 AI IDE 中取回你的代码痕迹
   - 编辑历史（活跃时段、文件类型）
   - 无代码内容，只取元数据
 """
+
 import json
 import logging
 from collections import Counter
@@ -84,26 +85,44 @@ def _scan_history_extensions():
 
 # 扩展名 → 编程语言映射
 EXT_TO_LANG = {
-    ".py": "Python", ".pyw": "Python", ".ipynb": "Python",
-    ".js": "JavaScript", ".jsx": "React", ".ts": "TypeScript", ".tsx": "React",
+    ".py": "Python",
+    ".pyw": "Python",
+    ".ipynb": "Python",
+    ".js": "JavaScript",
+    ".jsx": "React",
+    ".ts": "TypeScript",
+    ".tsx": "React",
     ".rs": "Rust",
     ".go": "Go",
-    ".java": "Java", ".kt": "Kotlin",
-    ".cpp": "C++", ".c": "C", ".h": "C/C++", ".hpp": "C++",
+    ".java": "Java",
+    ".kt": "Kotlin",
+    ".cpp": "C++",
+    ".c": "C",
+    ".h": "C/C++",
+    ".hpp": "C++",
     ".cs": "C#",
     ".swift": "Swift",
     ".rb": "Ruby",
     ".php": "PHP",
     ".vue": "Vue",
-    ".css": "CSS", ".scss": "SCSS", ".less": "Less",
-    ".html": "HTML", ".htm": "HTML",
-    ".json": "JSON", ".yaml": "YAML", ".yml": "YAML",
-    ".md": "Markdown", ".rst": "reStructuredText",
+    ".css": "CSS",
+    ".scss": "SCSS",
+    ".less": "Less",
+    ".html": "HTML",
+    ".htm": "HTML",
+    ".json": "JSON",
+    ".yaml": "YAML",
+    ".yml": "YAML",
+    ".md": "Markdown",
+    ".rst": "reStructuredText",
     ".sql": "SQL",
-    ".sh": "Shell", ".bat": "Batch", ".ps1": "PowerShell",
+    ".sh": "Shell",
+    ".bat": "Batch",
+    ".ps1": "PowerShell",
     ".toml": "TOML",
     ".xml": "XML",
-    ".wxss": "WeChat StyleSheet", ".wxml": "WeChat Template",
+    ".wxss": "WeChat StyleSheet",
+    ".wxml": "WeChat Template",
 }
 
 
@@ -181,9 +200,7 @@ def collect() -> Optional[AlphaIDProfile]:
         day = sum(c for h, c in hours.items() if 6 <= h <= 18)
         total = night + day
         if total > 0:
-            profile.persona.temporal.work_rhythm = (
-                "night_owl" if night / total > 0.35 else "daytime"
-            )
+            profile.persona.temporal.work_rhythm = "night_owl" if night / total > 0.35 else "daytime"
 
     # 元信息
     profile.extra["source"] = "trae"

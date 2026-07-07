@@ -14,6 +14,8 @@ from alpha_id.skill_signer import SkillRegistry
 from core.message import Message
 from core.twin_brain import BrainRegistry
 
+app = FastAPI(title="Alpha-ID Ghost Layer")
+
 # ── 全局缓存 ──
 
 _network_cache: Dict[str, Any] = {}
@@ -52,6 +54,95 @@ class ChatRequest(BaseModel):
 
 class BrainActionRequest(BaseModel):
     alpha_id: str
+
+
+# ── Profile 页面 ──
+
+
+def _load_profile_dict() -> Dict[str, Any]:
+    try:
+        from alpha_id.profile_schema import load_profile
+
+        profile = load_profile()
+        if profile:
+            return profile.to_dict()
+    except Exception:
+        pass
+    return {}
+
+
+@app.get("/profile", response_class=HTMLResponse)
+async def profile_page():
+    html = """<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>Alpha-ID 个人空间</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:linear-gradient(135deg,#0f172a,#1e293b);min-height:100vh;color:#e2e8f0;}
+header{padding:24px;border-bottom:1px solid rgba(148,163,184,0.1);}
+main{max-width:960px;margin:0 auto;padding:24px;}
+.card{background:rgba(30,41,59,0.8);backdrop-filter:blur(20px);border:1px solid rgba(148,163,184,0.1);border-radius:24px;padding:24px;margin-bottom:24px;}
+.tag{display:inline-block;background:rgba(51,65,85,0.6);color:#e2e8f0;padding:6px 14px;border-radius:999px;font-size:13px;margin:3px;border:1px solid rgba(148,163,184,0.08);}
+.section-title{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;}
+</style></head><body>
+<header><h1>Alpha-ID 个人空间</h1><p>你的数字灵魂主页</p></header>
+<main>
+  <div class="card">
+    <div class="section-title">画像概览</div>
+    <pre id="profile" style="white-space:pre-wrap;opacity:.9;">加载中...</pre>
+  </div>
+  <div class="card">
+    <div class="section-title">模拟盘入口</div>
+    <p>模拟盘是 Alpha-ID 的第二魔法时刻：你的精灵在数字创世纪里替你学习、社交、成长。</p>
+    <a href="/simulation" style="color:#38bdf8;">进入模拟盘 →</a>
+  </div>
+</main>
+<script>
+async function load(){
+  const res = await fetch('/api/profile');
+  const data = res.ok ? await res.json() : {error:'Profile not found'};
+  document.getElementById('profile').textContent = JSON.stringify(data, null, 2);
+}
+load();
+</script>
+</body></html>"""
+    return HTMLResponse(content=html)
+
+
+@app.get("/simulation", response_class=HTMLResponse)
+async def simulation_page():
+    html = """<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>Alpha-ID 模拟盘</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:radial-gradient(circle at top,#1e293b,#0f172a);min-height:100vh;color:#e2e8f0;}
+header{padding:24px;border-bottom:1px solid rgba(148,163,184,0.1);}
+main{max-width:960px;margin:0 auto;padding:24px;}
+.realm{background:rgba(30,41,59,0.8);backdrop-filter:blur(20px);border:1px solid rgba(148,163,184,0.1);border-radius:24px;padding:24px;margin-bottom:24px;}
+.realm h3{margin-bottom:8px;}
+.tag{display:inline-block;background:rgba(51,65,85,0.6);color:#e2e8f0;padding:6px 14px;border-radius:999px;font-size:13px;margin:3px;border:1px solid rgba(148,163,184,0.08);}
+</style></head><body>
+<header><h1>数字创世纪 · 模拟盘</h1><p>Nine mini-universes for your spirit to play, learn, and grow.</p></header>
+<main>
+  <div class="realm">
+    <h3>第一宇宙：交易所</h3>
+    <p>收集决策数据：风险承受、决策速度、资产配置偏好。</p>
+    <span class="tag">风险偏好</span><span class="tag">决策速度</span>
+  </div>
+  <div class="realm">
+    <h3>第二宇宙：竞技场</h3>
+    <p>收集对抗数据：进攻性、策略偏好、逆商。</p>
+    <span class="tag">进攻性</span><span class="tag">策略</span>
+  </div>
+  <div class="realm">
+    <h3>第三宇宙：学院</h3>
+    <p>收集学习数据：知识领域、耐心、复盘习惯。</p>
+    <span class="tag">知识领域</span><span class="tag">耐心</span>
+  </div>
+</main>
+</body></html>"""
+    return HTMLResponse(content=html)
 
 
 # ── 应用 ──

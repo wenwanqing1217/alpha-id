@@ -115,6 +115,10 @@ try:
 except ImportError:
     HAS_IDENTITY = False
 
+
+# 画像资源（MCP resource）
+
+
 # Codex（纯 Python，无外部依赖）
 try:
     from codex import Codex
@@ -161,6 +165,63 @@ AID (Agent Identity Layer) MCP Server.
 5. 用 memory_graph_stats 查看记忆网络统计
 """,
 )
+
+
+def _load_profile_dict() -> dict:
+    try:
+        from alpha_id.profile_schema import load_profile
+
+        profile = load_profile()
+        if profile:
+            return profile.to_dict()
+    except Exception:
+        pass
+    return {}
+
+
+@mcp.resource("profile://identity")
+def profile_identity() -> str:
+    """用户身份画像摘要（DID + 偏好）"""
+    data = _load_profile_dict()
+    if not data:
+        return json.dumps({"status": "no_profile"}, ensure_ascii=False)
+    info = {
+        "did": data.get("did"),
+        "alpha_id": data.get("alpha_id"),
+        "persona": data.get("persona", {}),
+    }
+    return json.dumps(info, ensure_ascii=False, indent=2)
+
+
+@mcp.resource("profile://style")
+def profile_style() -> str:
+    """用户的沟通风格 + 技术风格"""
+    data = _load_profile_dict()
+    if not data:
+        return json.dumps({"status": "no_profile"}, ensure_ascii=False)
+    persona = data.get("persona", {})
+    return json.dumps(
+        {
+            "communication": persona.get("communication", {}),
+            "technical": persona.get("technical", {}),
+        },
+        ensure_ascii=False,
+        indent=2,
+    )
+
+
+@mcp.resource("profile://memory")
+def profile_memory() -> str:
+    """当前画像中的记忆信号（时间 + 来源 + 质量）"""
+    data = _load_profile_dict()
+    if not data:
+        return json.dumps({"status": "no_profile"}, ensure_ascii=False)
+    memory = {
+        "created_at": data.get("created_at"),
+        "x_mining": data.get("x_mining"),
+        "x_provenance": data.get("x_provenance"),
+    }
+    return json.dumps(memory, ensure_ascii=False, indent=2)
 
 
 # ══════════════════════════════════════════════
@@ -482,7 +543,8 @@ def verify_identity(did: str, message: str, signature_hex: str) -> str:
     返回验证结果（valid: true/false）。
     """
     try:
-        from core.did import verify
+        from alpha_id.crypto import verify
+
         sig = bytes.fromhex(signature_hex)
         pub_hex = did[-64:] if len(did) > 64 else ""
         if not pub_hex:

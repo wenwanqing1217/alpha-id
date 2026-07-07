@@ -15,9 +15,10 @@ ReAct 思考引擎 — 结构化思考 + 工具调用循环
 import json
 import os
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from core.agent import Tool, _call_llm, _parse_tool_call
+from core.interfaces import AgentContainer
 
 # ── 思考系统提示 ──
 
@@ -54,12 +55,14 @@ class ReActEngine:
         self,
         alpha_id: str,
         brain=None,
+        backends: Optional[AgentContainer] = None,
         llm_api_key: str = "",
         llm_base_url: str = "",
         model: str = "",
     ):
         self.alpha_id = alpha_id
         self.brain = brain  # Optional[TwinBrain]
+        self._backends = backends
         self.api_key = llm_api_key or os.environ.get("LLM_API_KEY", "") or os.environ.get("OPENAI_API_KEY", "")
         self.base_url = llm_base_url or os.environ.get("LLM_BASE_URL", "")
         self.model = model or os.environ.get("LLM_MODEL", "deepseek-v4-flash")
@@ -185,10 +188,8 @@ class ReActEngine:
 
     def _query_profile(self) -> str:
         try:
-            from alpha_id.container import Container
-
-            container = Container.instance()
-            profile = container.identity.get_user_profile(self.alpha_id)
+            if self._backends is not None:
+                profile = self._backends.identity.get_user_profile(self.alpha_id)
             if profile:
                 return json.dumps(profile, ensure_ascii=False, default=str)
         except Exception:

@@ -32,6 +32,39 @@ from alpha_id.profile_schema import (
     summary,
 )
 
+
+def completeness(profile: AlphaIDProfile) -> dict:
+    """计算画像字段完整度"""
+    keys = [
+        "persona.communication.tone",
+        "persona.communication.sentence_length",
+        "persona.communication.active_hours",
+        "persona.technical.primary_languages",
+        "persona.technical.framework_preferences",
+        "persona.technical.coding_style",
+        "persona.temporal.work_rhythm",
+    ]
+    present = 0
+    missing = []
+    for key in keys:
+        obj = profile
+        for part in key.split("."):
+            obj = getattr(obj, part)
+        value = obj
+        if isinstance(value, (list, tuple)):
+            present += 1
+        elif value:
+            present += 1
+        else:
+            missing.append(key)
+    return {
+        "score": round(present / max(len(keys), 1), 2),
+        "present_count": present,
+        "field_count": len(keys),
+        "missing": missing,
+    }
+
+
 logger = logging.getLogger(__name__)
 profile_app = typer.Typer(help="Profile 画像管理")
 collect_app = typer.Typer(help="数据采集")
@@ -181,6 +214,7 @@ def cmd_collect_cursor(
         raise typer.Exit(1)
 
     from alpha_id.collectors.cursor import collect as cursor_collect
+
     profile = cursor_collect(p)
     if profile is None:
         typer.echo("[错误] 解析失败，请确认文件是有效的 Cursor 数据文件", err=True)
@@ -219,7 +253,8 @@ def cmd_collect_trae():
 
     profile = merge_profile(profile, source="trae", quality=QUALITY_LOCAL)
     if not profile.did:
-        from alpha_id.core.did import DIDRegistry
+        from core.did import DIDRegistry
+
         reg = DIDRegistry()
         profile.did = reg.generate()
         key_dir = Path.home() / ".alpha-id" / "keys"
@@ -229,6 +264,7 @@ def cmd_collect_trae():
     save_profile(profile)
     add_collected_source("trae")
     from alpha_id.collectors.trae import summary as trae_summary
+
     typer.echo("[OK] Trae 代码痕迹已采集")
     typer.echo(trae_summary(profile))
     typer.echo("")
@@ -246,7 +282,8 @@ def cmd_collect_browser():
 
     profile = merge_profile(profile, source="browser", quality=QUALITY_LOCAL)
     if not profile.did:
-        from alpha_id.core.did import DIDRegistry
+        from core.did import DIDRegistry
+
         reg = DIDRegistry()
         profile.did = reg.generate()
         key_dir = Path.home() / ".alpha-id" / "keys"
@@ -256,6 +293,7 @@ def cmd_collect_browser():
     save_profile(profile)
     add_collected_source("browser")
     from alpha_id.collectors.browser import summary as browser_summary
+
     typer.echo("[OK] 浏览器痕迹已采集")
     typer.echo(browser_summary(profile))
     typer.echo("")
@@ -311,6 +349,7 @@ def cmd_collect_scan(
             profile = merge_profile(profile, source=name, quality=_quality_for(name))
             if not profile.did:
                 from alpha_id.did import DIDRegistry
+
                 reg = DIDRegistry()
                 profile.did = reg.generate()
                 key_dir = Path.home() / ".alpha-id" / "keys"
@@ -327,6 +366,7 @@ def cmd_collect_scan(
             typer.echo(f"    [错误] {name}: {e}")
             if verbose:
                 import traceback
+
                 traceback.print_exc()
 
     if results:
@@ -381,7 +421,7 @@ def cmd_show(
 ):
     """展示 profile 画像"""
     if not profile_exists():
-        typer.echo("[错误] 尚未生成 profile，请先运行 aid collect chatgpt <file>", err=True)
+        typer.echo("[错误] 尚未生成 profile，请先运行 aid profile mine --path .", err=True)
         raise typer.Exit(1)
 
     profile = load_profile()
@@ -390,34 +430,118 @@ def cmd_show(
         raise typer.Exit(1)
 
     if format == "json":
-        typer.echo(json.dumps(profile.to_dict(), ensure_ascii=False, indent=2))
-    else:
-        lines = ["# Alpha-ID 身份卡片", "", f"**DID**: `{profile.did}`"]
-        aid = profile.extra.get("alpha_id", "")
-        if aid:
-            lines.append(f"**Alpha-ID**: `{aid}`")
-        lines.extend(["", "## 画像摘要"])
-        c = profile.persona.communication
-        if c.tone:
-            lines.append(f"- 沟通风格: {c.tone}")
-        if c.sentence_length:
-            lines.append(f"- 句子长度: {c.sentence_length}")
+        payload = profile.to_dict()
+        payload["x_completeness"] = completeness(profile)
+        typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+
+    typer.echo("")
+    typer.echo("[Alpha-ID] 你的数字身份画像")
+    aid = profile.extra.get("alpha_id")
+    if aid:
+        typer.echo("  身份: %s" % aid)
+    typer.echo("  DID: %s" % (profile.did or "未初始化"))
+    completeness_info = completeness(profile)
+    typer.echo(
+        "  完整度: %s%% (%s/%s)"
+        % (int(completeness_info["score"] * 100), completeness_info["present_count"], completeness_info["field_count"])
+    )
+    if completeness_info["missing"]:
+        typer.echo("  待补: %s" % ", ".join(completeness_info["missing"]))
+
+    typer.echo("")
+    typer.echo("[画像摘要]")
+    c = profile.persona.communication
+    if c.tone or c.sentence_length or c.active_hours:
+        typer.echo("- 沟通: 语气=%s，句长=%s" % (c.tone or "未知", c.sentence_length or "未知"))
         if c.active_hours:
-            lines.append(f"- 活跃时段: {', '.join(f'{h:02d}:00' for h in c.active_hours[:5])}")
-        t = profile.persona.technical
-        if t.primary_languages:
-            lines.append(f"- 主要语言: {', '.join(t.primary_languages)}")
-        if t.coding_style:
-            lines.append(f"- 编码风格: {t.coding_style}")
-        w = profile.persona.temporal
-        if w.work_rhythm:
-            lines.append(f"- 工作节奏: {w.work_rhythm}")
-        lines.extend(["", "_由 Alpha-ID 生成_"])
-        content = "\n".join(lines)
-        typer.echo(content)
+            typer.echo("- 活跃: %s" % ", ".join("%02d:00" % h for h in c.active_hours[:5]))
+
+    t = profile.persona.technical
+    if t.primary_languages or t.framework_preferences or t.coding_style:
+        typer.echo(
+            "- 技术: %s"
+            % ", ".join(
+                [x for x in [", ".join(t.primary_languages), ", ".join(t.framework_preferences), t.coding_style] if x]
+            )
+        )
+    w = profile.persona.temporal
+    if w.work_rhythm:
+        typer.echo("- 节奏: %s" % w.work_rhythm)
+
+    typer.echo("")
+    typer.echo("_由 Alpha-ID 生成_")
 
 
 @profile_app.command("web")
+@profile_app.command("mine")
+def cmd_mine(
+    path: str = typer.Option(".", "--path", "-p", help="要扫描的数字痕迹根目录"),
+):
+    """从本机目录扫描并推断画像，用于快速生成 Ghost Layer 画像"""
+    from alpha_id.detect import format_report
+    from alpha_id.detect import scan as detect_scan
+    from alpha_id.mining.extractor import extract_from_path
+    from alpha_id.mining.scanner import scan_path
+
+    scan_root = Path(path)
+    if not scan_root.exists():
+        typer.echo(f"[错误] 路径不存在: {scan_root}", err=True)
+        raise typer.Exit(1)
+
+    typer.echo("[扫描] 先看这个电脑里实际有什么数字痕迹...")
+    detected = detect_scan()
+    typer.echo(format_report(detected))
+
+    report = scan_path(str(scan_root))
+    if not report.sources:
+        typer.echo("[提示] 未检测到明显数字痕迹，可尝试更大范围路径")
+        raise typer.Exit(0)
+
+    typer.echo(f"[扫描] 目标路径: {scan_root}")
+    for source in report.top_sources():
+        typer.echo(f"  - {source.kind}: {source.label} ({source.confidence})")
+
+    typer.echo("[推断] 按本机实际痕迹推断画像，不再假设一定有 ChatGPT / Claude ...")
+    signals = []
+    for item in extract_from_path(str(scan_root)):
+        signals.append(
+            {
+                "source_kind": item.source_kind,
+                "source_path": item.source_path,
+                "messages": item.messages,
+                "timestamps": item.timestamps,
+                "code_extensions": item.code_extensions,
+                "bookmarks": item.bookmarks,
+            }
+        )
+
+    if not signals:
+        typer.echo("[提示] 扫描到痕迹，但未抽取到可推断信号")
+        raise typer.Exit(0)
+
+    profile = infer_profile(signals, seed_did=load_profile().did if load_profile() else "")
+    if not profile.did:
+        from alpha_id.did import DIDRegistry
+
+        reg = DIDRegistry()
+        profile.did = reg.generate()
+        key_dir = Path.home() / ".alpha-id" / "keys"
+        key_dir.mkdir(parents=True, exist_ok=True)
+        (key_dir / "private_key.bin").write_bytes(reg.export_private_key())
+
+    save_profile(profile)
+    typer.echo("[OK] 画像已生成/更新")
+    typer.echo(summary(profile))
+
+
+def infer_profile(signals, seed_did: str = "") -> AlphaIDProfile:
+    """从抽取信号推断画像，供 CLI 和后续链路复用"""
+    from alpha_id.mining.inferrer import infer_profile as _infer_profile
+
+    return _infer_profile(signals, seed_did=seed_did)
+
+
 def cmd_web(
     host: str = typer.Option("127.0.0.1", "--host", help="监听地址"),
     port: int = typer.Option(8080, "--port", "-p", help="端口"),
@@ -443,11 +567,7 @@ def cmd_web(
     def _inject_profile_data(html: str, profile: AlphaIDProfile) -> str:
         """在 HTML 中注入 profile 数据作为 JS 变量"""
         profile_json = _json.dumps(profile.to_dict(), ensure_ascii=False)
-        inject_script = (
-            '<script>\n'
-            f'window.__ALPHA_ID_PROFILE__ = {profile_json};\n'
-            '</script>\n'
-        )
+        inject_script = f"<script>\nwindow.__ALPHA_ID_PROFILE__ = {profile_json};\n</script>\n"
         if "</body>" in html:
             return html.replace("</body>", inject_script + "</body>")
         return html + inject_script
@@ -514,8 +634,8 @@ h1{{font-size:24px;color:#f1f5f9;margin-bottom:4px;}}
 .footer{{text-align:center;margin-top:32px;font-size:11px;color:#475569;}}
 .footer a{{color:#38bdf8;text-decoration:none;}}
 </style></head><body>
-<div class="card"><div class="avatar">{aid[-1:] if aid else 'A'}</div>
-<h1>{aid or 'Alpha-ID'}</h1>
+<div class="card"><div class="avatar">{aid[-1:] if aid else "A"}</div>
+<h1>{aid or "Alpha-ID"}</h1>
 <div class="did">{p.did}</div>
 <div class="section"><div class="section-title">沟通风格</div>{_tags(p.persona.communication.tone, p.persona.communication.sentence_length)}</div>
 <div class="section"><div class="section-title">技术偏好</div>{langs}</div>
@@ -524,6 +644,16 @@ h1{{font-size:24px;color:#f1f5f9;margin-bottom:4px;}}
 </div>
 <div class="footer">由 <a href="https://pypi.org/project/alpha-id-zix/">Alpha-ID</a> 生成</div>
 </body></html>"""
+
+
+@profile_app.command("serve")
+def cmd_serve(
+    install: bool = typer.Option(False, "--install", help="写入 Claude Desktop 配置"),
+):
+    """启动 Alpha-ID Profile MCP Server"""
+    from alpha_id.profile_mcp_server import main as mcp_main
+
+    mcp_main(install=install)
 
 
 @profile_app.command("daemon")
@@ -557,6 +687,7 @@ def cmd_daemon(
             pid = int(pid_file.read_text().strip())
             try:
                 import subprocess as _sp
+
                 _sp.run(["taskkill", "/f", "/pid", str(pid)], capture_output=True)
                 pid_file.unlink()
                 typer.echo("[OK] 后台服务已停止")
@@ -572,12 +703,14 @@ def cmd_daemon(
             pid = int(pid_file.read_text().strip())
             try:
                 import subprocess as _sp
+
                 _sp.run(["tasklist", "/fi", f"PID eq {pid}"], capture_output=True, text=True)
                 typer.echo(f"[OK] 后台服务运行中 (PID: {pid})")
                 # 读状态 JSON
                 sf = pid_file.with_suffix(".json")
                 if sf.exists():
                     import json as _json
+
                     data = _json.loads(sf.read_text())
                     typer.echo(f"  端口: {data.get('port', '?')}")
                     typer.echo(f"  启动: {data.get('started', '?')}")
@@ -599,12 +732,15 @@ def cmd_daemon(
     daemon_py += f"sf={repr(str(pid_file))}\n"
     daemon_py += "os.makedirs(os.path.dirname(sf),exist_ok=True)\n"
     daemon_py += "while True:\n try:\n  p=subprocess.Popen([sys.executable,script,'--transport','sse','--port',str(port)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)\n"
-    daemon_py += "  open(sf.replace('.pid','.json'),'w').write(json.dumps({'pid':p.pid,'port':port,'status':'running'}))\n"
+    daemon_py += (
+        "  open(sf.replace('.pid','.json'),'w').write(json.dumps({'pid':p.pid,'port':port,'status':'running'}))\n"
+    )
     daemon_py += "  p.wait()\n except Exception:\n  pass\n time.sleep(2)\n"
 
     proc = subprocess.Popen(
         [sys.executable, "-c", daemon_py],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
         creationflags=subprocess.CREATE_NO_WINDOW if hasattr(subprocess, "CREATE_NO_WINDOW") else 0,
     )
     pid_file.write_text(str(proc.pid))

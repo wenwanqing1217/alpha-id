@@ -79,7 +79,7 @@ def _extract_from_sqlite(db_path: Path) -> Optional[list]:
         for tbl in table_names:
             if any(k in tbl.lower() for k in ["conversation", "chat", "message", "thread"]):
                 try:
-                    rows = cursor.execute(f"SELECT * FROM \"{tbl}\" LIMIT 200").fetchall()
+                    rows = cursor.execute(f'SELECT * FROM "{tbl}" LIMIT 200').fetchall()
                     col_names = [d[0] for d in cursor.description]
                     for row in rows:
                         conv = dict(zip(col_names, row))
@@ -181,9 +181,14 @@ def collect(zip_path: Path) -> Optional[AlphaIDProfile]:
     # 技术偏好
     text = " ".join(msgs)
     langs = []
-    for lang, pat in {"Python": r"\bpython\b", "TypeScript": r"\btypescript\b",
-                       "JavaScript": r"\bjavascript\b", "Rust": r"\brust\b",
-                       "Go": r"\bgo\b", "Java": r"\bjava\b"}.items():
+    for lang, pat in {
+        "Python": r"\bpython\b",
+        "TypeScript": r"\btypescript\b",
+        "JavaScript": r"\bjavascript\b",
+        "Rust": r"\brust\b",
+        "Go": r"\bgo\b",
+        "Java": r"\bjava\b",
+    }.items():
         if re.search(pat, text, re.IGNORECASE):
             langs.append(lang)
     profile.persona.technical.primary_languages = langs[:5]

@@ -17,8 +17,11 @@ import re
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
+from core.interfaces import AgentContainer
+
 try:
     import httpx
+
     HAS_HTTPX = True
 except ImportError:
     httpx = None
@@ -26,8 +29,6 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-from alpha_id.container import Container  # noqa: E402
-from alpha_id.skill_signer import SkillRegistry, SkillRuntime  # noqa: E402
 
 # ── Tool 描述 ──
 
@@ -56,29 +57,87 @@ class Tool:
             return f"[工具错误] {e}"
 
 
+def _default_backends() -> AgentContainer:
+    """Create default backends from alpha_id container."""
+    from alpha_id.container import Container
+
+    container = Container.instance()
+
+    class _ContainerBackends(AgentContainer):
+        @property
+        def identity(self):
+            return container.identity
+
+        @property
+        def social(self):
+            return container.social
+
+        @property
+        def risk(self):
+            return container.risk
+
+        @property
+        def memory(self):
+            return container.memory
+
+        @property
+        def actions(self):
+            return container.actions
+
+        @property
+        def skill_registry(self):
+            from alpha_id.skill_signer import SkillRegistry
+
+            return SkillRegistry(storage_dir=str(Path.home() / ".aid" / "skills"))
+
+        @property
+        def skill_tracker(self):
+            from alpha_id.skill_signer import SkillAttributionTracker
+
+            return SkillAttributionTracker(storage_dir=str(Path.home() / ".aid" / "attributions"))
+
+        @property
+        def skill_runtime(self):
+            registry = self.skill_registry
+            tracker = self.skill_tracker
+            from alpha_id.skill_signer import SkillRuntime
+
+            return SkillRuntime(registry, tracker=tracker, poe_client=None)
+
+        @property
+        def poe_store(self):
+            from alpha_id.poe import PoEStore
+
+            return PoEStore(storage_dir=str(Path.home() / ".aid"))
+
+    return _ContainerBackends()
+
+
 # ── 内置工具 ──
 
 
-def _make_tools(alpha_id: str, signer=None) -> List[Tool]:
+def _make_tools(alpha_id: str, backends: Optional[AgentContainer] = None, signer=None) -> List[Tool]:
     """构造 Agent 可用工具列表
 
     Args:
         alpha_id: Agent 的 Alpha-ID
+        backends: 可选的依赖注入容器
         signer: 可选的 AIDSigner 实例，用于签名执行证明（PoE）
     """
-    container = Container.instance()
+    if backends is None:
+        backends = _default_backends()
     from core.action_engine.models import Action, ActionType
 
     def get_profile() -> str:
-        profile = container.identity.get_user_profile(alpha_id)
+        profile = backends.identity.get_user_profile(alpha_id)
         return json.dumps(profile, ensure_ascii=False, default=str) if profile else "未找到身份信息"
 
     def get_friends() -> str:
-        friends = container.social.get_friends(alpha_id)
+        friends = backends.social.get_friends(alpha_id)
         return json.dumps(friends, ensure_ascii=False) if friends else "暂无好友"
 
     def get_risk_score() -> str:
-        engine = container.risk
+        engine = backends.risk
         device_score = engine.calculate_device_score(None, None)
         behavior_score = engine.calculate_behavior_score({})
         voice_score = engine.calculate_voice_score(None)
@@ -87,26 +146,26 @@ def _make_tools(alpha_id: str, signer=None) -> List[Tool]:
         return json.dumps({"risk_score": round(total, 2), "risk_level": level}, ensure_ascii=False)
 
     def get_messages(unread_only: str = "true") -> str:
-        msgs = container.social.get_messages(alpha_id, unread_only=(unread_only.lower() == "true"))
+        msgs = backends.social.get_messages(alpha_id, unread_only=(unread_only.lower() == "true"))
         return json.dumps(msgs, ensure_ascii=False, default=str) if msgs else "暂无消息"
 
     def send_message(to_alpha_id: str, content: str) -> str:
-        result = container.social.send_message(alpha_id, to_alpha_id, content)
+        result = backends.social.send_message(alpha_id, to_alpha_id, content)
         return json.dumps(result, ensure_ascii=False)
 
     def send_friend_request(to_alpha_id: str, message: str = "") -> str:
         """向另一个 Alpha-ID 发送好友请求"""
-        result = container.social.send_friend_request(alpha_id, to_alpha_id, message)
+        result = backends.social.send_friend_request(alpha_id, to_alpha_id, message)
         return json.dumps(result, ensure_ascii=False)
 
     def save_memory(content: str, category: str = "general", sensitivity: str = "0") -> str:
         """保存一条长期记忆"""
-        mem = container.memory.save(content, category=category, sensitivity=int(sensitivity))
+        mem = backends.memory.save(content, category=category, sensitivity=int(sensitivity))
         return json.dumps(mem, ensure_ascii=False)
 
     def query_memory(query: str = "", keyword: str = "", limit: str = "5") -> str:
         """查询长期记忆（支持语义搜索和关键词搜索）"""
-        results = container.memory.query(query_text=query or None, keyword=keyword or None, limit=int(limit))
+        results = backends.memory.query(query_text=query or None, keyword=keyword or None, limit=int(limit))
         return json.dumps(results, ensure_ascii=False)
 
     # ── ActionEngine 工具 ──
@@ -126,20 +185,20 @@ def _make_tools(alpha_id: str, signer=None) -> List[Tool]:
             payload=parsed_payload,
             source_alpha_id=alpha_id,
         )
-        result = container.actions.plan(action)
+        result = backends.actions.plan(action)
         return json.dumps(result.to_dict(), ensure_ascii=False)
 
     def execute_action(action_id: str) -> str:
         """执行一个已批准的行动"""
-        result = container.actions.execute(action_id)
+        result = backends.actions.execute(action_id)
         if result is None:
             return json.dumps({"success": False, "message": f"未找到可执行的行动: {action_id}"}, ensure_ascii=False)
         return json.dumps(result.to_dict(), ensure_ascii=False)
 
     def list_pending_actions() -> str:
         """列出待审批和待执行的行动"""
-        pending = container.actions.list_pending_approvals()
-        pending_exec = container.actions.get_pending_actions()
+        pending = backends.actions.list_pending_approvals()
+        pending_exec = backends.actions.get_pending_actions()
         return json.dumps(
             {
                 "pending_approvals": pending,
@@ -150,41 +209,22 @@ def _make_tools(alpha_id: str, signer=None) -> List[Tool]:
 
     def get_action_history(limit: str = "10") -> str:
         """查询行动历史"""
-        results = container.actions.get_history(limit=int(limit))
+        results = backends.actions.get_history(limit=int(limit))
         return json.dumps(results, ensure_ascii=False) if results else "暂无行动记录"
 
     # ── Skill 工具 ──
 
-    _skill_registry: Optional[SkillRegistry] = None
-    _skill_tracker: Optional[SkillAttributionTracker] = None  # noqa: F821
-    _skill_runtime: Optional[SkillRuntime] = None
-    _skill_poe_store: Optional[PoEStore] = None  # noqa: F821
-
-    def _get_skill_registry() -> SkillRegistry:
-        nonlocal _skill_registry, _skill_tracker, _skill_runtime, _skill_poe_store
-        if _skill_registry is None:
-            from alpha_id.poe import PoEStore
-            from alpha_id.skill_signer import SkillAttributionTracker
-
-            storage_dir = str(Path.home() / ".aid" / "skills")
-            tracker_dir = str(Path.home() / ".aid" / "attributions")
-            poe_dir = str(Path.home() / ".aid")
-            _skill_registry = SkillRegistry(storage_dir=storage_dir)
-            _skill_tracker = SkillAttributionTracker(storage_dir=tracker_dir)
-            _skill_poe_store = PoEStore(storage_dir=poe_dir)
-            # 如果有 signer，创建 PoEClient
-            poe_client = None
-            if signer is not None:
-                from alpha_id.poe import PoEClient
-
-                poe_client = PoEClient(signer, store=_skill_poe_store)
-            _skill_runtime = SkillRuntime(_skill_registry, tracker=_skill_tracker, poe_client=poe_client)
-        return _skill_registry
+    def _get_skill_registry(backends: AgentContainer):
+        registry = backends.skill_registry
+        tracker = backends.skill_tracker
+        runtime = backends.skill_runtime
+        poe_store = backends.poe_store
+        return registry, tracker, runtime, poe_store
 
     def list_skills() -> str:
         """列出所有已注册且未吊销的技能"""
         try:
-            registry = _get_skill_registry()
+            registry, tracker, runtime, poe_store = _get_skill_registry(backends)
             entries = registry.list(include_revoked=False)
             if not entries:
                 return "暂无已注册的技能"
@@ -198,15 +238,15 @@ def _make_tools(alpha_id: str, signer=None) -> List[Tool]:
     def execute_skill(name: str, params_json: str = "{}") -> str:
         """加载并执行一个已注册的技能，自动记录归因并生成执行证明（PoE）"""
         try:
-            _get_skill_registry()  # ensure initialized
-            return _skill_runtime.execute(name, params_json, executor_did=alpha_id)
+            registry, tracker, runtime, poe_store = _get_skill_registry(backends)
+            return runtime.execute(name, params_json, executor_did=alpha_id)
         except Exception as e:
             return f"[技能执行失败] {e}"
 
     def get_skill_info(name: str) -> str:
         """获取指定技能的详细信息（作者、版本、标签、信誉）"""
         try:
-            registry = _get_skill_registry()
+            registry, tracker, runtime, poe_store = _get_skill_registry(backends)
             pkg = registry.get(name)
             if pkg is None:
                 return f"[未找到技能: {name}]"
@@ -221,8 +261,8 @@ def _make_tools(alpha_id: str, signer=None) -> List[Tool]:
                 "revoked": registry.is_revoked(pkg.name),
             }
             # 作者信誉
-            if _skill_tracker and pkg.author_did:
-                stats = _skill_tracker.get_author_stats(pkg.author_did)
+            if tracker and pkg.author_did:
+                stats = tracker.get_author_stats(pkg.author_did)
                 info["author_stats"] = stats
                 from core.reputation import SkillReputation
 
@@ -457,6 +497,7 @@ def _call_llm(messages: List[Dict[str, str]], tools_schema: List[Dict[str, Any]]
         else:
             import urllib.error
             import urllib.request
+
             req = urllib.request.Request(
                 f"{base_url.rstrip('/')}/chat/completions",
                 data=json.dumps(body).encode("utf-8"),
@@ -492,7 +533,7 @@ def _parse_tool_call(text: str) -> Optional[tuple]:
     m = re.search(r"__TOOL_CALL__\s+(?:id:(\S+)\s+)?(\w+)\s*\(([\s\S]*?)\)\s*$", text, re.MULTILINE)
     if not m:
         return None
-    tool_call_id = m.group(1) or ''
+    tool_call_id = m.group(1) or ""
     name = m.group(2)
     try:
         args = json.loads(m.group(3)) if m.group(3).strip() else {}
@@ -539,11 +580,19 @@ class AgentLoop:
         reply = loop.run("帮我查一下我的身份信息")
     """
 
-    def __init__(self, alpha_id: str, model: str = "deepseek-v4-flash", max_turns: int = 3, signer=None):
+    def __init__(
+        self,
+        alpha_id: str,
+        model: str = "deepseek-v4-flash",
+        max_turns: int = 3,
+        backends: Optional[AgentContainer] = None,
+        signer=None,
+    ):
         self.alpha_id = alpha_id
         self.model = model
         self.max_turns = max_turns
-        self.tools = _make_tools(alpha_id, signer=signer)
+        self._backends = backends
+        self.tools = _make_tools(alpha_id, backends=backends, signer=signer)
         self.tool_map = {t.name: t for t in self.tools}
         self.history: List[Dict[str, str]] = []
 
@@ -553,10 +602,8 @@ class AgentLoop:
 
         # 2. 注入用户档案
         try:
-            from alpha_id.container import Container
-
-            container = Container.instance()
-            profile = container.identity.get_user_profile(self.alpha_id)
+            if self._backends is not None:
+                profile = self._backends.identity.get_user_profile(self.alpha_id)
             if profile:
                 pid = profile.get("alpha_id", "未知")
                 uid = profile.get("user_id", "未知")
@@ -577,14 +624,12 @@ class AgentLoop:
 
         # 3. 注入相关记忆（语义搜索当前输入）
         try:
-            from alpha_id.container import Container
-
-            container = Container.instance()
-            recalled = container.memory.query(
-                query_text=user_input,
-                max_sensitivity=70,
-                limit=5,
-            )
+            if self._backends is not None:
+                recalled = self._backends.memory.query(
+                    query_text=user_input,
+                    max_sensitivity=70,
+                    limit=5,
+                )
             if recalled:
                 prompt += "\n\n## 我记得的关于这件事的回忆"
                 for m in recalled:

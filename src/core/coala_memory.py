@@ -24,10 +24,11 @@ from typing import Any, Dict, List, Optional
 
 class MemoryType(Enum):
     """CoALA 记忆类型"""
-    WORKING = "working"       # 工作记忆（当前 context window）
-    EPISODIC = "episodic"     # 情景记忆（事件记录）
-    SEMANTIC = "semantic"     # 语义记忆（事实和实体关系）
-    PROCEDURAL = "procedural" # 过程记忆（执行模式和推理策略）
+
+    WORKING = "working"  # 工作记忆（当前 context window）
+    EPISODIC = "episodic"  # 情景记忆（事件记录）
+    SEMANTIC = "semantic"  # 语义记忆（事实和实体关系）
+    PROCEDURAL = "procedural"  # 过程记忆（执行模式和推理策略）
 
 
 @dataclass
@@ -40,6 +41,7 @@ class WorkingMemoryItem:
     - 实时更新，会话结束后清空或归档
     - 相当于 LLM 的 RAM
     """
+
     content: str
     role: str  # "system", "user", "assistant", "tool"
     timestamp: float
@@ -57,6 +59,7 @@ class EpisodicMemoryItem:
     - "用户上周三问过退款流程"
     - "上次部署失败是因为 npm 版本冲突"
     """
+
     event_type: str  # "query", "response", "action", "error"
     description: str
     timestamp: float
@@ -76,6 +79,7 @@ class SemanticMemoryItem:
     - "用户偏好深色主题"
     - "张三是 A 项目的负责人"
     """
+
     fact_type: str  # "preference", "entity", "relation", "knowledge"
     subject: str
     predicate: str
@@ -98,6 +102,7 @@ class ProceduralMemoryItem:
     - "上次处理这类工单的步骤是……"
     - "遇到 API 超时先检查 rate limit"
     """
+
     procedure_type: str  # "workflow", "strategy", "pattern", "heuristic"
     name: str
     description: str
@@ -183,7 +188,7 @@ class EpisodicMemory:
         session_id: str,
         participants: List[str] = [],
         outcome: str = "success",
-        metadata: Dict[str, Any] = {}
+        metadata: Dict[str, Any] = {},
     ) -> str:
         """添加情景记忆"""
         item = EpisodicMemoryItem(
@@ -246,7 +251,7 @@ class SemanticMemory:
         confidence: float = 0.9,
         validity_start: float = 0,
         validity_end: float = float("inf"),
-        metadata: Dict[str, Any] = {}
+        metadata: Dict[str, Any] = {},
     ) -> str:
         """添加事实"""
         item = SemanticMemoryItem(
@@ -318,7 +323,7 @@ class ProceduralMemory:
         description: str,
         steps: List[str] = [],
         conditions: List[str] = [],
-        metadata: Dict[str, Any] = {}
+        metadata: Dict[str, Any] = {},
     ) -> str:
         """添加过程记忆"""
         item = ProceduralMemoryItem(
@@ -399,7 +404,7 @@ class CoALAMemorySystem:
                     description=item.content,
                     session_id=session_id,
                     outcome="completed",
-                    metadata={"role": item.role, "tokens": item.tokens}
+                    metadata={"role": item.role, "tokens": item.tokens},
                 )
 
     def extract_facts(self, content: str, session_id: str) -> List[str]:
@@ -419,6 +424,7 @@ class CoALAMemorySystem:
         ]
 
         import re
+
         for pattern, fact_type, predicate in preference_patterns:
             matches = re.findall(pattern, content)
             for match in matches:
@@ -428,7 +434,7 @@ class CoALAMemorySystem:
                     predicate=predicate,
                     object=match,
                     source=session_id,
-                    confidence=0.8
+                    confidence=0.8,
                 )
                 fact_ids.append(fact_id)
 
@@ -459,7 +465,10 @@ class CoALAMemorySystem:
             },
             "procedural": {
                 "total_procedures": len(self.procedural.procedures),
-                "avg_success_rate": sum(p.success_rate for p in self.procedural.procedures) / len(self.procedural.procedures) if self.procedural.procedures else 0,
+                "avg_success_rate": sum(p.success_rate for p in self.procedural.procedures)
+                / len(self.procedural.procedures)
+                if self.procedural.procedures
+                else 0,
             },
         }
 

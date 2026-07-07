@@ -1,4 +1,5 @@
 """测试 daemon 后台服务 - 不依赖真实进程"""
+
 from pathlib import Path
 
 from alpha_id.profile_cli import cmd_daemon
@@ -9,6 +10,7 @@ def test_daemon_status_no_pid(tmp_path, monkeypatch):
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     from typer.testing import CliRunner
     from alpha_id.profile_cli import profile_app
+
     r = CliRunner().invoke(profile_app, ["daemon", "status"])
     assert "未运行" in r.stdout or "未在运行" in r.stdout
 
@@ -18,6 +20,7 @@ def test_daemon_stop_no_pid(tmp_path, monkeypatch):
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     from typer.testing import CliRunner
     from alpha_id.profile_cli import profile_app
+
     r = CliRunner().invoke(profile_app, ["daemon", "stop"])
     assert "未在运行" in r.stdout
 
@@ -30,6 +33,7 @@ def test_daemon_stale_pid(tmp_path, monkeypatch):
     (pid_dir / "daemon.pid").write_text("999999")  # 不存在的 PID
     from typer.testing import CliRunner
     from alpha_id.profile_cli import profile_app
+
     r = CliRunner().invoke(profile_app, ["daemon", "stop"])
     assert "已停止" in r.stdout or "进程不存在" in r.stdout
     assert not (pid_dir / "daemon.pid").exists()
@@ -38,6 +42,7 @@ def test_daemon_stale_pid(tmp_path, monkeypatch):
 def test_daemon_help():
     from typer.testing import CliRunner
     from alpha_id.profile_cli import profile_app
+
     r = CliRunner().invoke(profile_app, ["daemon", "--help"])
     assert r.exit_code == 0
     assert "start" in r.stdout

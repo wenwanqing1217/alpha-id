@@ -29,7 +29,7 @@ def tool2(func=None, **kwargs):
 
 
 try:
-    from langchain.tools import tool
+    from langchain.tools import tool  # pyright: ignore[reportMissingImports]
 except ImportError:
     tool = tool2
 

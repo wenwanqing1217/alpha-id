@@ -227,6 +227,7 @@ class TestCodexTools:
 # 这些工具在 if HAS_MEMORY_GRAPH: 块内定义，无运行时守卫，
 # 所以需要 mock memory_graph 模块内部的依赖。
 
+
 class TestMemoryGraphTools:
     """Mock MemoryStore/SqliteStorage 来测试记忆网络工具"""
 
@@ -247,8 +248,7 @@ class TestMemoryGraphTools:
 
     def test_memory_graph_stats_mock(self):
         """mock MemoryStore.query 返回空列表"""
-        with patch("memory_graph.SqliteStorage") as mock_storage, \
-             patch("memory_graph.MemoryStore") as mock_store:
+        with patch("memory_graph.SqliteStorage") as mock_storage, patch("memory_graph.MemoryStore") as mock_store:
             fake_store = Mock()
             fake_store.query.return_value = []
             mock_storage.return_value = MagicMock()
@@ -258,8 +258,7 @@ class TestMemoryGraphTools:
 
     def test_memory_graph_search_mock(self):
         """mock 搜索"""
-        with patch("memory_graph.SqliteStorage") as mock_storage, \
-             patch("memory_graph.MemoryStore") as mock_store:
+        with patch("memory_graph.SqliteStorage") as mock_storage, patch("memory_graph.MemoryStore") as mock_store:
             fake_store = Mock()
             fake_store.query.return_value = []
             mock_storage.return_value = MagicMock()
@@ -269,8 +268,7 @@ class TestMemoryGraphTools:
 
     def test_memory_graph_html_mock(self):
         """mock html 生成"""
-        with patch("memory_graph.SqliteStorage") as mock_storage, \
-             patch("memory_graph.MemoryStore") as mock_store:
+        with patch("memory_graph.SqliteStorage") as mock_storage, patch("memory_graph.MemoryStore") as mock_store:
             fake_store = Mock()
             fake_store.query.return_value = []
             mock_storage.return_value = MagicMock()
@@ -280,8 +278,7 @@ class TestMemoryGraphTools:
 
     def test_memory_graph_save_mock(self):
         """mock 保存"""
-        with patch("memory_graph.SqliteStorage") as mock_storage, \
-             patch("memory_graph.MemoryStore") as mock_store:
+        with patch("memory_graph.SqliteStorage") as mock_storage, patch("memory_graph.MemoryStore") as mock_store:
             fake_store = Mock()
             fake_store.save.return_value = {"memory_id": "mock-123"}
             mock_storage.return_value = MagicMock()
@@ -291,8 +288,7 @@ class TestMemoryGraphTools:
 
     def test_memory_graph_delete_mock(self):
         """mock 删除"""
-        with patch("memory_graph.SqliteStorage") as mock_storage, \
-             patch("memory_graph.MemoryStore") as mock_store:
+        with patch("memory_graph.SqliteStorage") as mock_storage, patch("memory_graph.MemoryStore") as mock_store:
             fake_store = Mock()
             fake_store.delete.return_value = {"memory_id": "mock-123"}
             mock_storage.return_value = MagicMock()
@@ -302,8 +298,7 @@ class TestMemoryGraphTools:
 
     def test_memory_graph_update_mock(self):
         """mock 更新"""
-        with patch("memory_graph.SqliteStorage") as mock_storage, \
-             patch("memory_graph.MemoryStore") as mock_store:
+        with patch("memory_graph.SqliteStorage") as mock_storage, patch("memory_graph.MemoryStore") as mock_store:
             fake_store = Mock()
             fake_store.update.return_value = {"success": True}
             mock_storage.return_value = MagicMock()
@@ -323,15 +318,37 @@ async def test_all_tools_listed():
     tools = await aid_mcp_server.mcp.list_tools()
     names = [t.name for t in tools]
     expected = [
-        "capture_full_screen", "capture_window", "capture_region", "list_windows",
-        "ocr_image", "analyze_image",
-        "focus_window", "click_screen", "click_double", "click_right",
-        "type_text", "type_at", "press_key", "press_enter", "scroll", "mouse_position",
-        "get_identity", "verify_identity", "get_server_info",
-        "read_code", "search_code", "edit_code", "run_python", "list_code_files",
+        "capture_full_screen",
+        "capture_window",
+        "capture_region",
+        "list_windows",
+        "ocr_image",
+        "analyze_image",
+        "focus_window",
+        "click_screen",
+        "click_double",
+        "click_right",
+        "type_text",
+        "type_at",
+        "press_key",
+        "press_enter",
+        "scroll",
+        "mouse_position",
+        "get_identity",
+        "verify_identity",
+        "get_server_info",
+        "read_code",
+        "search_code",
+        "edit_code",
+        "run_python",
+        "list_code_files",
         "count_code_lines",
-        "memory_graph_stats", "memory_graph_html", "memory_graph_search",
-        "memory_graph_save", "memory_graph_delete", "memory_graph_update",
+        "memory_graph_stats",
+        "memory_graph_html",
+        "memory_graph_search",
+        "memory_graph_save",
+        "memory_graph_delete",
+        "memory_graph_update",
     ]
     for name in expected:
         assert name in names, f"缺少工具: {name}"

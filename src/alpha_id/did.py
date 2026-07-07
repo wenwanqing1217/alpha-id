@@ -282,6 +282,7 @@ class DIDRegistry:
         if self._public_key is None:
             raise ValueError("No public key loaded")
         return self._public_key
+
     def build_document(self) -> DIDDocument:
         if self._did is None or self._public_key is None:
             raise ValueError("Identity not initialized")
@@ -300,6 +301,7 @@ class DIDRegistry:
             authentication=[vm_id],
             metadata=getattr(self, "_metadata", {}),  # 嵌入元数据
         )
+
     # ── 签名 & 验证 ──
 
     def sign(self, payload: bytes) -> bytes:

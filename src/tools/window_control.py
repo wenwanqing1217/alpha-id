@@ -10,7 +10,7 @@ from typing import Optional
 
 # 兼容本地运行：有 langchain 则用 @tool，没有则用空装饰器
 try:
-    from langchain.tools import tool
+    from langchain.tools import tool  # pyright: ignore[reportMissingImports]
 except ImportError:
 
     def tool(func=None, **kwargs):

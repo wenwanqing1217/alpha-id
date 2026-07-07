@@ -31,8 +31,7 @@ def cmd_scan(
         try:
             r = httpx.post(
                 url,
-                json={"jsonrpc": "2.0", "id": 1, "method": "resources/read",
-                      "params": {"uri": "profile://identity"}},
+                json={"jsonrpc": "2.0", "id": 1, "method": "resources/read", "params": {"uri": "profile://identity"}},
                 timeout=2,
             )
             if r.status_code == 200:
@@ -78,10 +77,15 @@ def cmd_handshake(
     try:
         r = httpx.post(
             f"{url}/message",
-            json={"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {
-                "name": "verify_identity",
-                "arguments": {"did": did, "message": challenge, "signature_hex": ""},
-            }},
+            json={
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "tools/call",
+                "params": {
+                    "name": "verify_identity",
+                    "arguments": {"did": did, "message": challenge, "signature_hex": ""},
+                },
+            },
             timeout=10,
         )
         if r.status_code == 200:

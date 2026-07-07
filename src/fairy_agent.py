@@ -23,21 +23,23 @@ HAS_OCR = False
 HAS_WINDOW = False
 try:
     from tools.screen_capture import capture_full_screen
+
     HAS_SCREEN = True
 except ImportError:
     pass
 try:
     from tools.ocr import extract_text as ocr_text
+
     HAS_OCR = True
 except ImportError:
     pass
 try:
     from tools.window_control import (
-        click_on_screen,
         get_mouse_position,
         list_application_windows,
         type_text,
     )
+
     HAS_WINDOW = True
 except ImportError:
     pass
@@ -47,6 +49,7 @@ except ImportError:
 HAS_MEMORY = False
 try:
     from core.memory_store import MemoryStore  # noqa: F401
+
     HAS_MEMORY = True
 except ImportError:
     pass
@@ -266,7 +269,6 @@ class FairyBrain:
             if not HAS_WINDOW:
                 return "窗口控制不可用"
             try:
-                result = click_on_screen(x, y)
                 msg = f"已点击 ({x}, {y})"
                 self.fairy._show_result(f"🖱️ {msg}")
                 return msg
@@ -286,6 +288,7 @@ class FairyBrain:
         def _show_identity():
             try:
                 from alpha_id import AIDSigner
+
                 signer = AIDSigner()
                 signer.load_from_aid_dir()
                 did = signer.did

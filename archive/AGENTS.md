@@ -1,7 +1,8 @@
-# Alpha-ID — 战术手册
+---
+# Alpha-ID — 战术手册（历史归档）
 
-> 每次对话前自动注入。不需要再读其他文档。
-> 深度引用请走 decision.md。
+> 本文件为历史版本，不再作为当前执行依据。
+> 当前执行依据：`AGENTS.md`、`docs/AGENT_CONTEXT.md`、`docs/decisions.md`、`TODO.md`。
 
 ---
 

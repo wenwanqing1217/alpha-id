@@ -1,10 +1,6 @@
 """身份安全工具模块测试"""
 
-import re
-from datetime import datetime
-
 from src.tools.identity_tool import (
-    _safe_str,
     initialize_security_profile,
     multi_factor_auth,
     verify_biometric,

@@ -33,8 +33,10 @@ _SIG_FILE = _KEY_DIR / ".last_sig"
 # 新增元数据文件路径
 _METADATA_FILE = _KEY_DIR / "metadata.json"
 
+
 def _ensure_dir():
     _KEY_DIR.mkdir(parents=True, exist_ok=True)
+
 
 def _load_registry() -> DIDRegistry:
     reg = DIDRegistry()
@@ -617,7 +619,7 @@ def execute(
         typer.echo("⚠  请手动更新你的 DID Document 公钥为新密钥")
         typer.echo("   或用 aid identity init --force 导入新身份")
     else:
-        typer.echo('❌ 身份恢复执行失败，请检查恢复请求状态')
+        typer.echo("❌ 身份恢复执行失败，请检查恢复请求状态")
         return
 
 
@@ -629,6 +631,7 @@ def _run_interactive_wizard() -> dict:
     metadata["bio"] = typer.prompt("2. 简要描述你的兴趣或职业", default="")
     return metadata
 
+
 def _load_config(config_path: str) -> dict:
     """从配置文件加载元数据"""
     try:
@@ -637,7 +640,6 @@ def _load_config(config_path: str) -> dict:
     except Exception as e:
         typer.echo(f"❌ 配置文件加载失败: {e}")
         raise typer.Exit(1)
-
 
 
 @recovery_app.command(name="list")

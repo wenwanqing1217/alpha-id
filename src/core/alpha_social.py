@@ -11,7 +11,6 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 from core.storage import StorageBackend
-from core.storage_sqlite import SqliteStorage
 
 
 @dataclass
@@ -45,8 +44,12 @@ class AlphaSocialManager:
 
     def __init__(self, storage: Optional[StorageBackend] = None):
         if storage is None:
-            db_path = os.path.join(os.getenv("COZE_WORKSPACE_PATH", os.getcwd()), "assets", "alpha_id.db")
-            storage = SqliteStorage(db_path)
+            import tempfile
+
+            from core.storage import JsonStorage
+
+            db_path = os.path.join(tempfile.gettempdir(), "alpha_id_social.json")
+            self._storage = JsonStorage(db_path)
         else:
             self._storage = storage
 

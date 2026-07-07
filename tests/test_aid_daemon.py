@@ -40,16 +40,14 @@ def mock_all():
         canvas.create_oval.return_value = 1
         canvas.create_arc.return_value = 2
 
-        with patch("aid_daemon.HAS_SCREEN", True), patch(
-            "aid_daemon.HAS_WINDOW", True
-        ), patch("aid_daemon.HAS_OCR", True), patch(
-            "aid_daemon.HAS_MEMORY", False
-        ), patch(
-            "aid_daemon.HAS_LLM", False
-        ), patch(
-            "aid_daemon.HAS_TTS", False
-        ), patch(
-            "aid_daemon.HAS_SPEECH_RECOGNITION", False
+        with (
+            patch("aid_daemon.HAS_SCREEN", True),
+            patch("aid_daemon.HAS_WINDOW", True),
+            patch("aid_daemon.HAS_OCR", True),
+            patch("aid_daemon.HAS_MEMORY", False),
+            patch("aid_daemon.HAS_LLM", False),
+            patch("aid_daemon.HAS_TTS", False),
+            patch("aid_daemon.HAS_SPEECH_RECOGNITION", False),
         ):
             from aid_daemon import AIDFairy
 
@@ -99,9 +97,7 @@ class TestParseAndType:
     def test_empty_text_no_prefix(self, mock_all):
         fairy = mock_all
         fairy._parse_and_type("类型")
-        fairy._show_result.assert_called_once_with(
-            "用法：输入 你想说的话\n例如：输入 你好世界"
-        )
+        fairy._show_result.assert_called_once_with("用法：输入 你想说的话\n例如：输入 你好世界")
 
 
 class TestProcessCommand:

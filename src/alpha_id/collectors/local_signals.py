@@ -79,7 +79,9 @@ class LocalSignalsCollector(BaseCollector):
         if profile.persona.technical.primary_languages:
             lines.append(f"   检测到语言: {', '.join(profile.persona.technical.primary_languages)}")
         if profile.persona.communication.active_hours:
-            lines.append(f"   推测活跃时段: {', '.join(f'{h:02d}:00' for h in profile.persona.communication.active_hours[:5])}")
+            lines.append(
+                f"   推测活跃时段: {', '.join(f'{h:02d}:00' for h in profile.persona.communication.active_hours[:5])}"
+            )
         if profile.persona.temporal.work_rhythm:
             lines.append(f"   推测工作节奏: {profile.persona.temporal.work_rhythm}")
         return "\n".join(lines)
@@ -91,7 +93,14 @@ class LocalSignalsCollector(BaseCollector):
             Path.home() / ".bash_history",
             Path.home() / ".zsh_history",
             Path.home() / ".python_history",
-            Path.home() / "AppData" / "Roaming" / "Microsoft" / "Windows" / "PowerShell" / "PSReadLine" / "ConsoleHost_history.txt",
+            Path.home()
+            / "AppData"
+            / "Roaming"
+            / "Microsoft"
+            / "Windows"
+            / "PowerShell"
+            / "PSReadLine"
+            / "ConsoleHost_history.txt",
         ]:
             try:
                 if hist_path.exists():

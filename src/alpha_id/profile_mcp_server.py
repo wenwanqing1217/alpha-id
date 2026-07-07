@@ -147,7 +147,7 @@ def main(install: bool = False):
             import sys
 
             sys.path.insert(0, str(Path(__file__).parent.parent))
-            from core.did import verify
+            from alpha_id.crypto import verify
 
             sig = bytes.fromhex(signature_hex)
             # 尝试用常见公钥验证

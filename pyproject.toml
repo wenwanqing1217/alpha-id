@@ -1,6 +1,6 @@
 [project]
 name = "alpha-id-zix"
-version = "0.2.0"
+version = "0.3.0"
 description = "你的数字灵魂 — 用 ChatGPT 导出认识自己，让所有 AI 工具认识同一个你"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -14,18 +14,17 @@ classifiers = [
     "Topic :: Utilities",
 ]
 dependencies = [
-    "psycopg2-binary>=2.9,<3",
-    "sqlalchemy>=2.0",
     "cryptography>=42.0",
-    "bcrypt>=4.1",
-    "fastapi>=0.115",
-    "uvicorn[standard]>=0.30",
-    "pydantic>=2.9",
     "typer>=0.12",
-    "jinja2>=3.1",
     "pyyaml>=6.0",
-    "taskipy>=1.13",
 ]
+
+[project.optional-dependencies]
+web = ["fastapi>=0.115", "uvicorn[standard]>=0.30"]
+mcp = ["mcp>=1.0"]
+fairy = ["openai>=1.0", "pyautogui>=0.9", "Pillow>=10.0"]
+test = ["pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.5", "pyright>=1.1"]
+dev = ["alpha-id-zix[test,web,mcp]"]
 
 [project.urls]
 Homepage = "https://github.com/wenwanqing1217/alpha-id"
@@ -34,38 +33,9 @@ Documentation = "https://github.com/wenwanqing1217/alpha-id#readme"
 
 [project.scripts]
 aid = "alpha_id.cli:app"
-aid-mcp = "aid_mcp_server:main"
-aid-daemon = "aid_daemon:main"
-aid-api = "aid_api:main"
-
-[project.optional-dependencies]
-fairy = [
-    "openai>=1.0",
-    "pyautogui>=0.9",
-    "pygetwindow>=0.0",
-    "Pillow>=10.0",
-    "pytesseract>=0.3",
-]
-mcp-server = [
-    "mcp>=1.0",
-]
-test = [
-    "pytest>=8.0",
-    "pytest-asyncio>=1.0",
-    "pytest-cov>=5.0",
-    "ruff>=0.5",
-    "pyright>=1.1",
-]
-postgres = [
-    "asyncpg>=0.29",
-    "psycopg2-binary>=2.9,<3",
-]
-all = [
-    "alpha-id[fairy,mcp-server,test,postgres]",
-]
-dev = [
-    "alpha-id[test,postgres]",
-]
+aid-mcp = "entrypoints.mcp:main"
+aid-daemon = "entrypoints.daemon:main"
+aid-api = "entrypoints.api:main"
 
 [build-system]
 requires = ["setuptools>=75.0", "wheel"]

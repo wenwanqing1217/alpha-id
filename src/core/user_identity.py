@@ -12,10 +12,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel
-
 from core.storage import StorageBackend
-from core.storage_sqlite import SqliteStorage
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +32,8 @@ class UserProfile:
     status: str  # 状态（active/locked/inactive）
 
 
-class StatisticsResponse(BaseModel):
+@dataclass
+class StatisticsResponse:
     """系统统计信息"""
 
     total_users: int = 0
@@ -53,14 +51,14 @@ class UserIdentityManager:
     FOUNDER_CODE_HASH = "2147f64aa8dddda1aa5e6bd13fdebbca87a56b00f7948c9935d17da926a68a29"  # sha256("Alpha-1-zx")
 
     def __init__(self, storage: Optional[StorageBackend] = None):
-        # 默认使用 SQLite 存储
+        # 默认使用 JSON 存储
         if storage is None:
-            db_path = os.path.join(
-                os.getenv("COZE_WORKSPACE_PATH", os.getcwd()),
-                "assets",
-                "alpha_id.db",
-            )
-            storage = SqliteStorage(db_path)
+            import tempfile
+
+            from core.storage import JsonStorage
+
+            db_path = os.path.join(tempfile.gettempdir(), "alpha_id_users.json")
+            storage = JsonStorage(db_path)
 
         self._storage = storage
 

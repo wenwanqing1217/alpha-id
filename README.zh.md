@@ -1,103 +1,107 @@
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.12%2B-blue" alt="Python">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
-  <img src="https://img.shields.io/pypi/v/alpha-id-zix" alt="PyPI">
-  <img src="https://img.shields.io/pypi/dm/alpha-id-zix" alt="Downloads">
+  <img src="https://img.shields.io/badge/status-alpha--showcase-ready-purple" alt="Status">
 </p>
 
 <h1 align="center">Alpha-ID</h1>
 
 <p align="center">
   <strong>你的数字灵魂。</strong><br>
-  坐在所有 AI 工具之上——换模型、换平台、换设备，Alpha-ID 不换。
-</p>
-
-<p align="center">
-  <a href="README.md">English</a>
+  不是另一个 AI 助手，而是坐在所有 AI 工具之上的 Ghost Layer：换模型、换平台、换设备，Alpha-ID 不换。
 </p>
 
 ---
 
-## 🎯 P0: 现在就能用
-
-导出你的 ChatGPT 数据 → Alpha-ID 读取它 → 你看到自己的 AI 人格画像。
-
-```
-aid init                     # 创建 DID 数字身份
-aid collect chatgpt <zip>    # 导入 ChatGPT 导出 → 提取人格画像
-aid profile show             # 展示画像 — 总结、风格、技术偏好
-```
-
-**用样本数据试试：**
+## 30 秒讲清楚
 
 ```bash
 git clone https://github.com/wenwanqing1217/alpha-id
-cd alpha-id
-pip install -e .
+cd alpha-id/projects
+pip install -e ".[dev]"
 aid init
-aid collect chatgpt sample_data/chatgpt_export_sample.json
+aid profile mine --path .
 aid profile show
+aid profile web
+python scripts/demo.py
+python scripts/demo.py
 ```
 
-**你会看到：**
-```
-DID:   did:aid:xxx
-Since: 2026-06-05
-
-📋 人格画像
-  总结:     深夜技术探索者, Python/异步/Agent 方向
-  风格:     简洁直接, 偏好功能性编程
-  活跃时段: 22:00-03:00
-  关注话题: MCP 协议, Python 异步, Rust 函数式
-```
+初始化数字身份 -> 从本机痕迹里认出你 -> Web 端看到你的数字灵魂 -> 所有 AI 工具共用同一个你。
 
 ---
 
-## 为什么需要 Alpha-ID？
+## 为什么这个项目还要继续做
 
 | 场景 | 没有 Alpha-ID | 有 Alpha-ID |
-|------|--------------|------------|
-| 换 AI 工具 | 每个工具都要重新认识你 | 身份、人格、偏好自动跟着走 |
-| 跨平台 | ChatGPT 不认识你的 Claude 历史 | 一个 DID 走遍所有平台 |
-| 数字身份 | 分散在各平台 | 统一在私钥里 |
-| 隐私 | 数据归平台 | 私钥在你手里 |
+|:-----|:--------------|:------------|
+| 换 AI 工具 | 每次都重新自我介绍 | 身份、风格、记忆自动跟着走 |
+| 跨平台工作 | ChatGPT 不认识 Claude 历史 | 一个 `did:aid:` 贯穿所有工具 |
+| 本地痕迹 | 分散在对话、代码、浏览器里 | 统一成可解释的人格画像 |
+| 数据主权 | 记忆锁在平台服务器 | 私钥在本地，记忆可导出 |
+| 求职/展示 | 只能展示零散功能 | 能展示完整系统与魔法时刻 |
+
+**一句话**：现在缺的不是“又一个个人助理”，而是“属于用户的跨工具连续性层”。
 
 ---
 
-## 命令
+## 当前已经具备的能力
 
-| 命令 | 状态 | 说明 |
-|------|:----:|------|
-| `aid init` | ✅ P0 | 初始化 DID 数字身份 |
-| `aid collect chatgpt <zip>` | ✅ P0 | 从 ChatGPT 导出导入 |
-| `aid profile show` | ✅ P0 | 展示人格画像 |
-| `aid profile export --format json` | ✅ P0 | 导出 JSON 画像 |
-| `aid collect claude <zip>` | 🔜 P1 | 从 Claude 导入 |
-| `aid wizard start` | 🔜 P1 | 3 个问题快速生成画像（无导出数据时） |
-| `aid profile serve` | 🔜 P1 | MCP 身份注入（让 Claude Desktop 认识你） |
-| `aid profile web` | 🔜 P1 | 浏览器画像仪表盘 |
+- **DID 身份**：本地生成，`did:aid:`，私钥不离开本机。
+- **画像与记忆**：三层记忆、画像 Schema、来源质量、合并策略。
+- **采集框架**：ChatGPT / Claude / Cursor / Trae / Browser 都已预留。
+- **CLI 骨架**：`aid init`、`aid collect ...`、`aid profile ...` 已可继续扩展。
+- **Web 入口**：FastAPI + Web 入口已存在，可继续扩展星链宇宙和模拟盘。
+- **MCP 骨架**：已有 profile MCP server，可继续扩展自动注入链路。
+- **代码结构**：`src/` 下 88 个 Python 文件，约束统一，适合继续扩展。
 
 ---
 
-## 核心理念
+## 魔法时刻
 
-```
-Alpha-ID = DID（去中心化身份） + Persona（人格画像） + 私钥（你控制）
+> 用户运行 `aid profile mine --path .` 后，看到的不只是一张画像卡片。
+> 他看到的是：系统已经从他的代码、对话、浏览器痕迹里认出了他。
+
+这个瞬间说明你做的不只是工具，而是“数字存在”。
+
+---
+
+## 项目结构
+
+```text
+projects/
+  src/
+    alpha_id/       CLI、采集器、Web、MCP server
+    core/           零外部依赖核心：DID、记忆、双大脑、关系/风险
+    api/            FastAPI 路由
+    auth/           JWT 鉴权
+    tools/          桌面自动化工具
+    entrypoints/    统一入口：CLI / MCP / API / Daemon
+  docs/            核心文档与落地方案
+  tests/           自动化测试
 ```
 
-- **DID** — `did:aid:xxx`，W3C 标准去中心化身份
-- **Persona** — 从对话数据提取的沟通风格、技术偏好、工作节奏
-- **MCP** — 通过 Anthropic MCP 协议注入任何 AI 工具
-- **私钥在本地** — 没人能锁你的数据
+---
+
+## 路线图
+
+- **V1.0**：完整主链路 + Web 展示 + 模拟盘 MVP + 面试演示。
+- **V1.1**：采集扩展、MCP 自动注入、稳定性修复。
+- **V2.0**：双大脑拆分、因果图谱、A2A 轻量接入、语音通路。
+- **V3.0**：I2I + A2A 完整闭环、数字遗产、生态标准组件。
+
+---
+
+## 商业价值
+
+- **短期**：开源影响力 + 求职/面试叙事 + 本地主权 AI 顾问方案。
+- **中期**：面向重度 AI 用户的订阅服务：备份、同步、高级记忆分析。
+- **长期**：成为 A2A / Agent 生态里的“可信身份 + 记忆”标准层。
+
+这个项目的价值不只是代码，而是：**谁能先定义“用户数字存在”的标准，谁就能占据下一波 AI 产品的基础设施位。**
 
 ---
 
 ## License
 
 MIT
-
----
-
-<p align="center">
-  <i>项目入口：<a href="docs/AGENT_CONTEXT.md">AGENT_CONTEXT.md</a>（AI 必读）| 决策记录：<a href="docs/decisions.md">decisions.md</a> | 追踪：<a href="TODO.md">TODO.md</a></i>
-</p>

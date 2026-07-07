@@ -94,7 +94,9 @@ class ClaudeCollector(ChatGPTCollector):
             f"   句子长度: {profile.persona.communication.sentence_length or '未知'}",
         ]
         if profile.persona.communication.active_hours:
-            lines.append(f"   活跃时段: {', '.join(f'{h:02d}:00' for h in profile.persona.communication.active_hours[:5])}")
+            lines.append(
+                f"   活跃时段: {', '.join(f'{h:02d}:00' for h in profile.persona.communication.active_hours[:5])}"
+            )
         if profile.persona.technical.primary_languages:
             lines.append(f"   技术语言: {', '.join(profile.persona.technical.primary_languages)}")
         if profile.persona.technical.coding_style:

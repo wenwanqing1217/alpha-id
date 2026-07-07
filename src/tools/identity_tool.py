@@ -1,9 +1,9 @@
 import hashlib
 import re
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
-from langchain.tools import ToolRuntime, tool
+from tools.tool_decorator import ToolRuntime, tool
 
 
 def _safe_str(value: Any) -> str:
@@ -19,7 +19,7 @@ def initialize_security_profile(
     voice_print: str = None,
     biometric_data: str = None,
     security_questions: List[Dict[str, str]] = None,
-    runtime: ToolRuntime = None,
+    runtime: Optional[dict] = None,
 ) -> str:
     """
     初始化用户安全档案（首次配置）。

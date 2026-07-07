@@ -78,7 +78,6 @@ class ChatGPTCollector(BaseCollector):
 
     def summary(self, profile: AlphaIDProfile) -> str:
         """采集摘要"""
-        sources = profile.extra.get("x_collected_sources", [])
         lines = [
             "[ChatGPT] 对话数据采集",
             f"   沟通风格: {profile.persona.communication.tone or '未知'}",

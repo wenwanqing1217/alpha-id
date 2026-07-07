@@ -25,16 +25,18 @@ from typing import Any, Callable, Dict, List, Optional
 
 class MetricType(Enum):
     """指标类型"""
-    LATENCY = "latency"           # 延迟（毫秒）
-    ACCURACY = "accuracy"         # 准确率（0-100）
-    TOKEN_USAGE = "token_usage"   # Token 消耗
-    MEMORY_COUNT = "memory_count" # 记忆数量
-    ERROR_RATE = "error_rate"     # 错误率（0-100）
-    THROUGHPUT = "throughput"     # 吞吐量（请求/秒）
+
+    LATENCY = "latency"  # 延迟（毫秒）
+    ACCURACY = "accuracy"  # 准确率（0-100）
+    TOKEN_USAGE = "token_usage"  # Token 消耗
+    MEMORY_COUNT = "memory_count"  # 记忆数量
+    ERROR_RATE = "error_rate"  # 错误率（0-100）
+    THROUGHPUT = "throughput"  # 吞吐量（请求/秒）
 
 
 class LogLevel(Enum):
     """日志级别"""
+
     DEBUG = "debug"
     INFO = "info"
     WARNING = "warning"
@@ -44,6 +46,7 @@ class LogLevel(Enum):
 
 class AlertSeverity(Enum):
     """告警严重程度"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -53,6 +56,7 @@ class AlertSeverity(Enum):
 @dataclass
 class Metric:
     """监控指标"""
+
     name: str
     type: MetricType
     value: float
@@ -63,6 +67,7 @@ class Metric:
 @dataclass
 class LogEntry:
     """日志条目"""
+
     level: LogLevel
     message: str
     timestamp: float
@@ -73,6 +78,7 @@ class LogEntry:
 @dataclass
 class Alert:
     """告警"""
+
     name: str
     severity: AlertSeverity
     message: str
@@ -85,6 +91,7 @@ class Alert:
 @dataclass
 class TraceSpan:
     """追踪跨度"""
+
     trace_id: str
     span_id: str
     parent_span_id: str
@@ -162,13 +169,7 @@ class StructuredLogger:
         self.logs: List[LogEntry] = []
         self.max_logs = 10000
 
-    def log(
-        self,
-        level: LogLevel,
-        message: str,
-        context: Dict[str, Any] = {},
-        trace_id: str = ""
-    ):
+    def log(self, level: LogLevel, message: str, context: Dict[str, Any] = {}, trace_id: str = ""):
         """记录日志"""
         entry = LogEntry(
             level=level,
@@ -181,7 +182,7 @@ class StructuredLogger:
 
         # 限制日志数量
         if len(self.logs) > self.max_logs:
-            self.logs = self.logs[-self.max_logs:]
+            self.logs = self.logs[-self.max_logs :]
 
         # 写入文件
         if self.storage_path:
@@ -252,7 +253,7 @@ class AlertManager:
         metric_name: str,
         warning_threshold: float,
         critical_threshold: float,
-        comparison: str = "greater"  # "greater" or "less"
+        comparison: str = "greater",  # "greater" or "less"
     ):
         """设置阈值"""
         self.thresholds[metric_name] = {
@@ -351,12 +352,7 @@ class TraceCollector:
         self.current_spans: Dict[str, TraceSpan] = {}
 
     def start_span(
-        self,
-        trace_id: str,
-        span_id: str,
-        operation: str,
-        parent_span_id: str = "",
-        tags: Dict[str, str] = {}
+        self, trace_id: str, span_id: str, operation: str, parent_span_id: str = "", tags: Dict[str, str] = {}
     ) -> TraceSpan:
         """开始追踪跨度"""
         span = TraceSpan(
@@ -441,7 +437,9 @@ class ObservabilitySystem:
         self.alerts.set_threshold("error_rate", warning_threshold=5, critical_threshold=10, comparison="greater")
 
         # Token 消耗阈值
-        self.alerts.set_threshold("token_usage", warning_threshold=10000, critical_threshold=50000, comparison="greater")
+        self.alerts.set_threshold(
+            "token_usage", warning_threshold=10000, critical_threshold=50000, comparison="greater"
+        )
 
     def record_latency(self, operation: str, latency_ms: float, trace_id: str = ""):
         """记录延迟"""
@@ -453,7 +451,9 @@ class ObservabilitySystem:
 
     def record_token_usage(self, operation: str, tokens: int, trace_id: str = ""):
         """记录 Token 消耗"""
-        self.metrics.record("token_usage", MetricType.TOKEN_USAGE, tokens, {"operation": operation, "trace_id": trace_id})
+        self.metrics.record(
+            "token_usage", MetricType.TOKEN_USAGE, tokens, {"operation": operation, "trace_id": trace_id}
+        )
 
     def record_error(self, operation: str, error_type: str, trace_id: str = ""):
         """记录错误"""
@@ -482,7 +482,6 @@ class ObservabilitySystem:
     def check_health(self) -> Dict[str, Any]:
         """检查系统健康状态"""
         # 检查告警
-        new_alerts = self.alerts.check_alerts()
 
         # 获取指标摘要
         metrics_summary = self.metrics.get_all_aggregations()
