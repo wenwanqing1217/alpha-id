@@ -232,7 +232,7 @@ def collect() -> Optional[AlphaIDProfile]:
     all_techs = tech_interests + tech_from_history
     top_techs = [tech for tech, _ in all_techs.most_common(10)]
 
-    # 推断编程语言
+    # 推断编程语言（书签 + 历史）
     lang_keywords = {
         "Python": ["python", "pypi", "docs.python"],
         "TypeScript": ["typescript", "ts"],
@@ -240,6 +240,8 @@ def collect() -> Optional[AlphaIDProfile]:
         "Rust": ["rust", "crates.io", "docs.rs"],
         "Java": ["java", "spring", "maven"],
         "Go": ["go", "golang"],
+        "Kubernetes": ["kubernetes", "k8s"],
+        "Docker": ["docker"],
     }
     detected_langs = []
     for lang, keywords in lang_keywords.items():
@@ -249,9 +251,9 @@ def collect() -> Optional[AlphaIDProfile]:
                 break
 
     if detected_langs:
-        profile.persona.technical.primary_languages = list(set(detected_langs))[:8]
+        profile.persona.technical.primary_languages = list(dict.fromkeys(detected_langs))[:8]
 
-    # 框架偏好（从书签中提取）
+    # 框架偏好（书签 + 历史）
     frameworks = []
     for bm in bookmarks:
         url = bm["url"].lower()
@@ -263,8 +265,29 @@ def collect() -> Optional[AlphaIDProfile]:
             frameworks.append("Spring")
         elif "django" in url:
             frameworks.append("Django")
+    for h in history:
+        url = h["url"].lower()
+        if "react" in url:
+            frameworks.append("React")
+        elif "vue" in url:
+            frameworks.append("Vue")
+        elif "spring" in url:
+            frameworks.append("Spring")
+        elif "django" in url:
+            frameworks.append("Django")
     if frameworks:
-        profile.persona.technical.framework_preferences = list(set(frameworks))[:5]
+        profile.persona.technical.framework_preferences = list(dict.fromkeys(frameworks))[:5]
+
+    # 沟通风格（浏览行为推断）
+    if len(history) > 50:
+        profile.persona.communication.sentence_length = "medium"
+    else:
+        profile.persona.communication.sentence_length = "short"
+
+    if hour_counts:
+        peak = max(hour_counts.values())
+        if peak > 10:
+            profile.persona.communication.tone = "focused"
 
     # 活跃时段
     if hour_counts:

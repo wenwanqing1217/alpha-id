@@ -158,7 +158,7 @@ def collect() -> Optional[AlphaIDProfile]:
         lang = EXT_TO_LANG.get(ext)
         if lang and lang not in all_langs:
             all_langs.append(lang)
-    profile.persona.technical.primary_languages = all_langs[:8]
+    profile.persona.technical.primary_languages = list(dict.fromkeys(all_langs))[:8]
 
     # 编码风格
     has_ts = any("TypeScript" in lang for lang in all_langs)
@@ -172,7 +172,7 @@ def collect() -> Optional[AlphaIDProfile]:
 
     # 框架偏好
     frameworks = []
-    for ext in exts:
+    for ext, count in exts.most_common(20):
         if ext == ".vue":
             frameworks.append("Vue")
         elif ext in (".jsx", ".tsx"):
@@ -180,7 +180,7 @@ def collect() -> Optional[AlphaIDProfile]:
         elif ext == ".py":
             frameworks.append("Python")
     if frameworks:
-        profile.persona.technical.framework_preferences = list(set(frameworks))[:5]
+        profile.persona.technical.framework_preferences = list(dict.fromkeys(frameworks))[:5]
 
     # 活跃时段
     if active_dates:
@@ -201,6 +201,18 @@ def collect() -> Optional[AlphaIDProfile]:
         total = night + day
         if total > 0:
             profile.persona.temporal.work_rhythm = "night_owl" if night / total > 0.35 else "daytime"
+
+    # 沟通风格（代码密度推断）
+    total_edits = sum(1 for _ in exts.elements())
+    if total_edits > 200:
+        profile.persona.communication.tone = "concise"
+        profile.persona.communication.sentence_length = "short"
+    elif total_edits > 50:
+        profile.persona.communication.tone = "direct"
+        profile.persona.communication.sentence_length = "medium"
+    else:
+        profile.persona.communication.tone = "exploratory"
+        profile.persona.communication.sentence_length = "long"
 
     # 元信息
     profile.extra["source"] = "trae"

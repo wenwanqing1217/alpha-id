@@ -112,10 +112,27 @@ def _check_browser() -> Optional[DataSource]:
     return None
 
 
+def _check_git() -> Optional[DataSource]:
+    """本地 Git 仓库"""
+    try:
+        from alpha_id.collectors.git import GitCollector
+
+        if GitCollector().detect():
+            return {
+                "name": "Git",
+                "data_dir": None,
+                "sources": [{"type": "repositories", "collect_cmd": "aid collect git"}],
+            }
+    except Exception:
+        pass
+    return None
+
+
 DETECTORS = [
     ("AI 编程工具", [_check_trae, _check_codex, _check_codexplusplus]),
     ("聊天数据", [_check_chatgpt]),
     ("浏览器数据", [_check_browser]),
+    ("版本控制", [_check_git]),
 ]
 
 

@@ -32,7 +32,7 @@ class ClaudeCollector(ChatGPTCollector):
     )
 
     def detect(self) -> bool:
-        for p in [Path.home() / "Downloads", Path.home() / "Desktop"]:
+        for p in [Path.home() / "Downloads", Path.home() / "Desktop", Path.home() / ".alpha-id"]:
             for f in p.glob("*claude*"):
                 if f.suffix in (".zip", ".json"):
                     return True

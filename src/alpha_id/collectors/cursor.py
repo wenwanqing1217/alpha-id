@@ -43,7 +43,7 @@ def detect() -> bool:
         if d.exists():
             return True
     # 检查导出文件
-    for p in [Path.home() / "Downloads", Path.home() / "Desktop"]:
+    for p in [Path.home() / "Downloads", Path.home() / "Desktop", Path.home() / ".alpha-id"]:
         for f in p.glob("*cursor*"):
             if f.suffix in (".zip", ".db", ".sqlite"):
                 return True

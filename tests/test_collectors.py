@@ -97,3 +97,38 @@ class TestBrowserHistory:
         bad_file.write_text("not a database file", encoding="utf-8")
         result = _read_history(path)
         assert result == [], "损坏文件应返回空列表"
+
+
+# ── Git 采集器测试 ──
+
+
+class TestGitCollector:
+    """Git 仓库采集器测试"""
+
+    def test_detect_finds_repo(self, tmp_path, monkeypatch):
+        monkeypatch.setattr("alpha_id.collectors.git.Path.home", lambda: tmp_path)
+        monkeypatch.setattr("alpha_id.collectors.git.Path.cwd", lambda: tmp_path)
+        repo = tmp_path / "projects" / "myapp"
+        repo.mkdir(parents=True)
+        (repo / ".git").mkdir()
+        (repo / "main.py").write_text("print('hi')", encoding="utf-8")
+
+        from alpha_id.collectors.git import GitCollector
+
+        assert GitCollector().detect() is True
+
+    def test_collect_returns_profile(self, tmp_path, monkeypatch):
+        monkeypatch.setattr("alpha_id.collectors.git.Path.home", lambda: tmp_path)
+        monkeypatch.setattr("alpha_id.collectors.git.Path.cwd", lambda: tmp_path)
+        repo = tmp_path / "projects" / "myapp"
+        repo.mkdir(parents=True)
+        (repo / ".git").mkdir()
+        (repo / "main.py").write_text("print('hi')", encoding="utf-8")
+        (repo / "app.tsx").write_text("export default () => <div/>", encoding="utf-8")
+
+        from alpha_id.collectors.git import GitCollector
+
+        profile = GitCollector().collect()
+        assert profile is not None
+        assert "Python" in profile.persona.technical.primary_languages
+        assert "TypeScript" in profile.persona.technical.primary_languages
