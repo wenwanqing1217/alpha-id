@@ -15,9 +15,15 @@
 - 废除自动生效：旧版“core/ 永远零外部依赖”“永远不用 LangChain”“绝对不改旧测试”
 - 当前策略：优先新增测试；依赖/框架重新评估，不自动沿用旧禁令
 
+## 已推进
+
+- 采集器真实数据回流：Browser / Trae / Claude / Cursor / Git
+- `aid collect scan` 已可自动发现并合并多源画像
+- 测试修复：`tests/test_user_identity.py` 已恢复（10 passed）
+- 面试包：30s/3min demo script + README 更新
+
 ## 下一步
 
 - 画像质量：置信度 + 脱敏 + 多轮合并
-- 采集扩展：Claude / Cursor / Git / Browser 真实数据回流
-- 测试修复：剩余 21 个历史失败用例
-- 面试包：30s/3min demo script + Web 展示优化
+- 测试修复：剩余 20 个历史失败用例
+- Web/MCP：采集结果到个人空间与 MCP 资源
