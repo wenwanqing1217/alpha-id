@@ -50,9 +50,15 @@ class GitCollector(BaseCollector):
         except Exception:
             return False
 
+    def collect(self, input_path=None) -> Optional[AlphaIDProfile]:
+        repo = _find_repo()
+        if repo is None:
+            return None
+        return self.collect_for_path(repo)
+
     def collect_for_path(self, repo_path: Path) -> Optional[AlphaIDProfile]:
         repo = Path(repo_path)
-        if repo is None:
+        if not repo.exists() or not repo.is_dir():
             return None
 
         profile = AlphaIDProfile(
@@ -106,10 +112,13 @@ class GitCollector(BaseCollector):
         return profile
 
     def summary(self, profile: AlphaIDProfile) -> str:
-        repo = profile.extra.get("repo", "?")
+        return self.summary_for_path(Path(profile.extra.get("repo", ".")), profile)
+
+    def summary_for_path(self, repo_path: Path, profile: AlphaIDProfile) -> str:
+        repo = profile.extra.get("repo", str(repo_path))
         langs = profile.persona.technical.primary_languages or []
         lines = [
-            "[Git] 仓库痕迹采集",
+            "[Git] 仓库影迹采集",
             f"   仓库: {repo}",
             f"   主要语言: {', '.join(langs[:5]) if langs else '未知'}",
         ]

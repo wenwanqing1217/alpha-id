@@ -71,18 +71,6 @@ def _load_profile_dict() -> Dict[str, Any]:
     return {}
 
 
-@app.get("/api/profile")
-async def api_profile() -> JSONResponse:
-    data = _load_profile_dict()
-    return JSONResponse(
-        {
-            "profile": data,
-            "collected_sources": data.get("x_collected_sources", []),
-            "provenance": data.get("x_provenance", {}),
-        }
-    )
-
-
 @app.get("/profile", response_class=HTMLResponse)
 async def profile_page():
     html = """<!DOCTYPE html>
@@ -188,6 +176,18 @@ def _user_exists(alpha_id: str) -> bool:
 
 
 # ── 路由 ──
+
+
+@app.get("/api/profile")
+async def api_profile() -> JSONResponse:
+    data = _load_profile_dict()
+    return JSONResponse(
+        {
+            "profile": data,
+            "collected_sources": data.get("x_collected_sources", []),
+            "provenance": data.get("x_provenance", {}),
+        }
+    )
 
 
 @app.get("/", response_class=HTMLResponse)

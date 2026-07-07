@@ -1,8 +1,4 @@
-"""
-AID Codex — 代码理解 / 编辑 / 生成工具
-通过 MCP 暴露为可调用的工具，FairyBrain 可以直接理解自然语言代码需求。
-"""
-
+"""AID Codex — 代码理解 / 编辑 / 生成工具"""
 import os
 import re
 import subprocess
@@ -13,7 +9,6 @@ WORKSPACE = Path(__file__).resolve().parent
 
 
 def safe_path(path: str) -> Path:
-    """安全解析路径，防止目录遍历"""
     p = Path(path).resolve()
     if not str(p).startswith(str(WORKSPACE.resolve())):
         raise PermissionError(f"Access denied: {path}")
@@ -21,8 +16,13 @@ def safe_path(path: str) -> Path:
 
 
 def read_code(path: str, line_start: int = 1, line_end: int = 0) -> str:
-    """读取代码文件，支持行范围"""
-    p = safe_path(path)
+    p = Path(path)
+    if not p.exists():
+        return f"[Error] File not found: {path}"
+    try:
+        p = safe_path(path)
+    except PermissionError:
+        return f"[Error] Access denied: {path}"
     if not p.is_file():
         return f"[Error] File not found: {path}"
     lines = p.read_text(encoding="utf-8", errors="replace").splitlines()
@@ -37,7 +37,6 @@ def read_code(path: str, line_start: int = 1, line_end: int = 0) -> str:
 
 
 def search_code(pattern: str, path: str = "") -> str:
-    """在代码库中搜索文本或正则"""
     search_root = safe_path(path) if path else WORKSPACE
     if not search_root.is_dir():
         return f"[Error] Not a directory: {path}"
@@ -65,7 +64,6 @@ def search_code(pattern: str, path: str = "") -> str:
 
 
 def edit_code(path: str, old_string: str, new_string: str) -> str:
-    """替换文件中的文本（类似 sed）"""
     p = safe_path(path)
     if not p.is_file():
         return f"[Error] File not found: {path}"
@@ -79,10 +77,7 @@ def edit_code(path: str, old_string: str, new_string: str) -> str:
 
 
 def run_python(code: str) -> str:
-    """在隔离环境中执行 Python 代码片段"""
     import tempfile
-
-    # 方案 A: subprocess + capture_output (Linux/macOS 首选)
     for attempt in range(2):
         try:
             result = subprocess.run(
@@ -101,18 +96,15 @@ def run_python(code: str) -> str:
             return "[Error] Execution timed out"
         except OSError:
             break
-
-    # 方案 B: 临时文件 + shell 重定向（Windows 管道不可用时）
     tmpdir = tempfile.mkdtemp(prefix="codex_")
     script_path = os.path.join(tmpdir, "script.py")
     stdout_path = os.path.join(tmpdir, "stdout.txt")
     stderr_path = os.path.join(tmpdir, "stderr.txt")
-
     with open(script_path, "w", encoding="utf-8") as f:
         f.write(code)
-
     try:
-        ret = os.system(f'"{sys.executable}" "{script_path}" > "{stdout_path}" 2> "{stderr_path}"')
+        cmd = f'"{sys.executable}" "{script_path}" > "{stdout_path}" 2> "{stderr_path}"'
+        ret = os.system(cmd)
         if ret < 0:
             return f"[Error] Process killed by signal {-ret}"
         out = open(stdout_path, encoding="utf-8").read().strip()
@@ -133,22 +125,26 @@ def run_python(code: str) -> str:
 
 
 def list_files(path: str = ".", pattern: str = "*.py") -> str:
-    """列出目录中的文件"""
-    p = safe_path(path)
+    p = Path(path).resolve()
+    allowed = str(WORKSPACE.resolve())
+    project_root = str(WORKSPACE.parent.resolve())
+    target = str(p)
+    if not (target == allowed or target.startswith(allowed + "\\") or target == project_root or target.startswith(project_root + "\\")):
+        return f"[Error] Access denied: {path}"
     if not p.is_dir():
         return f"[Error] Not a directory: {path}"
     files = sorted(p.rglob(pattern))
     files = [f for f in files if ".venv" not in str(f) and "__pycache__" not in str(f)]
+    files = [f for f in files if str(f.resolve()).startswith(allowed)]
     if not files:
         return f"No files matching '{pattern}' in {path}"
-    lines = [str(f.relative_to(WORKSPACE)) for f in files[:50]]
-    if len(files) > 50:
-        lines.append(f"... and {len(files) - 50} more")
+    lines = [str(f.relative_to(WORKSPACE)) for f in files[:200]]
+    if len(files) > 200:
+        lines.append(f"... and {len(files) - 200} more")
     return "\n".join(lines)
 
 
 def count_loc(path: str = ".") -> str:
-    """统计 Python 代码行数"""
     p = safe_path(path)
     total = 0
     file_counts = []
@@ -166,8 +162,6 @@ def count_loc(path: str = ".") -> str:
 
 
 class Codex:
-    """代码工具箱"""
-
     def __init__(self, workspace: str = ""):
         global WORKSPACE
         if workspace:
