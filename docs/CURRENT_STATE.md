@@ -16,6 +16,7 @@
 - **MCP 注入**：`aid-mcp` 可对外暴露 `profile://identity`、`profile://style`、`profile://memory` 等资源。
 - **Git 采集**：`aid collect git --path .` 已可用，可把项目痕迹回填进画像。
 - **测试基线**：`tests/test_mcp_server.py` 的 Codex / MemoryGraph / tool list 组已验证通过；`tests/test_aid_daemon.py` 兼容层已恢复。
+- **扩展验证**：`tests/test_mining.py`、`tests/test_signer.py`、`tests/test_did.py`、`tests/test_memory_graph.py`、`tests/test_codex.py`、`tests/test_ocr.py`、`tests/test_identity_tool.py`、`tests/test_cli.py`、`tests/test_api.py`、`tests/test_web.py`、`tests/test_daemon.py`、`tests/test_collectors.py`、`tests/test_git_collect_cli.py`、`tests/test_cursor_collector.py`、`tests/test_agent_cli.py`、`tests/test_agent.py`、`tests/test_agent_react.py`、`tests/test_action_engine.py` 均已通过。
 
 ---
 
@@ -81,4 +82,7 @@ cd D:\AID\projects
 python -m pytest tests/test_mcp_server.py::TestCodexTools -q
 python -m pytest tests/test_mcp_server.py::test_all_tools_listed -q
 python -m pytest tests/test_mcp_server.py::TestMemoryGraphTools -q
+python -m pytest tests/test_mining.py tests/test_signer.py tests/test_did.py tests/test_memory_graph.py tests/test_codex.py tests/test_ocr.py tests/test_identity_tool.py -q
+python -m pytest tests/test_cli.py tests/test_api.py tests/test_web.py tests/test_daemon.py -q
+python -m pytest tests/test_collectors.py tests/test_git_collect_cli.py tests/test_cursor_collector.py tests/test_agent_cli.py tests/test_agent.py tests/test_agent_react.py tests/test_action_engine.py -q
 ```
