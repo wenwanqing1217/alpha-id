@@ -1,7 +1,8 @@
-﻿<p align="center">
+<p align="center">
   <img src="https://img.shields.io/badge/python-3.12%2B-blue" alt="Python">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
-  <img src="https://img.shields.io/badge/status-alpha--showcase-ready-purple" alt="Status">
+  <img src="https://img.shields.io/badge/status-alpha--showcase--ready-purple" alt="Status">
+  <img src="https://img.shields.io/badge/focus-Ghost%20Layer%20%2F%20Digital%20Identity%20Infra-ff6" alt="Focus">
 </p>
 
 <h1 align="center">Alpha-ID</h1>
@@ -9,6 +10,10 @@
 <p align="center">
   <strong>你的数字灵魂。</strong><br>
   不是另一个 AI 助手，是坐在所有 AI 工具之上的 Ghost Layer：换模型、换平台、换设备，Alpha-ID 不换。
+</p>
+
+<p align="center">
+  <strong>一个数字身份，所有 AI 工具都认识同一个你。</strong>
 </p>
 
 ---
@@ -26,7 +31,7 @@ aid profile web
 python scripts/demo.py
 ```
 
-一个命令生成 DID，一条命令从本机痕迹里认出你，Web 端看到你的数字灵魂，MCP 客户端直接读到同一个你。
+**它解决的核心问题**：你在 ChatGPT、Claude、Cursor、浏览器里的记忆和身份都是孤岛；Alpha-ID 用本地 DID + 本机痕迹挖掘 + MCP 注入，让所有工具共享同一个你。
 
 ---
 
@@ -36,7 +41,7 @@ python scripts/demo.py
 |:-----|:--------------|:------------|
 | 换 AI 工具 | 每次都重新自我介绍 | 身份、风格、记忆自动跟着走 |
 | 跨平台工作 | ChatGPT 不认识 Claude 历史 | 一个 `did:aid:` 贯穿所有工具 |
-| 本地痕迹 | 分散在聊天、代码、浏览器里 | 统一成可解释的人格画像 |
+| 本机痕迹 | 分散在代码、聊天、浏览器里 | 统一成可解释的人格画像 |
 | 数据主权 | 记忆锁在平台服务器 | 私钥在本地，记忆可导出 |
 | 面试/展示 | 只有零散功能 demo | 有完整系统叙事和魔法时刻 |
 
@@ -44,7 +49,17 @@ python scripts/demo.py
 
 ---
 
-## 能力边界（当前已完成）
+## 魔法时刻
+
+> 用户运行 `aid profile mine --path .` 后，看到的不只是一张卡片。
+> 他看到的是：系统已经先扫描了他电脑里**实际存在**的痕迹，再按这些痕迹认出他。
+> 不会先假设他一定有 ChatGPT / Claude / Cursor，而是先看他**有什么**。
+
+这个瞬间比“又一个导入器”重要，因为它解释了你到底在做一种什么新东西：**不是工具，是数字存在。**
+
+---
+
+## 已完成能力
 
 - **DID 身份层**：本地 Ed25519，`did:aid:`，私钥不离开本机。
 - **画像/记忆层**：三层记忆、画像 Schema、来源质量、合并策略。
@@ -56,15 +71,6 @@ python scripts/demo.py
 
 ---
 
-## 魔法时刻
-
-> 用户运行 `aid profile mine --path .` 后，看到的不只是一张卡片。
-> 他看到的是：系统已经先扫描了他电脑里**实际存在**的痕迹，再按这些痕迹认出他。
-> 不会先假设他一定有 ChatGPT / Claude / Cursor，而是先看他**有什么**。
-这个瞬间比“又一个导入器”重要，因为它解释了你到底在做一种什么新东西：**不是工具，是数字存在。**
-
----
-
 ## 项目结构
 
 ```text
@@ -73,7 +79,7 @@ projects/
     alpha_id/       CLI、采集器、Web、MCP server
     core/           零外部依赖核心：DID、记忆、双大脑、关系/风险
     api/            FastAPI 路由
-- **采集器层**：先扫描本机实际痕迹，再按发现结果推荐采集路径；ChatGPT / Claude / Cursor / Trae / Browser 都按需支持。
+    auth/           JWT auth
     tools/          桌面自动化工具
     entrypoints/    统一入口：CLI / MCP / API / Daemon
   docs/            核心文档与落地方案
@@ -104,10 +110,3 @@ projects/
 ## License
 
 MIT
-
-
-## 并行推进策略
-
-- 主链路与 Git 采集、Web 个人空间、MCP 资源同步迭代，避免单线程等太久。
-- 先保证 `Phase 1 demo` 能跑；同时修剩余历史测试，不把面试展示押在单点成功上。
-- 完整愿景保留，但用“最小可展示闭环”落地，再逐步补 DID/I2I/A2A 深度。
