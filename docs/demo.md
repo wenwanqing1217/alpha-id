@@ -27,3 +27,13 @@ python scripts/demo.py
 ## 公开 README 一句话
 
 > 不是另一个 AI 助理，是坐在所有 AI 工具之上的 Ghost Layer。先看本机有什么，再决定采集什么；换工具、换平台，Alpha-ID 不换。
+
+## 可面试版本检查清单
+
+- [ ] `aid init`
+- [ ] `aid profile mine --path .`
+- [ ] `aid profile show`
+- [ ] `aid profile web`
+- [ ] `python scripts/demo.py`
+- [ ] `aid collect git --path .`
+- [ ] 说明 `/api/profile` 与 MCP `profile://identity` 的数据连续性

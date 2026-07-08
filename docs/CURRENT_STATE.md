@@ -34,3 +34,14 @@
 - Git 采集器：新增 `aid collect git --path .` 手工命令，scan 也会自动纳入 Git 检测。
 - 测试一致性：修复 `tests/test_codex.py`、`tests/test_fairy_agent.py` 的 wording/availability 回归。
 - 面试包：README 增加当前主链路、并行推进策略、公开状态说明。
+
+## 最新修复
+
+- 统一 Phase 2 基线提交：
+  - `8280f2f` chore: phase2 baseline + git collector + web profile api + interview polish
+  - `bb289d4` fix: stabilize codex, git collector, web profile route, and fairy agent tests
+- 测试基线：已跑通 `831 passed`（排除 `tests/test_mcp_server.py`、`tests/test_aid_daemon.py` 两个长期遗留）。
+- Web profile API：`/api/profile` 已接入真实 FastAPI 路由，`/profile` 页面可展示 collected sources + provenance。
+- Git 采集器：`aid collect git --path .` 可用，collector 同时保留 `collect()` / `collect_for_path()` 双通路。
+- Codex 工具：`read_code` / `list_files` 路径校验与返回文案已对齐当前测试预期。
+- 面试包：README 已补当前主链路、并行推进策略、Git 采集器说明。

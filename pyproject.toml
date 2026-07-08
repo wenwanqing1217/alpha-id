@@ -33,7 +33,7 @@ Documentation = "https://github.com/wenwanqing1217/alpha-id#readme"
 
 [project.scripts]
 aid = "alpha_id.cli:app"
-aid-mcp = "entrypoints.mcp:main"
+aid-mcp = "entrypoints.aid_mcp_server:main"
 aid-daemon = "entrypoints.daemon:main"
 aid-api = "entrypoints.api:main"
 

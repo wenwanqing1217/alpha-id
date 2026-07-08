@@ -1,10 +1,9 @@
 """Tests for AID desktop fairy — command parsing & routing"""
 
 import os
-import sys
-import re
 import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
+import sys
+from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
@@ -41,13 +40,13 @@ def mock_all():
         canvas.create_arc.return_value = 2
 
         with (
-            patch("aid_daemon.HAS_SCREEN", True),
-            patch("aid_daemon.HAS_WINDOW", True),
-            patch("aid_daemon.HAS_OCR", True),
-            patch("aid_daemon.HAS_MEMORY", False),
-            patch("aid_daemon.HAS_LLM", False),
-            patch("aid_daemon.HAS_TTS", False),
-            patch("aid_daemon.HAS_SPEECH_RECOGNITION", False),
+            patch("entrypoints.daemon.HAS_SCREEN", True),
+            patch("entrypoints.daemon.HAS_WINDOW", True),
+            patch("entrypoints.daemon.HAS_OCR", True),
+            patch("entrypoints.daemon.HAS_MEMORY", False),
+            patch("entrypoints.daemon.HAS_LLM", False),
+            patch("entrypoints.daemon.HAS_TTS", False),
+            patch("entrypoints.daemon.HAS_SPEECH_RECOGNITION", False),
         ):
             from aid_daemon import AIDFairy
 
@@ -105,19 +104,19 @@ class TestProcessCommand:
 
     def test_screenshot_keyword(self, mock_all):
         fairy = mock_all
-        with patch.object(fairy, "_quick_look") as mock_method:
+        with patch.object(fairy, "_quick_look_result") as mock_method:
             fairy._process_command("看屏幕")
             mock_method.assert_called_once()
 
     def test_window_keyword(self, mock_all):
         fairy = mock_all
-        with patch.object(fairy, "_list_windows") as mock_method:
+        with patch.object(fairy, "_list_windows_result") as mock_method:
             fairy._process_command("窗口列表")
             mock_method.assert_called_once()
 
     def test_mouse_keyword(self, mock_all):
         fairy = mock_all
-        with patch.object(fairy, "_show_mouse_position") as mock_method:
+        with patch.object(fairy, "_mouse_position_result") as mock_method:
             fairy._process_command("鼠标位置")
             mock_method.assert_called_once()
 
@@ -158,13 +157,13 @@ class TestProcessCommand:
 
     def test_case_insensitive(self, mock_all):
         fairy = mock_all
-        with patch.object(fairy, "_quick_look") as mock_method:
+        with patch.object(fairy, "_quick_look_result") as mock_method:
             fairy._process_command("SCREENSHOT")
             mock_method.assert_called_once()
 
     def test_english_screenshot(self, mock_all):
         fairy = mock_all
-        with patch.object(fairy, "_quick_look") as mock_method:
+        with patch.object(fairy, "_quick_look_result") as mock_method:
             fairy._process_command("screenshot")
             mock_method.assert_called_once()
 

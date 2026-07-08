@@ -15,6 +15,9 @@ from typing import Optional
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# 兼容 legacy `aid_daemon` 测试导入：让 patch("aid_daemon.*") 落到当前模块。
+sys.modules.setdefault("aid_daemon", sys.modules[__name__])
+
 # ── 版本 ──
 try:
     from alpha_id import __version__
