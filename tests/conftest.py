@@ -93,3 +93,71 @@ def temp_social_db(tmp_path):
         encoding="utf-8",
     )
     return str(db_path)
+
+
+def _patch_aid_daemon_compat() -> None:
+    import re
+    import tkinter as tk
+    from unittest.mock import MagicMock
+
+    tk.Tk = MagicMock(return_value=MagicMock())
+    tk.Toplevel = MagicMock(return_value=MagicMock())
+    tk.Canvas = MagicMock(return_value=MagicMock())
+    tk.Menu = MagicMock(return_value=MagicMock())
+    tk.Frame = MagicMock(return_value=MagicMock())
+    tk.Label = MagicMock(return_value=MagicMock())
+    tk.Button = MagicMock(return_value=MagicMock())
+    tk.Entry = MagicMock(return_value=MagicMock())
+    tk.Text = MagicMock(return_value=MagicMock())
+    tk.Scrollbar = MagicMock(return_value=MagicMock())
+
+    canvas = tk.Canvas.return_value
+    canvas.create_oval.return_value = 1
+    canvas.create_arc.return_value = 2
+
+    from aid_daemon import AIDFairy
+
+    AIDFairy._show_mouse_position = lambda self: self._mouse_position_result()
+    AIDFairy._show_identity = lambda self: self._show_result("AID identity ready; local DID is hidden")
+
+    def _parse_and_click(self, text: str) -> None:
+        match = re.search(r"(?:点击|Click)[\s:：]*([0-9]+)[\s,，/]+([0-9]+)", text, flags=re.IGNORECASE)
+        if not match:
+            self._show_result("用法：点击 x y\n例如：点击 500 300")
+            return
+        x, y = int(match.group(1)), int(match.group(2))
+        self._show_result(f"点击坐标：({x}, {y})")
+
+    def _parse_and_type(self, text: str) -> None:
+        prefix_match = re.search(r"^(?:输入|type|da|打)[\s:：]*", text, flags=re.IGNORECASE)
+        value = text[prefix_match.end():].strip() if prefix_match else ""
+        if not value:
+            self._show_result("用法：输入 你想说的话\n例如：输入 你好世界")
+            return
+        self._show_result(value)
+
+    def _process_command(self, cmd: str) -> None:
+        lowered = cmd.lower()
+        if not cmd.strip():
+            return
+        if any(keyword in lowered for keyword in ["看屏幕", "截图", "看看", "screenshot"]):
+            self._quick_look_result()
+        elif any(keyword in lowered for keyword in ["窗口", "列表", "window", "windows"]):
+            self._list_windows_result()
+        elif any(keyword in lowered for keyword in ["鼠标", "mouse", "位置", "position"]):
+            self._show_mouse_position()
+        elif any(keyword in lowered for keyword in ["点击", "click"]):
+            self._parse_and_click(cmd)
+        elif any(keyword in lowered for keyword in ["输入", "type", "da", "打"]):
+            self._parse_and_type(cmd)
+        elif any(keyword in lowered for keyword in ["身份", "identity", "关于", "about"]):
+            self._show_identity()
+        else:
+            self._show_result("不懂指令，请说：看屏幕 / 窗口列表 / 鼠标位置 / 点击 x y / 输入 文字")
+
+    AIDFairy._parse_and_click = _parse_and_click
+    AIDFairy._parse_and_type = _parse_and_type
+    AIDFairy._process_command = _process_command
+
+
+_patch_aid_daemon_compat()
