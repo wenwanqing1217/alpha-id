@@ -41,28 +41,36 @@ def _import_pil():
     try:
         from PIL import Image
 
-        return Image
+        pil_image = Image
     except ImportError:
+        pil_image = None
+    if pil_image is None:
+        pil_image = sys.modules.get("PIL.Image")
+    if pil_image is None:
         raise ImportError("请安装 Pillow")
+    return pil_image
 
 
 def _import_tesseract():
     """导入 pytesseract，自动检测 Windows 路径"""
     try:
         import pytesseract
-
-        if sys.platform == "win32":
-            paths = [
-                r"C:\Program Files\Tesseract-OCR\tesseract.exe",
-                r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
-            ]
-            for p in paths:
-                if os.path.exists(p):
-                    pytesseract.pytesseract.tesseract_cmd = p
-                    break
-        return pytesseract
     except ImportError:
+        pytesseract = None
+    if pytesseract is None:
+        pytesseract = sys.modules.get("pytesseract")
+    if pytesseract is None:
         raise ImportError("请安装 pytesseract")
+    if sys.platform == "win32":
+        paths = [
+            r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+            r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+        ]
+        for path in paths:
+            if os.path.exists(path):
+                pytesseract.pytesseract.tesseract_cmd = path
+                break
+    return pytesseract
 
 
 def _get_llm_client(client=None):

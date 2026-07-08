@@ -1,7 +1,7 @@
 """pytest 共享配置"""
 
-import sys
 import os
+import sys
 
 # 将 src 目录加入 Python 路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
@@ -29,6 +29,18 @@ if "langchain" not in sys.modules:
 
     sys.modules["langchain"] = _langchain_mod
     sys.modules["langchain.tools"] = _langchain_tools_mod
+
+from unittest.mock import MagicMock
+
+# 在测试环境提前桩化 GUI/硬件相关模块，避免当前 Windows/Python 组合下
+# tkinter/mouseinfo/pyautogui 导入时的 metaclass conflict，保证测试稳定。
+if "tkinter" not in sys.modules:
+    _mock_tk = MagicMock()
+    sys.modules["tkinter"] = _mock_tk
+if "mouseinfo" not in sys.modules:
+    sys.modules["mouseinfo"] = MagicMock()
+if "pyautogui" not in sys.modules:
+    sys.modules["pyautogui"] = MagicMock()
 
 import pytest
 
@@ -130,7 +142,7 @@ def _patch_aid_daemon_compat() -> None:
 
     def _parse_and_type(self, text: str) -> None:
         prefix_match = re.search(r"^(?:输入|type|da|打)[\s:：]*", text, flags=re.IGNORECASE)
-        value = text[prefix_match.end():].strip() if prefix_match else ""
+        value = text[prefix_match.end() :].strip() if prefix_match else ""
         if not value:
             self._show_result("用法：输入 你想说的话\n例如：输入 你好世界")
             return

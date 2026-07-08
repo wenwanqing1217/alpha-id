@@ -53,3 +53,7 @@ test_output.html
 pytest_temp/
 assets/
 
+
+.tmp
+.pytest_tmp
+

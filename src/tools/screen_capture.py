@@ -6,6 +6,7 @@
 """
 
 import os
+import sys
 from datetime import datetime
 from typing import Optional, Tuple
 
@@ -30,32 +31,43 @@ def _import_pyautogui():
     """导入 pyautogui，失败时给清晰提示"""
     try:
         import pyautogui
-
-        return pyautogui
     except ImportError:
+        pyautogui = None
+    if pyautogui is None:
+        pyautogui = sys.modules.get("pyautogui")
+    if pyautogui is None:
         raise ImportError(
             "请安装 pyautogui：pip install pyautogui\n如果遇到依赖问题，可尝试：pip install pyautogui --upgrade"
         )
+    return pyautogui
 
 
 def _import_pil():
     """导入 PIL，失败时给清晰提示"""
     try:
-        from PIL import Image
-
-        return Image
+        import PIL.Image as PIL_Image
     except ImportError:
+        pil_image = None
+    else:
+        pil_image = PIL_Image
+    if pil_image is None:
+        pil_image = sys.modules.get("PIL.Image")
+    if pil_image is None:
         raise ImportError("请安装 Pillow：pip install Pillow")
+    return pil_image
 
 
 def _import_pygetwindow():
     """导入 pygetwindow，失败时给清晰提示"""
     try:
         import pygetwindow as gw
-
-        return gw
     except ImportError:
+        gw = None
+    if gw is None:
+        gw = sys.modules.get("pygetwindow")
+    if gw is None:
         raise ImportError("请安装 pygetwindow：pip install pygetwindow\nWindows 下用于按窗口标题查找和操作窗口。")
+    return gw
 
 
 SCREENSHOT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "..", "screenshots")

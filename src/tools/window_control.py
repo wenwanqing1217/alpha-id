@@ -5,6 +5,7 @@
 与 screen_capture 配合，构成完整的"看+点"闭环。
 """
 
+import sys
 import time
 from typing import Optional
 
@@ -26,21 +27,27 @@ except ImportError:
 def _import_pyautogui():
     try:
         import pyautogui
-
-        pyautogui.FAILSAFE = True  # 鼠标移到左上角可紧急停止
-        pyautogui.PAUSE = 0.3  # 每个操作间隔，模拟人类操作节奏
-        return pyautogui
     except ImportError:
+        pyautogui = None
+    if pyautogui is None:
+        pyautogui = sys.modules.get("pyautogui")
+    if pyautogui is None:
         raise ImportError("请安装 pyautogui：pip install pyautogui")
+    pyautogui.FAILSAFE = True  # 鼠标移到左上角可紧急停止
+    pyautogui.PAUSE = 0.3  # 每个操作间隔，模拟人类操作节奏
+    return pyautogui
 
 
 def _import_pygetwindow():
     try:
         import pygetwindow as gw
-
-        return gw
     except ImportError:
+        gw = None
+    if gw is None:
+        gw = sys.modules.get("pygetwindow")
+    if gw is None:
         raise ImportError("请安装 pygetwindow：pip install pygetwindow")
+    return gw
 
 
 # ── 工具函数 ──

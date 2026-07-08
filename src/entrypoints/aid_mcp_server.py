@@ -22,6 +22,7 @@ Claude Desktop 配置（claude_desktop_config.json）：
 import json
 import os
 import sys
+from pathlib import Path
 from typing import Optional
 
 import typer
@@ -259,9 +260,12 @@ def capture_full_screen() -> str:
 
     返回截图文件路径，可传给 ocr_* 工具做进一步分析。
     """
-    if not HAS_SCREEN_CAPTURE:
+    if not _has_capability("HAS_SCREEN_CAPTURE"):
         return f"❌ 截图工具不可用: {_screen_import_error}"
-    return _capture_full_screen()
+    try:
+        return _capture_full_screen()
+    except Exception as e:
+        return f"❌ 截图工具不可用: {e}"
 
 
 @mcp.tool()
@@ -274,9 +278,12 @@ def capture_window(window_title: str) -> str:
 
     先用 list_windows 查看当前有哪些窗口。
     """
-    if not HAS_SCREEN_CAPTURE:
+    if not _has_capability("HAS_SCREEN_CAPTURE"):
         return f"❌ 截图工具不可用: {_screen_import_error}"
-    return _capture_application_window(window_title)
+    try:
+        return _capture_application_window(window_title)
+    except Exception as e:
+        return f"❌ 截图工具不可用: {e}"
 
 
 @mcp.tool()
@@ -292,9 +299,12 @@ def capture_region(x: int, y: int, width: int, height: int) -> str:
 
     适用于已知聊天区域位置后，精准截取消息列表。
     """
-    if not HAS_SCREEN_CAPTURE:
+    if not _has_capability("HAS_SCREEN_CAPTURE"):
         return f"❌ 截图工具不可用: {_screen_import_error}"
-    return _capture_region(x, y, width, height)
+    try:
+        return _capture_region(x, y, width, height)
+    except Exception as e:
+        return f"❌ 截图工具不可用: {e}"
 
 
 @mcp.tool()
@@ -304,9 +314,12 @@ def list_windows() -> str:
 
     在截图前先用此命令找到目标窗口的准确标题。
     """
-    if not HAS_SCREEN_CAPTURE:
+    if not _has_capability("HAS_SCREEN_CAPTURE"):
         return f"❌ 截图工具不可用: {_screen_import_error}"
-    return _list_application_windows()
+    try:
+        return _list_application_windows()
+    except Exception as e:
+        return f"❌ 截图工具不可用: {e}"
 
 
 # ══════════════════════════════════════════════
@@ -325,7 +338,7 @@ def ocr_image(image_path: str, lang: str = "chi_sim+eng") -> str:
 
     适合：提取聊天截图文字、文档文字、界面按钮标签。
     """
-    if not HAS_OCR:
+    if not _has_capability("HAS_OCR"):
         return f"❌ OCR 工具不可用: {_ocr_import_error}"
     try:
         text = _ocr_extract_text(image_path, lang=lang)
@@ -351,7 +364,7 @@ def analyze_image(image_path: str, prompt: str = "请详细描述这张图片的
     需要设置 OPENAI_API_KEY 环境变量（或兼容 API）。
     适合：截图后的理解环节——先截屏，再分析看到的内容。
     """
-    if not HAS_OCR:
+    if not _has_capability("HAS_OCR"):
         return f"❌ 视觉分析工具不可用: {_ocr_import_error}"
     try:
         result = _ocr_analyze(image_path, prompt=prompt)
@@ -376,9 +389,12 @@ def focus_window(window_title: str) -> str:
     在点击/输入之前，先确保窗口在前台。
     先用 list_windows 查看窗口列表。
     """
-    if not HAS_WINDOW_CONTROL:
+    if not _has_capability("HAS_WINDOW_CONTROL"):
         return f"❌ 窗口控制工具不可用: {_window_import_error}"
-    return _focus_window(window_title)
+    try:
+        return _focus_window(window_title)
+    except Exception as e:
+        return f"❌ 窗口控制工具不可用: {e}"
 
 
 @mcp.tool()
@@ -394,21 +410,30 @@ def click_screen(x: int, y: int, button: str = "left", clicks: int = 1) -> str:
 
     坐标来自截图分析或窗口定位信息。
     """
-    if not HAS_WINDOW_CONTROL:
+    if not _has_capability("HAS_WINDOW_CONTROL"):
         return f"❌ 窗口控制工具不可用: {_window_import_error}"
-    return _click(x, y, button=button, clicks=clicks)
+    try:
+        return _click(x, y, button=button, clicks=clicks)
+    except Exception as e:
+        return f"❌ 窗口控制工具不可用: {e}"
 
 
 @mcp.tool()
 def click_double(x: int, y: int) -> str:
     """在屏幕指定坐标处双击。"""
-    return click_screen(x=x, y=y, button="left", clicks=2)
+    try:
+        return click_screen(x=x, y=y, button="left", clicks=2)
+    except Exception as e:
+        return f"❌ 窗口控制工具不可用: {e}"
 
 
 @mcp.tool()
 def click_right(x: int, y: int) -> str:
     """在屏幕指定坐标处右键。"""
-    return click_screen(x=x, y=y, button="right", clicks=1)
+    try:
+        return click_screen(x=x, y=y, button="right", clicks=1)
+    except Exception as e:
+        return f"❌ 窗口控制工具不可用: {e}"
 
 
 @mcp.tool()
@@ -422,9 +447,12 @@ def type_text(text: str, interval: float = 0.05) -> str:
 
     先确保目标输入框已聚焦（用 click_screen 点一下输入框）。
     """
-    if not HAS_WINDOW_CONTROL:
+    if not _has_capability("HAS_WINDOW_CONTROL"):
         return f"❌ 窗口控制工具不可用: {_window_import_error}"
-    return _type_text(text=text, interval=interval)
+    try:
+        return _type_text(text=text, interval=interval)
+    except Exception as e:
+        return f"❌ 窗口控制工具不可用: {e}"
 
 
 @mcp.tool()
@@ -440,9 +468,12 @@ def type_at(text: str, x: int, y: int, interval: float = 0.05) -> str:
 
     常用场景：分析完截图后，知道了消息输入框的位置，直接点进去打字。
     """
-    if not HAS_WINDOW_CONTROL:
+    if not _has_capability("HAS_WINDOW_CONTROL"):
         return f"❌ 窗口控制工具不可用: {_window_import_error}"
-    return _type_at_position(text=text, x=x, y=y, interval=interval)
+    try:
+        return _type_at_position(text=text, x=x, y=y, interval=interval)
+    except Exception as e:
+        return f"❌ 窗口控制工具不可用: {e}"
 
 
 @mcp.tool()
@@ -461,15 +492,21 @@ def press_key(keys: str) -> str:
     - 截全屏: alt+prtsc
     - 切换窗口: alt+tab
     """
-    if not HAS_WINDOW_CONTROL:
+    if not _has_capability("HAS_WINDOW_CONTROL"):
         return f"❌ 窗口控制工具不可用: {_window_import_error}"
-    return _press_key(keys)
+    try:
+        return _press_key(keys)
+    except Exception as e:
+        return f"❌ 窗口控制工具不可用: {e}"
 
 
 @mcp.tool()
 def press_enter() -> str:
     """按下回车键（常用于发送消息或确认）。"""
-    return press_key("enter")
+    try:
+        return press_key("enter")
+    except Exception as e:
+        return f"❌ 窗口控制工具不可用: {e}"
 
 
 @mcp.tool()
@@ -482,9 +519,12 @@ def scroll(clicks: int = -3, x: Optional[int] = None, y: Optional[int] = None) -
         x: 滚动位置的 X 坐标（可选）
         y: 滚动位置的 Y 坐标（可选）
     """
-    if not HAS_WINDOW_CONTROL:
+    if not _has_capability("HAS_WINDOW_CONTROL"):
         return f"❌ 窗口控制工具不可用: {_window_import_error}"
-    return _scroll(clicks=clicks, x=x, y=y)
+    try:
+        return _scroll(clicks=clicks, x=x, y=y)
+    except Exception as e:
+        return f"❌ 窗口控制工具不可用: {e}"
 
 
 @mcp.tool()
@@ -494,9 +534,12 @@ def mouse_position() -> str:
 
     用于定位坐标：先把鼠标放到目标位置，然后运行此命令获取坐标。
     """
-    if not HAS_WINDOW_CONTROL:
+    if not _has_capability("HAS_WINDOW_CONTROL"):
         return f"❌ 窗口控制工具不可用: {_window_import_error}"
-    return _get_mouse_position()
+    try:
+        return _get_mouse_position()
+    except Exception as e:
+        return f"❌ 窗口控制工具不可用: {e}"
 
 
 # ══════════════════════════════════════════════
@@ -508,12 +551,15 @@ def _get_signer():
     """延迟初始化身份签名器"""
     global _signer
     if _signer is None:
-        _signer = AIDSigner()
+        try:
+            _signer = AIDSigner()
+        except Exception as e:
+            return None, str(e)
         try:
             _signer.load_from_aid_dir()
         except (FileNotFoundError, ValueError):
             pass  # 没有初始化身份也没关系
-    return _signer
+    return _signer, ""
 
 
 @mcp.tool()
@@ -524,10 +570,12 @@ def get_identity() -> str:
     返回 DID、公钥（前16位）和身份文件位置。
     如果没有初始化身份，会提示如何创建。
     """
-    if not HAS_IDENTITY:
+    if not _has_capability("HAS_IDENTITY"):
         return "❌ 身份 SDK 不可用。请先安装 alpha-id。"
 
-    signer = _get_signer()
+    signer, signer_error = _get_signer()
+    if signer is None:
+        return f"❌ 身份工具不可用: {signer_error}"
     if not signer.has_identity:
         return (
             "⚠️ 当前没有 AID 身份。\n\n"
@@ -584,32 +632,32 @@ def get_server_info() -> str:
     获取 AID MCP Server 的版本信息和可用能力列表。
     """
     capabilities = []
-    if HAS_SCREEN_CAPTURE:
+    if _has_capability("HAS_SCREEN_CAPTURE"):
         capabilities.append("✅ 屏幕捕获")
     else:
         capabilities.append("❌ 屏幕捕获（需安装: pip install pyautogui pygetwindow Pillow）")
 
-    if HAS_OCR:
+    if _has_capability("HAS_OCR"):
         capabilities.append("✅ OCR/视觉分析")
     else:
         capabilities.append("❌ OCR/视觉分析（需安装: pip install pytesseract Pillow openai）")
 
-    if HAS_WINDOW_CONTROL:
+    if _has_capability("HAS_WINDOW_CONTROL"):
         capabilities.append("✅ 窗口控制")
     else:
         capabilities.append("❌ 窗口控制（需安装: pip install pyautogui pygetwindow）")
 
-    if HAS_IDENTITY:
+    if _has_capability("HAS_IDENTITY"):
         capabilities.append("✅ AID 身份")
     else:
         capabilities.append("❌ AID 身份（alpha-id SDK 未就绪）")
 
-    if HAS_CODEX:
+    if _has_capability("HAS_CODEX"):
         capabilities.append("✅ Codex 代码工具（read_code, search_code, edit_code, run_python, list_files, count_loc）")
     else:
         capabilities.append("❌ Codex 代码工具（codex.py 加载失败）")
 
-    if HAS_MEMORY_GRAPH:
+    if _has_capability("HAS_MEMORY_GRAPH"):
         capabilities.append(
             "✅ 记忆网络（memory_graph_stats, memory_graph_html, memory_graph_search, memory_graph_save, memory_graph_delete, memory_graph_update）"
         )
@@ -633,26 +681,32 @@ def get_server_info() -> str:
 
 if HAS_CODEX:
 
+    @mcp.tool()
     def read_code(path: str, line_start: int = 1, line_end: int = 0) -> str:
         """读取代码文件，带行号显示。参数：path=文件路径，line_start=起始行，line_end=结束行"""
         return _codex.tools["read_code"]["fn"](path, line_start, line_end)
 
+    @mcp.tool()
     def search_code(pattern: str, path: str = "") -> str:
         """在代码库中搜索文本或正则表达式。参数：pattern=搜索模式，path=可选目录"""
         return _codex.tools["search_code"]["fn"](pattern, path)
 
+    @mcp.tool()
     def edit_code(path: str, old_string: str, new_string: str) -> str:
         """替换代码文件中的文本。参数：path=文件路径，old_string=旧文本，new_string=新文本"""
         return _codex.tools["edit_code"]["fn"](path, old_string, new_string)
 
+    @mcp.tool()
     def run_python(code: str) -> str:
         """在隔离环境中执行 Python 代码片段。参数：code=要执行的代码"""
         return _codex.tools["run_python"]["fn"](code)
 
+    @mcp.tool()
     def list_code_files(path: str = ".", pattern: str = "*.py") -> str:
         """列出代码目录中的文件。参数：path=目录路径，pattern=匹配模式"""
         return _codex.tools["list_files"]["fn"](path, pattern)
 
+    @mcp.tool()
     def count_code_lines(path: str = ".") -> str:
         """统计代码目录中的 Python 行数。参数：path=目录路径"""
         return _codex.tools["count_loc"]["fn"](path)
@@ -686,11 +740,11 @@ def export_mcp_tools(mcp_instance) -> None:
     ]:
         mcp_instance.add_tool(fn, name=fn.__name__)
 
-    if globals().get('HAS_CODEX'):
+    if _has_capability("HAS_CODEX"):
         for fn in [read_code, search_code, edit_code, run_python, list_code_files, count_code_lines]:
             mcp_instance.add_tool(fn, name=fn.__name__)
 
-    if globals().get('HAS_MEMORY_GRAPH'):
+    if _has_capability("HAS_MEMORY_GRAPH"):
         for fn in [
             memory_graph_stats,
             memory_graph_html,
@@ -704,8 +758,9 @@ def export_mcp_tools(mcp_instance) -> None:
 #  记忆网络工具
 # ══════════════════════════════════════════════
 
-if HAS_MEMORY_GRAPH:
+if _has_capability("HAS_MEMORY_GRAPH"):
 
+    @mcp.tool()
     def memory_graph_stats(alpha_id: str = "Alpha-001") -> str:
         """
         查看记忆网络的统计摘要。显示记忆总数、分类分布、关联数量、枢纽节点。
@@ -713,6 +768,7 @@ if HAS_MEMORY_GRAPH:
         """
         return _mg_stats(alpha_id=alpha_id)
 
+    @mcp.tool()
     def memory_graph_html(
         alpha_id: str = "Alpha-001",
         output_path: str = "",
@@ -736,6 +792,7 @@ if HAS_MEMORY_GRAPH:
             max_nodes=max_nodes,
         )
 
+    @mcp.tool()
     def memory_graph_search(
         alpha_id: str = "Alpha-001",
         query: str = "",
@@ -752,6 +809,7 @@ if HAS_MEMORY_GRAPH:
         """
         return _mg_search(alpha_id=alpha_id, query=query, limit=limit)
 
+    @mcp.tool()
     def memory_graph_save(
         alpha_id: str = "Alpha-001",
         content: str = "",
@@ -785,6 +843,7 @@ if HAS_MEMORY_GRAPH:
             source=source,
         )
 
+    @mcp.tool()
     def memory_graph_delete(alpha_id: str = "Alpha-001", memory_id: str = "") -> str:
         """
         从记忆网络中删除一条记忆。
@@ -798,6 +857,7 @@ if HAS_MEMORY_GRAPH:
             return "[Error] 请提供 memory_id"
         return _mg_delete(alpha_id=alpha_id, memory_id=memory_id)
 
+    @mcp.tool()
     def memory_graph_update(
         alpha_id: str = "Alpha-001",
         memory_id: str = "",
