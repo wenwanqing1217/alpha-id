@@ -28,21 +28,56 @@ python scripts/demo.py
 
 ---
 
-## 公开 README 一句话
+## 可展示 README 一句话
 
 > 不是另一个 AI 助理，是坐在所有 AI 工具之上的 Ghost Layer。先看本机有什么，再决定采集什么；换工具、换平台，Alpha-ID 不换。
 
 ---
 
-## 可面试版本检查清单
+## 面试演示脚本
 
-- [ ] `aid init`
-- [ ] `aid profile mine --path .`
-- [ ] `aid profile show`
-- [ ] `aid profile web`
-- [ ] `python scripts/demo.py`
-- [ ] `aid collect git --path .`
-- [ ] 说明 `/api/profile` 与 MCP `profile://identity` 的数据连续性
+### 30 秒开场
+
+**说**：
+“大多数项目都在做新增一个 AI 助手；Alpha-ID 做的是让所有 AI 工具都认识同一个你。
+它不是一个平台，而是一个 Ghost Layer：本地 DID、本机痕迹、MCP 注入，三件事合在一起。”
+
+**演示**：
+```bash
+aid init
+aid profile mine --path .
+aid profile show
+python scripts/demo.py
+```
+
+### 3 分钟版本
+
+1. **先说问题**：ChatGPT、Claude、Cursor、浏览器里的记忆都是孤岛；换工具就要重新自我介绍。
+2. **再说方案**：Alpha-ID 用 `did:aid:` 建立本地身份，先扫描本机实际存在的痕迹，再生成连续画像。
+3. **边做边说**：
+   - `aid init`：生成本地身份，私钥不离开本机。
+   - `aid profile mine --path .`：不是假设你有什么，而是先看你有什么。
+   - `aid profile show`：展示记忆、风格、来源质量。
+   - `aid profile web`：打开个人空间，让非技术观众也能看懂。
+   - `python scripts/demo.py`：展示 MCP 可读取 `profile://identity`，具备对外注入能力。
+4. **最后补壁垒**：本地优先、数据主权、用户历史关系不可复制。
+
+### 面试官追问速查
+
+1. **你和其他 AI 助理最大的区别是什么？**
+   答：不是新增一个助手，而是做一个跨工具的身份与记忆层；核心是 DID + 本地主权 + 本机痕迹优先。
+
+2. **为什么 DID 重要？**
+   答：静态画像文件没有身份连续性；DID 才能让画像被 MCP / A2A 安全调用和继承。
+
+3. **你们是做模型、平台还是协议？**
+   答：当前都不做；先做记忆与身份层，再通过 MCP 注入现有工具。
+
+4. **商业价值在哪里？**
+   答：短期是开源影响力 + 高端岗位可信度；中期是记忆备份与同步订阅；长期是 A2A / Agent 生态的标准层。
+
+5. **这个项目能证明什么？**
+   答：我能从零落地完整系统，而不是功能模块；我会把用户主权和可解释性放第一位；我能把技术叙事转化为商业/面试叙事。
 
 ---
 
