@@ -15,7 +15,7 @@ services:
     shm_size: 256mb
     environment:
       POSTGRES_USER: ${PGUSER:-aid}
-      POSTGRES_PASSWORD: ${PGPASSWORD:-aid_secret}
+      POSTGRES_PASSWORD: ${PGPASSWORD}
       POSTGRES_DB: ${PGDATABASE:-alpha_id}
     ports:
       - "${PGPORT:-5432}:5432"
@@ -39,7 +39,7 @@ services:
       - "${API_PORT:-8000}:8000"
     environment:
       # --- 数据库 ---
-      DATABASE_URL: postgresql://${PGUSER:-aid}:${PGPASSWORD:-aid_secret}@db:5432/${PGDATABASE:-alpha_id}
+      DATABASE_URL: postgresql://${PGUSER:-aid}:${PGPASSWORD}@db:5432/${PGDATABASE:-alpha_id}
       # --- 日志级别 ---
       LOG_LEVEL: ${LOG_LEVEL:-info}
       # --- 环境标识 ---
