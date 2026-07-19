@@ -2,9 +2,16 @@
 
 import os
 import sys
+import tempfile
 
 # 将 src 目录加入 Python 路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+
+_fallback_temp = tempfile.mkdtemp(prefix="aid_pytest_temp_")
+os.environ.setdefault("TMPDIR", _fallback_temp)
+os.environ.setdefault("TEMP", _fallback_temp)
+os.environ.setdefault("TMP", _fallback_temp)
+tempfile.tempdir = _fallback_temp
 
 # ── 模拟 langchain.tools ──────────────────────────────────────────────
 # 某些工具模块引用了 @tool 装饰器 / ToolRuntime，在 CI/测试环境不安装 langchain

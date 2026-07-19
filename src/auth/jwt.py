@@ -22,6 +22,15 @@ REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.environ.get("JWT_REFRESH_EXPIRE_DAYS", "
 ALGORITHM: str = "HS256"
 
 
+def validate_master_key() -> None:
+    """校验主密钥是否已配置，拒绝使用默认 fallback 启动。"""
+    if not os.environ.get("AUTH_MASTER_KEY"):
+        raise RuntimeError(
+            "AUTH_MASTER_KEY 未配置，无法使用默认密钥启动。"
+            "请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。"
+        )
+
+
 # ── 密钥工具 ──
 
 

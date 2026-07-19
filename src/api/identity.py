@@ -44,7 +44,7 @@ def login(body: LoginRequest):
     if not devices:
         raise HTTPException(status_code=403, detail="该用户尚未绑定设备")
     if body.device_fingerprint not in devices:
-        pass  # 允许新设备绑定后登录
+        raise HTTPException(status_code=403, detail="设备未绑定，请先绑定设备")
 
     token = create_access_token(body.alpha_id)
     refresh = create_refresh_token(body.alpha_id)

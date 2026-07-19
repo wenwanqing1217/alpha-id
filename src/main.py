@@ -1,5 +1,6 @@
 """Alpha-ID API 服务入口"""
 
+import os
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -7,14 +8,17 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from alpha_id.container import Container
-from api.identity import router as identity_router
-from api.risk import router as risk_router
-from api.social import router as social_router
+from auth.jwt import validate_master_key
+from .api.identity import router as identity_router
+from .api.risk import router as risk_router
+from .api.social import router as social_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator:
     """服务生命周期管理"""
+    # 启动：校验 JWT 主密钥
+    validate_master_key()
     # 启动：容器自动 lazy init
     container = Container.instance()
     yield
@@ -29,10 +33,21 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS
+# CORS - 生产环境必须配置具体域名
+allowed_origins = os.environ.get("AID_ALLOWED_ORIGINS", "").strip()
+if allowed_origins:
+    origins = [o.strip() for o in allowed_origins.split(",") if o.strip()]
+else:
+    origins = [
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:8000",
+    ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

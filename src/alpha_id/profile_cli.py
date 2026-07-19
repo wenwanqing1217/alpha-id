@@ -526,7 +526,6 @@ def cmd_show(
     typer.echo("_由 Alpha-ID 生成_")
 
 
-@profile_app.command("web")
 @profile_app.command("mine")
 def cmd_mine(
     path: str = typer.Option(".", "--path", "-p", help="要扫描的数字痕迹根目录"),
@@ -595,6 +594,7 @@ def infer_profile(signals, seed_did: str = "") -> AlphaIDProfile:
     return _infer_profile(signals, seed_did=seed_did)
 
 
+@profile_app.command("web")
 def cmd_web(
     host: str = typer.Option("127.0.0.1", "--host", help="监听地址"),
     port: int = typer.Option(8080, "--port", "-p", help="端口"),

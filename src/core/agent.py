@@ -11,11 +11,14 @@ Agent 纯循环 —— LLM + Tools + Loop，不依赖任何框架
     reply = loop.run("帮我查一下我的身份信息")
 """
 
+import ipaddress
 import json
 import logging
+import os
 import re
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
+from urllib.parse import urlparse
 
 from core.interfaces import AgentContainer
 
@@ -28,6 +31,50 @@ except ImportError:
     HAS_HTTPX = False
 
 logger = logging.getLogger(__name__)
+
+
+# ── 安全：LLM base_url SSRF 防护 ──
+
+
+_ALLOWED_LLM_HOSTS = {
+    "api.deepseek.com",
+    "api.openai.com",
+    "api.siliconflow.cn",
+    "open.bigmodel.cn",
+    "api.moonshot.cn",
+    "api.anthropic.com",
+    "localhost",
+    "127.0.0.1",
+}
+
+
+def _validate_llm_base_url(base_url: str) -> str:
+    """校验 LLM base_url，防止 SSRF。"""
+    parsed = urlparse(base_url)
+    hostname = (parsed.hostname or "").lower()
+
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError(f"不支持的 LLM URL scheme: {parsed.scheme}")
+
+    if not hostname:
+        raise ValueError("LLM base_url 缺少 hostname")
+
+    # 允许显式配置的域名
+    if hostname in _ALLOWED_LLM_HOSTS:
+        return base_url.rstrip("/")
+
+    # 禁止内网 / 链路本地 / 回环地址
+    try:
+        ip = ipaddress.ip_address(hostname)
+        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved:
+            raise ValueError(f"LLM base_url 禁止访问内网地址: {hostname}")
+    except ValueError as exc:
+        if "禁止访问" in str(exc):
+            raise
+        # 不是 IP，继续执行域名检查
+
+    # 未在允许列表中的域名一律拒绝，避免任意域名跳转
+    raise ValueError(f"LLM base_url 域名未授权: {hostname}")
 
 
 # ── Tool 描述 ──
@@ -465,6 +512,11 @@ def _call_llm(messages: List[Dict[str, str]], tools_schema: List[Dict[str, Any]]
 
     api_key = os.getenv("OPENAI_API_KEY") or os.getenv("COZE_WORKLOAD_IDENTITY_API_KEY")
     base_url = os.getenv("OPENAI_BASE_URL") or "https://api.openai.com/v1"
+
+    try:
+        base_url = _validate_llm_base_url(base_url)
+    except ValueError as exc:
+        return f"[LLM 配置错误] {exc}"
 
     if not api_key:
         return "[LLM 未配置：请设置 OPENAI_API_KEY 环境变量]"

@@ -3,6 +3,7 @@
 from fastapi import APIRouter, HTTPException, Query
 
 from alpha_id.container import Container
+from auth.middleware import require_user
 from core.alpha_social import AlphaSocialManager
 
 from .models import FriendRequestRespond, FriendRequestSend, MessageSend
@@ -15,7 +16,7 @@ def get_manager() -> AlphaSocialManager:
 
 
 @router.post("/friend-request")
-def send_friend_request(body: FriendRequestSend):
+def send_friend_request(body: FriendRequestSend, _: str = Depends(require_user)):
     """发送好友请求"""
     result = get_manager().send_friend_request(
         from_alpha_id=body.from_alpha_id,
@@ -28,7 +29,7 @@ def send_friend_request(body: FriendRequestSend):
 
 
 @router.put("/friend-request/{request_id}")
-def respond_friend_request(request_id: str, body: FriendRequestRespond):
+def respond_friend_request(request_id: str, body: FriendRequestRespond, _: str = Depends(require_user)):
     """响应好友请求"""
     result = get_manager().respond_friend_request(request_id=request_id, response=body.response)
     if not result["success"]:
@@ -37,21 +38,21 @@ def respond_friend_request(request_id: str, body: FriendRequestRespond):
 
 
 @router.get("/{alpha_id}/friends")
-def get_friends(alpha_id: str):
+def get_friends(alpha_id: str, _: str = Depends(require_user)):
     """获取好友列表"""
     friends = get_manager().get_friends(alpha_id)
     return {"alpha_id": alpha_id, "friends": friends, "count": len(friends)}
 
 
 @router.get("/{alpha_id}/requests")
-def get_pending_requests(alpha_id: str):
+def get_pending_requests(alpha_id: str, _: str = Depends(require_user)):
     """获取待处理的好友请求"""
     requests = get_manager().get_pending_friend_requests(alpha_id)
     return {"alpha_id": alpha_id, "requests": requests, "count": len(requests)}
 
 
 @router.post("/message")
-def send_message(body: MessageSend):
+def send_message(body: MessageSend, _: str = Depends(require_user)):
     """发送消息给好友"""
     result = get_manager().send_message(
         from_alpha_id=body.from_alpha_id,
@@ -65,7 +66,7 @@ def send_message(body: MessageSend):
 
 
 @router.get("/{alpha_id}/messages")
-def get_messages(alpha_id: str, unread_only: bool = Query(False)):
+def get_messages(alpha_id: str, unread_only: bool = Query(False), _: str = Depends(require_user)):
     """获取消息列表"""
     messages = get_manager().get_messages(alpha_id, unread_only=unread_only)
     return {"alpha_id": alpha_id, "messages": messages, "count": len(messages)}
