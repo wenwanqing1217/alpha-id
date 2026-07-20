@@ -43,7 +43,7 @@ class TestSkillPackage:
             author_did="did:aid:abc",
             author_public_key_hex="aabb" * 16,
             content_hash="deadbeef",
-            content_type="python",
+            content_type="text",
             signature="ccdd" * 16,
             signed_at=123.0,
             tags=["ai", "tools"],
@@ -98,11 +98,11 @@ class TestSkillPackage:
             version="1.0.0",
             author_did="did:aid:xyz",
             content_hash="abc123",
-            content_type="python",
+            content_type="text",
             signed_at=456.0,
         )
         payload = pkg._signing_payload()
-        expected = b"demo|1.0.0|did:aid:xyz|abc123|python|456.0"
+        expected = b"demo|1.0.0|did:aid:xyz|abc123|text|456.0"
         assert payload == expected
 
     def test_summary(self):
@@ -141,7 +141,7 @@ class TestSignAndVerify:
         assert pkg.version == "1.0.0"
         assert pkg.author_did == signer.did
         assert pkg.description == "Say hello"
-        assert pkg.content_type == "python"
+        assert pkg.content_type == "text"
         assert pkg.tags == ["demo"]
         assert pkg.is_signed
         assert len(pkg.signature) == 128  # 64 bytes in hex
@@ -584,7 +584,7 @@ class TestSkillRuntime:
         assert "暂无" in result or "可用" not in result
 
     def test_execute_python(self, tmp_path):
-        """执行 Python 技能"""
+        """执行 text 类型技能：安全模式下直接返回文件内容"""
         skill_file = tmp_path / "hello.py"
         skill_file.write_text("""
 def main(params):
@@ -595,29 +595,32 @@ def main(params):
         author = AIDSigner()
         author.generate()
 
-        pkg = sign_skill(skill_file, author, name="python-skill", version="1.0.0")
+        pkg = sign_skill(skill_file, author, name="python-skill", version="1.0.0", content_type="text")
 
         registry = SkillRegistry(storage_dir=str(tmp_path))
         registry.register(pkg, content=skill_file.read_bytes())
         runtime = SkillRuntime(registry)
 
         result = runtime.execute("python-skill", '{"name": "TestAgent"}')
-        assert '"greeting": "hello TestAgent"' in result
+        # 安全模式：text/markdown 直接返回文件原文，不再执行代码
+        assert "def main(params)" in result
+        assert "hello TestAgent" not in result  # 不再执行，只返回原文
 
     def test_execute_python_no_main(self, tmp_path):
-        """Python 技能没有 main 函数也能执行"""
+        """text 类型技能：安全模式下直接返回文件内容"""
         skill_file = tmp_path / "silent.py"
         skill_file.write_text('print("Hello from skill")')
 
         author = AIDSigner()
         author.generate()
-        pkg = sign_skill(skill_file, author, name="silent")
+        pkg = sign_skill(skill_file, author, name="silent", content_type="text")
 
         registry = SkillRegistry(storage_dir=str(tmp_path))
         registry.register(pkg, content=skill_file.read_bytes())
         runtime = SkillRuntime(registry)
 
         result = runtime.execute("silent", "{}")
+        # 安全模式：直接返回原文
         assert "Hello from skill" in result
 
     def test_execute_revoked_skill(self, tmp_path):
@@ -979,7 +982,7 @@ class TestAttributionIntegration:
         assert stats["total_executions"] == 0  # 没记录
 
     def test_runtime_failure_recorded(self, tmp_path):
-        """执行失败也记录归因（python 内部吞异常，但记录为 success=True）"""
+        """执行失败也记录归因（安全模式下返回原文，不执行代码）"""
         storage = str(tmp_path / "reg4")
         registry = SkillRegistry(storage_dir=storage)
         tracker = SkillAttributionTracker(storage_dir=str(tmp_path))
@@ -989,12 +992,12 @@ class TestAttributionIntegration:
         author.generate()
         skill_file = tmp_path / "crash.py"
         skill_file.write_text("def main(p): raise RuntimeError('boom')")
-        pkg = sign_skill(skill_file, author, name="crash")
+        pkg = sign_skill(skill_file, author, name="crash", content_type="text")
         registry.register(pkg, content=skill_file.read_bytes())
 
         result = runtime.execute("crash", "{}", executor_did="did:aid:caller")
-        # python 执行器内部吞异常，输出无返回值的消息
-        assert "执行完毕" in result
+        # 安全模式：返回原文，不执行
+        assert "RuntimeError" in result or "boom" in result
 
         stats = tracker.get_author_stats(author.did)
         assert stats["total_executions"] == 1

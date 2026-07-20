@@ -12,11 +12,17 @@ Auth / 401 / 404 边界也在覆盖范围内。
 
 import os
 import json
+import sys
 
 import pytest
 from fastapi.testclient import TestClient
 
-from main import app
+# 在导入 main/app 前设置 JWT 测试密钥
+os.environ.setdefault("AUTH_MASTER_KEY", "test-master-key-256bit-secret-for-unit-tests-only")
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+
+from src.main import app
 from auth.jwt import create_access_token
 
 _fixture_counter = [0]  # mutable counter for unique device fingerprints
@@ -296,7 +302,7 @@ class TestSocialE2E:
         return (a_id, t1), (b_id, t2)
 
     def test_send_and_accept_friend_request(self, client: TestClient, two_users):
-        (a_id, _), (b_id, _) = two_users
+        (a_id, t1), (b_id, t2) = two_users
 
         # A 向 B 发送好友请求
         send = client.post(
@@ -306,12 +312,16 @@ class TestSocialE2E:
                 "to_alpha_id": b_id,
                 "message": "你好，做个朋友吧",
             },
+            headers={"Authorization": f"Bearer {t1}"},
         )
         assert send.status_code == 200
         request_id = send.json()["request_id"]
 
         # B 查看 pending 请求
-        pending = client.get(f"/api/v1/social/{b_id}/requests")
+        pending = client.get(
+            f"/api/v1/social/{b_id}/requests",
+            headers={"Authorization": f"Bearer {t2}"},
+        )
         assert pending.status_code == 200
         assert pending.json()["count"] == 1
         assert pending.json()["requests"][0]["from_alpha_id"] == a_id
@@ -320,18 +330,19 @@ class TestSocialE2E:
         accept = client.put(
             f"/api/v1/social/friend-request/{request_id}",
             json={"response": "accept"},
+            headers={"Authorization": f"Bearer {t2}"},
         )
         assert accept.status_code == 200
         assert accept.json()["success"] is True
 
         # 验证好友列表
-        a_friends = client.get(f"/api/v1/social/{a_id}/friends").json()["friends"]
-        b_friends = client.get(f"/api/v1/social/{b_id}/friends").json()["friends"]
+        a_friends = client.get(f"/api/v1/social/{a_id}/friends", headers={"Authorization": f"Bearer {t1}"}).json()["friends"]
+        b_friends = client.get(f"/api/v1/social/{b_id}/friends", headers={"Authorization": f"Bearer {t2}"}).json()["friends"]
         assert b_id in a_friends
         assert a_id in b_friends
 
     def test_reject_friend_request(self, client: TestClient, two_users):
-        (a_id, _), (b_id, _) = two_users
+        (a_id, t1), (b_id, t2) = two_users
 
         send = client.post(
             "/api/v1/social/friend-request",
@@ -339,22 +350,24 @@ class TestSocialE2E:
                 "from_alpha_id": a_id,
                 "to_alpha_id": b_id,
             },
+            headers={"Authorization": f"Bearer {t1}"},
         )
         request_id = send.json()["request_id"]
 
         reject = client.put(
             f"/api/v1/social/friend-request/{request_id}",
             json={"response": "reject"},
+            headers={"Authorization": f"Bearer {t2}"},
         )
         assert reject.status_code == 200
 
-        a_friends = client.get(f"/api/v1/social/{a_id}/friends").json()["friends"]
-        b_friends = client.get(f"/api/v1/social/{b_id}/friends").json()["friends"]
+        a_friends = client.get(f"/api/v1/social/{a_id}/friends", headers={"Authorization": f"Bearer {t1}"}).json()["friends"]
+        b_friends = client.get(f"/api/v1/social/{b_id}/friends", headers={"Authorization": f"Bearer {t2}"}).json()["friends"]
         assert b_id not in a_friends
         assert a_id not in b_friends
 
     def test_send_message_between_friends(self, client: TestClient, two_users):
-        (a_id, _), (b_id, _) = two_users
+        (a_id, t1), (b_id, t2) = two_users
 
         # 成为好友
         send = client.post(
@@ -363,9 +376,14 @@ class TestSocialE2E:
                 "from_alpha_id": a_id,
                 "to_alpha_id": b_id,
             },
+            headers={"Authorization": f"Bearer {t1}"},
         )
         req_id = send.json()["request_id"]
-        client.put(f"/api/v1/social/friend-request/{req_id}", json={"response": "accept"})
+        client.put(
+            f"/api/v1/social/friend-request/{req_id}",
+            json={"response": "accept"},
+            headers={"Authorization": f"Bearer {t2}"},
+        )
 
         # A 发消息给 B
         msg = client.post(
@@ -376,19 +394,23 @@ class TestSocialE2E:
                 "content": "你好，这是测试消息",
                 "message_type": "text",
             },
+            headers={"Authorization": f"Bearer {t1}"},
         )
         assert msg.status_code == 200
         assert msg.json()["success"] is True
 
         # B 查看未读消息
-        b_msgs = client.get(f"/api/v1/social/{b_id}/messages?unread_only=true")
+        b_msgs = client.get(
+            f"/api/v1/social/{b_id}/messages?unread_only=true",
+            headers={"Authorization": f"Bearer {t2}"},
+        )
         assert b_msgs.status_code == 200
         assert b_msgs.json()["count"] >= 1
         contents = [m["content"] for m in b_msgs.json()["messages"]]
         assert "你好，这是测试消息" in contents
 
     def test_send_message_to_non_friend_fails(self, client: TestClient, two_users):
-        (a_id, _), (b_id, _) = two_users
+        (a_id, t1), (b_id, _) = two_users
         resp = client.post(
             "/api/v1/social/message",
             json={
@@ -396,17 +418,19 @@ class TestSocialE2E:
                 "to_alpha_id": b_id,
                 "content": "hello",
             },
+            headers={"Authorization": f"Bearer {t1}"},
         )
         assert resp.status_code == 400
 
     def test_friend_request_duplicate(self, client: TestClient, two_users):
-        (a_id, _), (b_id, _) = two_users
+        (a_id, t1), (b_id, _) = two_users
         client.post(
             "/api/v1/social/friend-request",
             json={
                 "from_alpha_id": a_id,
                 "to_alpha_id": b_id,
             },
+            headers={"Authorization": f"Bearer {t1}"},
         )
         resp = client.post(
             "/api/v1/social/friend-request",
@@ -414,6 +438,7 @@ class TestSocialE2E:
                 "from_alpha_id": a_id,
                 "to_alpha_id": b_id,
             },
+            headers={"Authorization": f"Bearer {t1}"},
         )
         assert resp.status_code == 400
 

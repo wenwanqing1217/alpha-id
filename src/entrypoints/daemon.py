@@ -4,6 +4,7 @@ AID Daemon v2 — 桌面精灵
 """
 
 import argparse
+import logging
 import os
 import re
 import subprocess
@@ -12,6 +13,8 @@ import threading
 import time
 import traceback
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -34,7 +37,7 @@ try:
 
     HAS_DWM_ACRYLIC = True
 except Exception:
-    pass
+    logger.exception("Unhandled exception")
 
 # ── LLM 大脑 ──
 HAS_LLM = False
@@ -99,7 +102,7 @@ try:
             break
     HAS_TTS = True
 except Exception:
-    pass
+    logger.exception("Unhandled exception")
 
 # ── STT ──
 HAS_SPEECH = False
@@ -285,7 +288,7 @@ class AIDFairy:
             self._ball_hwnd = hwnd
             apply_acrylic(hwnd, tint_color=0x0F0F1A, alpha=160)
         except Exception:
-            pass
+            logger.exception("Unhandled exception")
 
     # ═══════════════════════════════════════════════════════
     #  小岛 v2 — Dynamic Island × Win11 亚克力
@@ -439,7 +442,7 @@ class AIDFairy:
 
             self.ball.after(50, self._animate_breath)
         except Exception:
-            pass
+            logger.exception("Unhandled exception")
 
     # ── 交互 ──
 
@@ -529,7 +532,7 @@ class AIDFairy:
             hwnd = ctypes.windll.user32.GetParent(win.winfo_id())
             apply_acrylic(hwnd, tint_color=0x0F0F1A, alpha=200)
         except Exception:
-            pass
+            logger.exception("Unhandled exception")
 
         # ── 标题栏 ──
         title_bar = tk.Frame(win, bg=Palette.BG_DARK, height=36)
@@ -772,7 +775,7 @@ class AIDFairy:
             try:
                 self._chat_win.destroy()
             except Exception:
-                pass
+                logger.exception("Unhandled exception")
         self._chat_win = None
         self._chat_visible = False
 
@@ -903,7 +906,7 @@ class AIDFairy:
                 self._chat_text.delete(f"{last_line - 1}.0", "end-1c")
                 self._chat_text.delete(f"{last_line - 2}.0", "end-1c")
             except Exception:
-                pass
+                logger.exception("Unhandled exception")
             self._chat_text.configure(state="disabled")
 
     def _safe_call(self, fn):
@@ -911,7 +914,7 @@ class AIDFairy:
         try:
             self.ball.after(0, fn)
         except Exception:
-            pass
+            logger.exception("Unhandled exception")
 
     # ═══════════════════════════════════════════════════════
     #  语音唤醒
@@ -959,7 +962,7 @@ class AIDFairy:
                         time.sleep(1)
                         continue
             except Exception:
-                pass
+                logger.exception("Unhandled exception")
 
         t = threading.Thread(target=_listen, daemon=True, name="wakeup-listener")
         t.start()
@@ -1019,7 +1022,7 @@ class AIDFairy:
                         ollama_detected = True
                         _safe_print(f"  Ollama:  ✅ 已连接（{', '.join(models[:3])}）")
             except Exception:
-                pass
+                logger.exception("Unhandled exception")
 
         try:
             if HAS_LLM or ollama_detected:
@@ -1132,7 +1135,7 @@ class AIDFairy:
                 pos = get_mouse_position()
                 self._safe_call(lambda: self._add_chat_message("ai", f"📍 鼠标位置：({pos[0]}, {pos[1]})"))
             except Exception:
-                pass
+                logger.exception("Unhandled exception")
 
         threading.Thread(target=_do, daemon=True).start()
 
@@ -1178,7 +1181,7 @@ class AIDFairy:
                     stderr=subprocess.DEVNULL,
                 )
             except Exception:
-                pass
+                logger.exception("Unhandled exception")
 
         threading.Thread(target=_run, daemon=True).start()
 
@@ -1188,11 +1191,11 @@ class AIDFairy:
                 self._mcp_process.terminate()
                 self._mcp_process.wait(timeout=3)
             except Exception:
-                pass
+                logger.exception("Unhandled exception")
         try:
             self.ball.destroy()
         except Exception:
-            pass
+            logger.exception("Unhandled exception")
 
     def run(self):
         try:
@@ -1216,7 +1219,7 @@ def _safe_print(*args, **kwargs):
             text = " ".join(str(a) for a in args)
             print(text.encode("utf-8", errors="replace").decode("gbk", errors="replace"), **kwargs)
         except Exception:
-            pass
+            logger.exception("Unhandled exception")
 
 
 def _check_ollama() -> bool:
@@ -1313,7 +1316,7 @@ def main():
         try:
             sys.stdout.reconfigure(encoding="utf-8")
         except Exception:
-            pass
+            logger.exception("Unhandled exception")
 
     # ── 环境检测模式 ──
     if args.check:

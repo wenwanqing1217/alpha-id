@@ -98,22 +98,24 @@ def run_python(code: str) -> str:
             break
     tmpdir = tempfile.mkdtemp(prefix="codex_")
     script_path = os.path.join(tmpdir, "script.py")
-    stdout_path = os.path.join(tmpdir, "stdout.txt")
-    stderr_path = os.path.join(tmpdir, "stderr.txt")
-    with open(script_path, "w", encoding="utf-8") as f:
-        f.write(code)
     try:
-        cmd = f'"{sys.executable}" "{script_path}" > "{stdout_path}" 2> "{stderr_path}"'
-        ret = os.system(cmd)
-        if ret < 0:
-            return f"[Error] Process killed by signal {-ret}"
-        out = open(stdout_path, encoding="utf-8").read().strip()
-        err = open(stderr_path, encoding="utf-8").read().strip()
+        result = subprocess.run(
+            [sys.executable, script_path],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            cwd=str(WORKSPACE),
+        )
+        ret = result.returncode
+        out = result.stdout.strip()
+        err = result.stderr.strip()
         if err:
             return f"STDERR:\n{err}" + (f"\n\nSTDOUT:\n{out}" if out else "")
         return out or "(no output)"
-    except Exception as e:
-        return f"[Error] {e}"
+    except subprocess.TimeoutExpired:
+        return "[Error] Execution timed out"
+    except OSError:
+        pass
     finally:
         try:
             os.unlink(script_path)

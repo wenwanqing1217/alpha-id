@@ -1,28 +1,52 @@
-"""测试 Web 演示模块"""
+"""Test Web display module"""
+
+import sys, os, uuid
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 import pytest
 from fastapi.testclient import TestClient
 
 from alpha_id.container import Container
 from alpha_id.web import app
+from src.main import app as api_app
+
+
+def _unique_fp() -> str:
+    return f"web-test-{uuid.uuid4().hex[:12]}"
 
 
 @pytest.fixture
 def client():
-    """TestClient + 容器重置"""
+    """TestClient + device setup + register test user"""
     Container.instance().reset()
-    return TestClient(app)
+
+    # Register test user (via API)
+    api_client = TestClient(api_app)
+    fp = _unique_fp()
+    resp = api_client.post("/api/v1/identity/register", json={"device_fingerprint": fp})
+    assert resp.status_code == 200, f"Registration failed: {resp.text}"
+    alpha_id = resp.json()["alpha_id"]
+
+    web_client = TestClient(app)
+    web_client._alpha_id = alpha_id
+    web_client._fp = fp
+    return web_client
 
 
 class TestWebLogin:
-    """登录/注册 API 测试"""
+    """Login/register API tests"""
 
     def test_login_with_device_fp(self, client):
-        resp = client.post("/login", json={"device_fingerprint": "web-test-device-1"})
+        alpha_id = client._alpha_id
+        resp = client.post(
+            "/login",
+            json={"device_fingerprint": "web-test-device-1", "alpha_id": alpha_id},
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["success"] is True
-        assert data["alpha_id"].startswith("Alpha-")
+        assert data["alpha_id"] == alpha_id
         assert data["action"] in ("login", "register")
 
     def test_login_empty_device_fp(self, client):
@@ -41,20 +65,31 @@ class TestWebLogin:
         assert resp.status_code == 404
 
     def test_login_twice_returns_same_alpha_id(self, client):
-        r1 = client.post("/login", json={"device_fingerprint": "web-test-device-same"})
+        alpha_id = client._alpha_id
+        r1 = client.post(
+            "/login",
+            json={"device_fingerprint": "web-test-device-same", "alpha_id": alpha_id},
+        )
         aid = r1.json()["alpha_id"]
 
-        r2 = client.post("/login", json={"device_fingerprint": "web-test-device-same"})
+        r2 = client.post(
+            "/login",
+            json={"device_fingerprint": "web-test-device-same", "alpha_id": alpha_id},
+        )
         assert r2.json()["alpha_id"] == aid
 
 
 class TestWebChat:
-    """聊天 API 测试"""
+    """Chat API tests"""
 
     @pytest.fixture(autouse=True)
     def setup(self, client):
-        """先登录再测试聊天"""
-        resp = client.post("/login", json={"device_fingerprint": "web-test-chat-user"})
+        """Login before testing chat"""
+        alpha_id = client._alpha_id
+        resp = client.post(
+            "/login",
+            json={"device_fingerprint": "web-test-chat-user", "alpha_id": alpha_id},
+        )
         data = resp.json()
         self.alpha_id = data["alpha_id"]
         assert data["success"]
@@ -72,10 +107,10 @@ class TestWebChat:
         assert resp.status_code == 401
 
     def test_chat_basic(self, client):
-        """无 API key 时返回未配置提示"""
+        """Without API key returns unconfigured prompt"""
         import os
 
-        # 保存并清空 API key，确保走 _call_llm 的 no-key 分支
+        # Save and clear API keys to ensure _call_llm hits the no-key branch
         old_key = os.environ.pop("OPENAI_API_KEY", None)
         old_key2 = os.environ.pop("COZE_WORKLOAD_IDENTITY_API_KEY", None)
         try:
@@ -83,7 +118,7 @@ class TestWebChat:
                 "/chat",
                 json={
                     "alpha_id": self.alpha_id,
-                    "message": "你是谁",
+                    "message": "Hello",
                 },
             )
             assert resp.status_code == 200
@@ -98,11 +133,15 @@ class TestWebChat:
 
 
 class TestWebIdentity:
-    """身份信息 API 测试"""
+    """Identity info API tests"""
 
     def test_get_identity(self, client):
-        # 先登录
-        r = client.post("/login", json={"device_fingerprint": "web-test-id-device"})
+        # Login first
+        alpha_id = client._alpha_id
+        r = client.post(
+            "/login",
+            json={"device_fingerprint": "web-test-id-device", "alpha_id": alpha_id},
+        )
         aid = r.json()["alpha_id"]
 
         resp = client.get("/identity", headers={"X-Alpha-ID": aid})
@@ -122,7 +161,7 @@ class TestWebIdentity:
 
 
 class TestWebIndex:
-    """首页测试"""
+    """Homepage tests"""
 
     def test_index_returns_html(self, client):
         resp = client.get("/")
@@ -132,11 +171,15 @@ class TestWebIndex:
 
 
 class TestWebBrainControl:
-    """大脑状态控制 API 测试"""
+    """Brain state control API tests"""
 
     @pytest.fixture(autouse=True)
     def setup(self, client):
-        resp = client.post("/login", json={"device_fingerprint": "web-test-brain-user"})
+        alpha_id = client._alpha_id
+        resp = client.post(
+            "/login",
+            json={"device_fingerprint": "web-test-brain-user", "alpha_id": alpha_id},
+        )
         data = resp.json()
         self.alpha_id = data["alpha_id"]
         assert data["success"]
@@ -159,16 +202,16 @@ class TestWebBrainControl:
         assert resp.status_code == 404
 
     def test_brain_sleep_and_awake(self, client):
-        # 休眠
+        # Sleep
         resp = client.post("/brain/sleep", json={"alpha_id": self.alpha_id})
         assert resp.status_code == 200
         assert resp.json()["state"] == "sleep"
 
-        # 验证状态
+        # Verify state
         resp = client.get(f"/brain/status?alpha_id={self.alpha_id}")
         assert resp.json()["state"] == "sleep"
 
-        # 唤醒
+        # Wake up
         resp = client.post("/brain/awake", json={"alpha_id": self.alpha_id})
         assert resp.status_code == 200
         assert resp.json()["state"] == "awake"
@@ -178,6 +221,7 @@ class TestWebBrainControl:
         assert resp.status_code == 200
         data = resp.json()
         assert data["success"]
+
 
 class TestWebProfileApi:
     def test_api_profile_returns_empty_profile(self, client):
@@ -192,6 +236,7 @@ class TestWebProfileApi:
 
     def test_api_profile_reflects_collected_sources(self, client):
         from alpha_id.profile_schema import AlphaIDProfile, save_profile
+
         profile = AlphaIDProfile(did="did:aid:test", created_at="2026-01-01T00:00:00Z")
         profile.extra["x_collected_sources"] = ["git", "browser"]
         profile.extra["x_provenance"] = {"tone": {"source": "cursor", "confidence": 0.8}}

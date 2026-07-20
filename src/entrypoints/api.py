@@ -2,6 +2,14 @@
 
 import argparse
 import sys
+from pathlib import Path
+
+# Ensure `alpha_id` package is resolvable whether this module is run as:
+#   - `python -m src.entrypoints.api`
+#   - `python src/entrypoints/api.py`
+_src_dir = Path(__file__).resolve().parent.parent
+if str(_src_dir) not in sys.path:
+    sys.path.insert(0, str(_src_dir))
 
 
 def main():

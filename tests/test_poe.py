@@ -377,13 +377,14 @@ class TestPoEIntegration:
 
         skill_file = tmp_path / "hello.py"
         skill_file.write_text('def main(p): return "hello " + p.get("name","world")')
-        pkg = sign_skill(skill_file, author, name="hello")
+        pkg = sign_skill(skill_file, author, name="hello", content_type="text")
         with open(skill_file, "rb") as fh:
             registry.register(pkg, content=fh.read())
 
         # 执行
         result = runtime.execute("hello", '{"name":"PoE"}', executor_did=signer.did)
-        assert "hello PoE" in result
+        # 安全模式：text 类型直接返回文件原文
+        assert "def main(p)" in result
 
         # 验证 PoE 已生成
         poes = poe_store.list_for_skill("hello")
@@ -423,11 +424,12 @@ class TestPoEIntegration:
 
         skill_file = tmp_path / "test.py"
         skill_file.write_text('def main(p): return "ok"')
-        pkg = sign_skill(skill_file, author, name="test_poe_attr")
+        pkg = sign_skill(skill_file, author, name="test_poe_attr", content_type="text")
         with open(skill_file, "rb") as fh:
             registry.register(pkg, content=fh.read())
 
         runtime.execute("test_poe_attr", "{}", executor_did=signer.did)
+        # 安全模式：text 类型直接返回原文，不执行代码
 
         # 归因已记录
         stats = tracker.get_author_stats(author.did)
@@ -441,7 +443,7 @@ class TestPoEIntegration:
         """PoE 生成失败不阻塞技能执行"""
         from alpha_id.skill_signer import SkillRegistry, SkillRuntime, sign_skill, SkillPackage
 
-        # 没有 signer 的 PoEClient 会失败——用 None 模拟
+        # 用无身份的 signer 模拟 PoEClient 失败场景
         signer = AIDSigner()
         signer.generate()
         author = AIDSigner()
@@ -459,10 +461,10 @@ class TestPoEIntegration:
 
         skill_file = tmp_path / "simple.py"
         skill_file.write_text('def main(p): return "ok"')
-        pkg = sign_skill(skill_file, author, name="simple")
+        pkg = sign_skill(skill_file, author, name="simple", content_type="text")
         with open(skill_file, "rb") as fh:
             registry.register(pkg, content=fh.read())
 
-        # 应该正常执行，不抛异常
+        # 应该正常返回文件内容，不抛异常
         result = runtime.execute("simple", "{}", executor_did=signer.did)
-        assert "ok" in result or "返回" in result
+        assert "ok" in result or "返回" in result or "def main" in result

@@ -16,7 +16,7 @@ from alpha_id.did import DIDRegistry
 
 logger = logging.getLogger(__name__)
 
-SUPPORTED_CONTENT_TYPES = ["python", "shell", "javascript", "typescript", "text", "markdown"]
+SUPPORTED_CONTENT_TYPES = ["shell", "javascript", "typescript", "text", "markdown"]
 
 
 class SkillSigningError(Exception):
@@ -101,7 +101,7 @@ class SkillPackage:
 
 
 def sign_skill(
-    skill_file, signer, name="", version="1.0.0", description="", content_type="python", tags=None, dependencies=None
+    skill_file, signer, name="", version="1.0.0", description="", content_type="text", tags=None, dependencies=None
 ):
     """Sign a skill file and return a SkillPackage"""
     if not signer.has_identity:
@@ -488,8 +488,8 @@ class SkillRuntime:
         success = True
         result_text = ""
 
-        # Markdown skills return content directly
-        if pkg.content_type == "markdown":
+        # Only allow safe content types to return their content directly
+        if pkg.content_type in ("markdown", "text"):
             content = skill_file.read_text(encoding="utf-8")
             duration_ms = int((time.time() - start) * 1000)
             result_text = content
@@ -500,42 +500,8 @@ class SkillRuntime:
             self._generate_poe(name, pkg, params, result_text, success, duration_ms, executor_did)
             return result_text
 
-        try:
-            content = stored_content.decode("utf-8", errors="replace")
-            local_ns = {}
-            import io
-            import sys as _sys
-
-            old_stdout = _sys.stdout
-            _sys.stdout = io.StringIO()
-            try:
-                exec(content, local_ns)
-            finally:
-                captured = _sys.stdout.getvalue()
-                _sys.stdout = old_stdout
-            if "main" in local_ns:
-                import json as _json
-
-                try:
-                    p = _json.loads(params) if params else {}
-                except json.JSONDecodeError:
-                    p = {}
-                output = local_ns["main"](p)
-                if isinstance(output, (dict, list)):
-                    result_text = _json.dumps(output, ensure_ascii=False)
-                else:
-                    result_text = str(output) or captured
-            else:
-                result_text = captured or "技能执行完毕（无 main 函数）"
-        except Exception:
-            success = True  # Runtime swallows exceptions
-            result_text = captured if "captured" in dir() and captured else "技能执行完毕"
-        finally:
-            duration_ms = int((time.time() - start) * 1000)
-        if self._tracker and executor_did:
-            self._tracker.record_execution(pkg=pkg, executor_did=executor_did, success=success, duration_ms=duration_ms)
-        self._generate_poe(name, pkg, params, result_text, success, duration_ms, executor_did)
-        return result_text or "技能执行完毕"
+        # Reject executable content types for security
+        return f"不支持的技能内容类型: {pkg.content_type}，出于安全考虑已禁用执行"
 
     def _generate_poe(self, name, pkg, params, output, success, duration_ms, executor_did):
         """Generate PoE record if poe_client is available"""

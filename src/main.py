@@ -1,17 +1,35 @@
 """Alpha-ID API 服务入口"""
 
 import os
+import sys
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import AsyncGenerator
+
+# Ensure this module can be imported either as:
+#   - `from main import app`  (src dir on sys.path)
+#   - `from src.main import app`  (project root on sys.path, common in tests)
+_src_dir = Path(__file__).resolve().parent
+if str(_src_dir) not in sys.path:
+    sys.path.insert(0, str(_src_dir))
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from alpha_id.container import Container
 from auth.jwt import validate_master_key
-from .api.identity import router as identity_router
-from .api.risk import router as risk_router
-from .api.social import router as social_router
+
+# Support both package-style imports (`src.main`) and direct module imports (`main`).
+if __package__:
+    from .api.identity import router as identity_router
+    from .api.risk import router as risk_router
+    from .api.social import router as social_router
+    from .api.shortdrama import router as shortdrama_router
+else:
+    from api.identity import router as identity_router
+    from api.risk import router as risk_router
+    from api.social import router as social_router
+    from api.shortdrama import router as shortdrama_router
 
 
 @asynccontextmanager
@@ -56,6 +74,7 @@ app.add_middleware(
 app.include_router(identity_router)
 app.include_router(social_router)
 app.include_router(risk_router)
+app.include_router(shortdrama_router)
 
 
 @app.get("/health")

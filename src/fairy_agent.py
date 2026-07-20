@@ -12,9 +12,12 @@ FairyBrain — 桌面精灵的 LLM 大脑
 """
 
 import json
+import logging
 import os
 import threading
 from typing import Callable, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 # ── 桌面工具（延迟加载） ──
 
@@ -148,6 +151,22 @@ class FairyBrain:
 ### 🆔 show_identity（身份）
 - 显示 AID 数字身份
 
+### 🎬 短剧审核工具组
+- `shortdrama_scan_and_submit`：AI 预扫短剧内容并提交审核队列。用户说「预审短剧」「审核剧本」「检查能不能发」时调用。
+- `shortdrama_query_status`：查询审核任务状态。需要 job_id。
+- `shortdrama_list_jobs`：列出所有审核任务。可按 status 过滤：pending / reviewing / approved / rejected。
+- `shortdrama_approve`：审核通过。需要 job_id。
+- `shortdrama_reject`：审核拒绝。需要 job_id 和 reason。
+- `shortdrama_copy_upload_info`：复制上传信息到剪贴板。需要 job_id。
+
+## 短剧审核链式流程（重要）
+当用户要求审核短剧时，按以下顺序调用：
+1. `shortdrama_scan_and_submit` 提交内容，获得 job_id
+2. `shortdrama_query_status` 用 job_id 查询审核状态
+3. 如果状态是 reviewing，告诉用户"已提交审核，预计 1-3 天"
+4. 如果用户要求通过/拒绝，调用 `shortdrama_approve` 或 `shortdrama_reject`
+5. 最后调用 `shortdrama_copy_upload_info` 把上传信息复制到剪贴板，方便用户手动粘贴到短剧平台
+
 ## 你的性格
 - 温和、简洁、务实
 - 用中文回答，口语化
@@ -158,7 +177,8 @@ class FairyBrain:
 现在工具会返回真实数据给你，你可以：
 1. 先 quick_look → 看到屏幕上有"微信" → 再找微信窗口位置 → 点击它
 2. 先 query_memory → 知道用户上次说过什么 → 再执行操作
-3. 分步思考，每一步看到结果后再决定下一步
+3. 短剧审核：scan_and_submit → query_status → approve/reject → copy_upload_info
+4. 分步思考，每一步看到结果后再决定下一步
 
 ## 规则
 - 如果用户随便聊天（打招呼、问好、闲聊），直接 chat 回复，不用调工具
@@ -417,6 +437,140 @@ class FairyBrain:
             )
         )
 
+        # ── 短剧自动化工具 ──
+        self._register_shortdrama_tools()
+
+    def _register_shortdrama_tools(self):
+        """注册短剧创作与审核工具"""
+        from tools.shortdrama_tool import ShortDramaTool
+
+        tool = ShortDramaTool()
+
+        def _scan_and_submit(title: str, content: str, content_type: str = "video"):
+            """AI预扫 + 提交审核队列。title为短剧标题，content为剧本/描述。返回job_id和审核状态。"""
+            result = tool.scan_and_submit(title=title, content=content, content_type=content_type)
+            return json.dumps(result, ensure_ascii=False, indent=2)
+
+        def _query_review_status(job_id: str):
+            """查询短剧审核状态。job_id是审核任务的ID。返回状态：pending/reviewing/approved/rejected。"""
+            result = tool.query_status(job_id)
+            return json.dumps(result, ensure_ascii=False, indent=2)
+
+        def _list_review_jobs(user_id: str = "default", status: str = ""):
+            """列出所有短剧审核任务。status可选过滤：pending/reviewing/approved/rejected。"""
+            result = tool.list_jobs(user_id=user_id, status=status or None)
+            return json.dumps(result, ensure_ascii=False, indent=2)
+
+        def _approve_job(job_id: str, reviewer: str = "admin"):
+            """人工审核通过短剧任务。job_id是审核任务ID，reviewer是审核人。"""
+            result = tool.approve_job(job_id, reviewer=reviewer)
+            return json.dumps(result, ensure_ascii=False, indent=2)
+
+        def _reject_job(job_id: str, reason: str, reviewer: str = "admin"):
+            """人工审核拒绝短剧任务。job_id是审核任务ID，reason是拒绝原因，reviewer是审核人。"""
+            result = tool.reject_job(job_id, reason=reason, reviewer=reviewer)
+            return json.dumps(result, ensure_ascii=False, indent=2)
+
+        def _copy_upload_info(job_id: str):
+            """复制短剧上传信息到剪贴板。job_id是审核任务ID。复制后用户可直接粘贴到短剧平台。"""
+            info = tool.get_upload_info(job_id)
+            if not info.get("success"):
+                return json.dumps(info, ensure_ascii=False, indent=2)
+            text = info.get("text", "")
+            copy_result = tool.copy_to_clipboard(text)
+            return json.dumps({**copy_result, "upload_info": info.get("upload_info", {})}, ensure_ascii=False, indent=2)
+
+        self._add_tool(
+            FairyTool(
+                name="shortdrama_scan_and_submit",
+                description="短剧内容AI预检并提交审核。适合用户说「预审短剧」「审核剧本」「检查能不能发」时调用。返回job_id用于后续查询。",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "title": {"type": "string", "description": "短剧标题"},
+                        "content": {"type": "string", "description": "剧本内容或描述"},
+                        "content_type": {"type": "string", "description": "内容类型，默认 video", "default": "video"},
+                    },
+                    "required": ["title", "content"],
+                },
+                fn=_scan_and_submit,
+            )
+        )
+        self._add_tool(
+            FairyTool(
+                name="shortdrama_query_status",
+                description="查询短剧审核状态。用户问「审核怎么样了」「看看状态」时调用。需要job_id参数。",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "job_id": {"type": "string", "description": "审核任务ID，从 scan_and_submit 返回结果中获取"},
+                    },
+                    "required": ["job_id"],
+                },
+                fn=_query_review_status,
+            )
+        )
+        self._add_tool(
+            FairyTool(
+                name="shortdrama_list_jobs",
+                description="列出所有短剧审核任务。用户问「有哪些审核任务」「看看所有短剧」时调用。",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "user_id": {"type": "string", "description": "用户ID，默认 default"},
+                        "status": {"type": "string", "description": "状态过滤：pending/reviewing/approved/rejected"},
+                    },
+                    "required": [],
+                },
+                fn=_list_review_jobs,
+            )
+        )
+        self._add_tool(
+            FairyTool(
+                name="shortdrama_approve",
+                description="人工审核通过短剧任务。用户说「通过」「批准」「过审」时调用。需要job_id。",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "job_id": {"type": "string", "description": "审核任务ID"},
+                        "reviewer": {"type": "string", "description": "审核人，默认 admin"},
+                    },
+                    "required": ["job_id"],
+                },
+                fn=_approve_job,
+            )
+        )
+        self._add_tool(
+            FairyTool(
+                name="shortdrama_reject",
+                description="人工审核拒绝短剧任务。用户说「拒绝」「打回」「需要修改」时调用。需要job_id和reason。",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "job_id": {"type": "string", "description": "审核任务ID"},
+                        "reason": {"type": "string", "description": "拒绝原因"},
+                        "reviewer": {"type": "string", "description": "审核人，默认 admin"},
+                    },
+                    "required": ["job_id", "reason"],
+                },
+                fn=_reject_job,
+            )
+        )
+        self._add_tool(
+            FairyTool(
+                name="shortdrama_copy_upload_info",
+                description="复制短剧上传信息到剪贴板。用户说「复制上传信息」「粘贴到平台」时调用。需要job_id。",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "job_id": {"type": "string", "description": "审核任务ID"},
+                    },
+                    "required": ["job_id"],
+                },
+                fn=_copy_upload_info,
+            )
+        )
+
     def _add_tool(self, tool: FairyTool):
         self.tools[tool.name] = tool
 
@@ -447,7 +601,7 @@ class FairyBrain:
                 tags=["desktop_fairy"],
             )
         except Exception:
-            pass
+            logger.exception("Unhandled exception")
 
     # ── 核心处理 ──
 

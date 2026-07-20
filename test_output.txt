@@ -1,0 +1,253 @@
+F.FE..EFFFEE.EEEEE................................F..................... [  8%]
+.....F.................................................................. [ 16%]
+........................................................................ [ 24%]
+.....................F..F.F.FFFF....FFFFFFF.EEEEEEEEEE...........FFFFFFF [ 32%]
+FFFFFFFFFF..FFF...........F............................................. [ 40%]
+........................................................................ [ 48%]
+........................................................................ [ 56%]
+..................................................................F..... [ 64%]
+........................................................................ [ 72%]
+........................................................................ [ 80%]
+.......................F.....................F.......................... [ 88%]
+........................................................................ [ 97%]
+......F..FEEEEF...EEEEE...                                               [100%]
+=================================== ERRORS ====================================
+_______ ERROR at setup of TestIdentityE2E.test_get_me_with_valid_token ________
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+______ ERROR at setup of TestIdentityE2E.test_get_profile_requires_auth _______
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+_____________ ERROR at setup of TestIdentityE2E.test_bind_device ______________
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+____________ ERROR at setup of TestIdentityE2E.test_record_session ____________
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+_____ ERROR at setup of TestSocialE2E.test_send_and_accept_friend_request _____
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+_________ ERROR at setup of TestSocialE2E.test_reject_friend_request __________
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+______ ERROR at setup of TestSocialE2E.test_send_message_between_friends ______
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+____ ERROR at setup of TestSocialE2E.test_send_message_to_non_friend_fails ____
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+________ ERROR at setup of TestSocialE2E.test_friend_request_duplicate ________
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+__________ ERROR at setup of TestSocialAPI.test_send_friend_request ___________
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+______ ERROR at setup of TestSocialAPI.test_send_friend_request_missing _______
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+_________ ERROR at setup of TestSocialAPI.test_accept_friend_request __________
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+_________ ERROR at setup of TestSocialAPI.test_reject_friend_request __________
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+______________ ERROR at setup of TestSocialAPI.test_get_friends _______________
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+__________ ERROR at setup of TestSocialAPI.test_get_pending_requests __________
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+______________ ERROR at setup of TestSocialAPI.test_send_message ______________
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+________ ERROR at setup of TestSocialAPI.test_send_message_not_friends ________
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+______________ ERROR at setup of TestSocialAPI.test_get_messages ______________
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+__________ ERROR at setup of TestSocialAPI.test_get_messages_unread ___________
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+__________ ERROR at setup of TestWebChat.test_chat_requires_alpha_id __________
+E   KeyError: 'alpha_id'
+__________ ERROR at setup of TestWebChat.test_chat_requires_message ___________
+E   KeyError: 'alpha_id'
+___________ ERROR at setup of TestWebChat.test_chat_unauthenticated ___________
+E   KeyError: 'alpha_id'
+________________ ERROR at setup of TestWebChat.test_chat_basic ________________
+E   KeyError: 'alpha_id'
+___________ ERROR at setup of TestWebBrainControl.test_brain_status ___________
+E   KeyError: 'alpha_id'
+_____ ERROR at setup of TestWebBrainControl.test_brain_status_missing_id ______
+E   KeyError: 'alpha_id'
+_____ ERROR at setup of TestWebBrainControl.test_brain_status_nonexistent _____
+E   KeyError: 'alpha_id'
+______ ERROR at setup of TestWebBrainControl.test_brain_sleep_and_awake _______
+E   KeyError: 'alpha_id'
+___________ ERROR at setup of TestWebBrainControl.test_brain_think ____________
+E   KeyError: 'alpha_id'
+================================== FAILURES ===================================
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   assert 'Hello, Alice' in "def main(p): return 'Hello, ' + p.get('name', 'World')"
+D:\AID\projects\tests\integration\test_p3_multi_agent.py:142: assert 'Hello, Alice' in "def main(p): return 'Hello, ' + p.get('name', 'World')"
+E   assert 'Hello, Alice' in 'def main(params):\n    name = params.get("name", "World")\n    return f"Hello, {name}!"\n'
+D:\mindflow-workspace\AID\projects\tests\integration\test_skill_lifecycle_e2e.py:61: assert 'Hello, Alice' in 'def main(params):\n    name = params.get("name", "World")\n    return f"Hello, {name}!"\n'
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+D:\mindflow-workspace\AID\projects\src\auth\jwt.py:24: RuntimeError: AUTH_MASTER_KEY 未配置，无法启动。请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。
+E   assert 'Hello, CLI' in 'def main(p): return "Hello, " + p.get("name", "World")\n'
+     +  where 'def main(p): return "Hello, " + p.get("name", "World")\n' = <Result okay>.stdout
+D:\AID\projects\tests\test_cli.py:167: assert 'Hello, CLI' in 'def main(p): return "Hello, " + p.get("name", "World")\n'
+E   assert 'hello PoE' in 'def main(p): return "hello " + p.get("name","world")'
+D:\mindflow-workspace\AID\projects\tests\test_poe.py:386: assert 'hello PoE' in 'def main(p): return "hello " + p.get("name","world")'
+E   assert '"greeting": "hello TestAgent"' in '\ndef main(params):\n    name = params.get("name", "world")\n    return {"greeting": f"hello {name}"}\n'
+D:\mindflow-workspace\AID\projects\tests\test_skill_signer.py:605: assert '"greeting": "hello TestAgent"' in '\ndef main(params):\n    name = params.get("name", "world")\n    return {"greeting": f"hello {name}"}\n'
+E   assert '执行完毕' in "def main(p): raise RuntimeError('boom')"
+D:\mindflow-workspace\AID\projects\tests\test_skill_signer.py:997: assert '执行完毕' in "def main(p): raise RuntimeError('boom')"
+E   assert 403 == 200
+     +  where 403 = <Response [403 Forbidden]>.status_code
+D:\AID\projects\tests\test_web.py:22: assert 403 == 200
+E   KeyError: 'alpha_id'
+D:\AID\projects\tests\test_web.py:45: KeyError: 'alpha_id'
+E   KeyError: 'alpha_id'
+D:\AID\projects\tests\test_web.py:106: KeyError: 'alpha_id'
+============================== warnings summary ===============================
+C:\Users\温青\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\speech_recognition\__init__.py:7
+  C:\Users\温青\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\speech_recognition\__init__.py:7: DeprecationWarning: aifc was removed in Python 3.13. Please be aware that you are currently NOT using standard 'aifc', but instead a separately installed 'standard-aifc'.
+    import aifc
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/integration/test_e2e_api.py::TestIdentityE2E::test_register_and_login
+FAILED tests/integration/test_e2e_api.py::TestIdentityE2E::test_login_with_empty_device_fp_registered
+FAILED tests/integration/test_e2e_api.py::TestIdentityE2E::test_get_nonexistent_profile_returns_404
+FAILED tests/integration/test_e2e_api.py::TestIdentityE2E::test_refresh_token
+FAILED tests/integration/test_e2e_api.py::TestIdentityE2E::test_bad_refresh_token_returns_401
+FAILED tests/integration/test_p3_multi_agent.py::TestAgentNetwork::test_call_skill_basic
+FAILED tests/integration/test_skill_lifecycle_e2e.py::TestSkillLifecycleE2E::test_full_lifecycle
+FAILED tests/test_api.py::TestAuthAPI::test_login_success - RuntimeError: AUT...
+FAILED tests/test_api.py::TestAuthAPI::test_refresh_token - RuntimeError: AUT...
+FAILED tests/test_api.py::TestAuthAPI::test_me_endpoint - RuntimeError: AUTH_...
+FAILED tests/test_api.py::TestAuthAPI::test_protected_endpoint_with_bearer - ...
+FAILED tests/test_api.py::TestAuthAPI::test_protected_endpoint_no_auth - Runt...
+FAILED tests/test_api.py::TestAuthAPI::test_protected_endpoint_bad_token - Ru...
+FAILED tests/test_api.py::TestAuthAPI::test_refresh_access_denied - RuntimeEr...
+FAILED tests/test_api.py::TestIdentityAPI::test_get_profile - RuntimeError: A...
+FAILED tests/test_api.py::TestIdentityAPI::test_get_profile_not_found - Runti...
+FAILED tests/test_api.py::TestIdentityAPI::test_bind_device - RuntimeError: A...
+FAILED tests/test_api.py::TestIdentityAPI::test_bind_device_invalid_user - Ru...
+FAILED tests/test_api.py::TestIdentityAPI::test_sync_device - RuntimeError: A...
+FAILED tests/test_api.py::TestIdentityAPI::test_sync_device_invalid - Runtime...
+FAILED tests/test_api.py::TestIdentityAPI::test_record_session - RuntimeError...
+FAILED tests/test_auth.py::TestSecretKey::test_singleton - RuntimeError: AUTH...
+FAILED tests/test_auth.py::TestSecretKey::test_key_is_32_bytes - RuntimeError...
+FAILED tests/test_auth.py::TestSecretKey::test_hex_format - RuntimeError: AUT...
+FAILED tests/test_auth.py::TestTokenCreation::test_access_token_format - Runt...
+FAILED tests/test_auth.py::TestTokenCreation::test_access_token_subject - Run...
+FAILED tests/test_auth.py::TestTokenCreation::test_refresh_token_type - Runti...
+FAILED tests/test_auth.py::TestTokenCreation::test_access_token_expiry - Runt...
+FAILED tests/test_auth.py::TestTokenCreation::test_refresh_token_expiry - Run...
+FAILED tests/test_auth.py::TestTokenCreation::test_extra_claims - RuntimeErro...
+FAILED tests/test_auth.py::TestTokenCreation::test_different_users_different_tokens
+FAILED tests/test_auth.py::TestTokenCreation::test_iat_is_recent - RuntimeErr...
+FAILED tests/test_auth.py::TestTokenVerification::test_verify_access_ok - Run...
+FAILED tests/test_auth.py::TestTokenVerification::test_verify_refresh_ok - Ru...
+FAILED tests/test_auth.py::TestTokenVerification::test_verify_wrong_type - Ru...
+FAILED tests/test_auth.py::TestTokenVerification::test_tampered_payload - Run...
+FAILED tests/test_auth.py::TestTokenVerification::test_tampered_header - Runt...
+FAILED tests/test_auth.py::TestTokenVerification::test_expired_token - Runtim...
+FAILED tests/test_auth.py::TestVerifyTokenEdgeCases::test_invalid_base64 - Ru...
+FAILED tests/test_auth.py::TestVerifyTokenEdgeCases::test_unknown_type - Runt...
+FAILED tests/test_auth.py::TestGetCurrentAlphaId::test_valid_bearer - Runtime...
+FAILED tests/test_cli.py::TestSkill::test_full_flow - assert 'Hello, CLI' in ...
+FAILED tests/test_poe.py::TestPoEIntegration::test_runtime_generates_poe - as...
+FAILED tests/test_skill_signer.py::TestSkillRuntime::test_execute_python - as...
+FAILED tests/test_skill_signer.py::TestAttributionIntegration::test_runtime_failure_recorded
+FAILED tests/test_web.py::TestWebLogin::test_login_with_device_fp - assert 40...
+FAILED tests/test_web.py::TestWebLogin::test_login_twice_returns_same_alpha_id
+FAILED tests/test_web.py::TestWebIdentity::test_get_identity - KeyError: 'alp...
+ERROR tests/integration/test_e2e_api.py::TestIdentityE2E::test_get_me_with_valid_token
+ERROR tests/integration/test_e2e_api.py::TestIdentityE2E::test_get_profile_requires_auth
+ERROR tests/integration/test_e2e_api.py::TestIdentityE2E::test_bind_device - ...
+ERROR tests/integration/test_e2e_api.py::TestIdentityE2E::test_record_session
+ERROR tests/integration/test_e2e_api.py::TestSocialE2E::test_send_and_accept_friend_request
+ERROR tests/integration/test_e2e_api.py::TestSocialE2E::test_reject_friend_request
+ERROR tests/integration/test_e2e_api.py::TestSocialE2E::test_send_message_between_friends
+ERROR tests/integration/test_e2e_api.py::TestSocialE2E::test_send_message_to_non_friend_fails
+ERROR tests/integration/test_e2e_api.py::TestSocialE2E::test_friend_request_duplicate
+ERROR tests/test_api.py::TestSocialAPI::test_send_friend_request - RuntimeErr...
+ERROR tests/test_api.py::TestSocialAPI::test_send_friend_request_missing - Ru...
+ERROR tests/test_api.py::TestSocialAPI::test_accept_friend_request - RuntimeE...
+ERROR tests/test_api.py::TestSocialAPI::test_reject_friend_request - RuntimeE...
+ERROR tests/test_api.py::TestSocialAPI::test_get_friends - RuntimeError: AUTH...
+ERROR tests/test_api.py::TestSocialAPI::test_get_pending_requests - RuntimeEr...
+ERROR tests/test_api.py::TestSocialAPI::test_send_message - RuntimeError: AUT...
+ERROR tests/test_api.py::TestSocialAPI::test_send_message_not_friends - Runti...
+ERROR tests/test_api.py::TestSocialAPI::test_get_messages - RuntimeError: AUT...
+ERROR tests/test_api.py::TestSocialAPI::test_get_messages_unread - RuntimeErr...
+ERROR tests/test_web.py::TestWebChat::test_chat_requires_alpha_id - KeyError:...
+ERROR tests/test_web.py::TestWebChat::test_chat_requires_message - KeyError: ...
+ERROR tests/test_web.py::TestWebChat::test_chat_unauthenticated - KeyError: '...
+ERROR tests/test_web.py::TestWebChat::test_chat_basic - KeyError: 'alpha_id'
+ERROR tests/test_web.py::TestWebBrainControl::test_brain_status - KeyError: '...
+ERROR tests/test_web.py::TestWebBrainControl::test_brain_status_missing_id - ...
+ERROR tests/test_web.py::TestWebBrainControl::test_brain_status_nonexistent
+ERROR tests/test_web.py::TestWebBrainControl::test_brain_sleep_and_awake - Ke...
+ERROR tests/test_web.py::TestWebBrainControl::test_brain_think - KeyError: 'a...
+48 failed, 814 passed, 1 warning, 28 errors in 22.15s

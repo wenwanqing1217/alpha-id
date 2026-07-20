@@ -122,3 +122,36 @@ class RiskEvaluateRequest(BaseModel):
     device_current: Optional[DeviceFingerprintModel] = None
     behavior_current: Optional[BehaviorFingerprintModel] = None
     voice_data: Optional[VoiceDataModel] = None
+
+
+# ── 短剧自动化模块 ──
+
+
+class ShortDramaSubmitRequest(BaseModel):
+    title: str = Field(..., description="短剧标题")
+    content: str = Field(..., description="剧本内容或描述")
+    content_type: str = Field(default="video", description="内容类型")
+    user_id: str = Field(default="default", description="用户ID")
+
+
+class ShortDramaQueryRequest(BaseModel):
+    job_id: str = Field(..., description="审核任务ID")
+    user_id: str = Field(default="default", description="用户ID")
+
+
+class ShortDramaJobResponse(BaseModel):
+    success: bool
+    status: str
+    job_id: str
+    title: str
+    ai_scan_result: Optional[dict] = None
+    review_result: Optional[dict] = None
+    created_at: str
+    updated_at: str
+    message: str = ""
+
+
+class ShortDramaListResponse(BaseModel):
+    success: bool
+    total: int
+    jobs: List[dict]

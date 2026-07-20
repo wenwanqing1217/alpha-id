@@ -22,6 +22,9 @@ _crt_search_path = r"D:\QQNT"
 if os.path.isdir(_crt_search_path):
     os.add_dll_directory(_crt_search_path)
 
+# 在导入任何使用 JWT 的模块前设置测试密钥
+os.environ.setdefault("AUTH_MASTER_KEY", "test-master-key-256bit-secret-for-unit-tests-only")
+
 try:
     from fastapi.testclient import TestClient
 
@@ -34,9 +37,6 @@ pytestmark = pytest.mark.skipif(
     not _HAVE_FASTAPI,
     reason="缺少 FastAPI/pydantic 环境（需要 Python 3.12+ 及 Visual C++ Redistributable）",
 )
-
-
-# ── 工厂：通过容器注入临时存储 ──
 
 
 @pytest.fixture(autouse=True)
@@ -381,10 +381,15 @@ class TestSocialAPI:
 
     @pytest.fixture(autouse=True)
     def _setup_users(self, client, identity_db, social_db):
-        """每个测试前注册两个用户（依赖 identity 也在运行）"""
-        # identity_db fixture 也在此生效（通过 autouse）
+        """每个测试前注册两个用户并登录获取令牌"""
         self.alice = register_user(client, "fp-alice-soc")
+        self.alice["token"] = login_user(client, self.alice["alpha_id"], "fp-alice-soc")["access_token"]
+
         self.bob = register_user(client, "fp-bob-soc")
+        self.bob["token"] = login_user(client, self.bob["alpha_id"], "fp-bob-soc")["access_token"]
+
+    def _auth_headers(self, user):
+        return {"Authorization": f"Bearer {user['token']}"}
 
     def test_send_friend_request(self, client):
         resp = client.post(
@@ -394,6 +399,7 @@ class TestSocialAPI:
                 "to_alpha_id": self.bob["alpha_id"],
                 "message": "hello bob",
             },
+            headers=self._auth_headers(self.alice),
         )
         assert resp.status_code == 200
         data = resp.json()
@@ -408,6 +414,7 @@ class TestSocialAPI:
                 "to_alpha_id": "AID-NOONE",
                 "message": "",
             },
+            headers=self._auth_headers(self.alice),
         )
         # social manager 不验证用户是否存在，只关心请求是否成功发送
         assert resp.status_code == 200
@@ -420,6 +427,7 @@ class TestSocialAPI:
                 "from_alpha_id": self.alice["alpha_id"],
                 "to_alpha_id": self.bob["alpha_id"],
             },
+            headers=self._auth_headers(self.alice),
         )
         request_id = req_resp.json()["request_id"]
 
@@ -429,6 +437,7 @@ class TestSocialAPI:
             json={
                 "response": "accept",
             },
+            headers=self._auth_headers(self.bob),
         )
         assert resp.status_code == 200
         data = resp.json()
@@ -442,6 +451,7 @@ class TestSocialAPI:
                 "from_alpha_id": self.alice["alpha_id"],
                 "to_alpha_id": self.bob["alpha_id"],
             },
+            headers=self._auth_headers(self.alice),
         )
         request_id = req_resp.json()["request_id"]
 
@@ -450,6 +460,7 @@ class TestSocialAPI:
             json={
                 "response": "reject",
             },
+            headers=self._auth_headers(self.bob),
         )
         assert resp.status_code == 200
         data = resp.json()
@@ -463,11 +474,12 @@ class TestSocialAPI:
                 "from_alpha_id": self.alice["alpha_id"],
                 "to_alpha_id": self.bob["alpha_id"],
             },
+            headers=self._auth_headers(self.alice),
         )
         rid = req_resp.json()["request_id"]
-        client.put(f"/api/v1/social/friend-request/{rid}", json={"response": "accept"})
+        client.put(f"/api/v1/social/friend-request/{rid}", json={"response": "accept"}, headers=self._auth_headers(self.bob))
 
-        resp = client.get(f"/api/v1/social/{self.alice['alpha_id']}/friends")
+        resp = client.get(f"/api/v1/social/{self.alice['alpha_id']}/friends", headers=self._auth_headers(self.alice))
         assert resp.status_code == 200
         data = resp.json()
         assert data["count"] == 1
@@ -480,9 +492,10 @@ class TestSocialAPI:
                 "from_alpha_id": self.alice["alpha_id"],
                 "to_alpha_id": self.bob["alpha_id"],
             },
+            headers=self._auth_headers(self.alice),
         )
 
-        resp = client.get(f"/api/v1/social/{self.bob['alpha_id']}/requests")
+        resp = client.get(f"/api/v1/social/{self.bob['alpha_id']}/requests", headers=self._auth_headers(self.bob))
         assert resp.status_code == 200
         data = resp.json()
         assert data["count"] == 1
@@ -495,9 +508,10 @@ class TestSocialAPI:
                 "from_alpha_id": self.alice["alpha_id"],
                 "to_alpha_id": self.bob["alpha_id"],
             },
+            headers=self._auth_headers(self.alice),
         )
         rid = req_resp.json()["request_id"]
-        client.put(f"/api/v1/social/friend-request/{rid}", json={"response": "accept"})
+        client.put(f"/api/v1/social/friend-request/{rid}", json={"response": "accept"}, headers=self._auth_headers(self.bob))
 
         resp = client.post(
             "/api/v1/social/message",
@@ -507,6 +521,7 @@ class TestSocialAPI:
                 "content": "你好 Bob！",
                 "message_type": "text",
             },
+            headers=self._auth_headers(self.alice),
         )
         assert resp.status_code == 200
         data = resp.json()
@@ -520,6 +535,7 @@ class TestSocialAPI:
                 "to_alpha_id": self.bob["alpha_id"],
                 "content": "hi",
             },
+            headers=self._auth_headers(self.alice),
         )
         assert resp.status_code == 400
 
@@ -531,9 +547,10 @@ class TestSocialAPI:
                 "from_alpha_id": self.alice["alpha_id"],
                 "to_alpha_id": self.bob["alpha_id"],
             },
+            headers=self._auth_headers(self.alice),
         )
         rid = req_resp.json()["request_id"]
-        client.put(f"/api/v1/social/friend-request/{rid}", json={"response": "accept"})
+        client.put(f"/api/v1/social/friend-request/{rid}", json={"response": "accept"}, headers=self._auth_headers(self.bob))
         client.post(
             "/api/v1/social/message",
             json={
@@ -541,9 +558,10 @@ class TestSocialAPI:
                 "to_alpha_id": self.bob["alpha_id"],
                 "content": "hi bob",
             },
+            headers=self._auth_headers(self.alice),
         )
 
-        resp = client.get(f"/api/v1/social/{self.bob['alpha_id']}/messages")
+        resp = client.get(f"/api/v1/social/{self.bob['alpha_id']}/messages", headers=self._auth_headers(self.bob))
         assert resp.status_code == 200
         data = resp.json()
         assert data["count"] == 1
@@ -556,9 +574,10 @@ class TestSocialAPI:
                 "from_alpha_id": self.alice["alpha_id"],
                 "to_alpha_id": self.bob["alpha_id"],
             },
+            headers=self._auth_headers(self.alice),
         )
         rid = req_resp.json()["request_id"]
-        client.put(f"/api/v1/social/friend-request/{rid}", json={"response": "accept"})
+        client.put(f"/api/v1/social/friend-request/{rid}", json={"response": "accept"}, headers=self._auth_headers(self.bob))
         client.post(
             "/api/v1/social/message",
             json={
@@ -566,9 +585,10 @@ class TestSocialAPI:
                 "to_alpha_id": self.bob["alpha_id"],
                 "content": "unread test",
             },
+            headers=self._auth_headers(self.alice),
         )
 
-        resp = client.get(f"/api/v1/social/{self.bob['alpha_id']}/messages?unread_only=true")
+        resp = client.get(f"/api/v1/social/{self.bob['alpha_id']}/messages?unread_only=true", headers=self._auth_headers(self.bob))
         assert resp.status_code == 200
         data = resp.json()
         assert data["count"] == 1

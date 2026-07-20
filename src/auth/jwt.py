@@ -10,10 +10,7 @@ from typing import Optional
 # ── 配置（生产环境请从环境变量或密钥管理服务读取） ──
 
 # 密钥衍生参数
-MASTER_KEY: str = os.environ.get(
-    "AUTH_MASTER_KEY",
-    "replace-me-with-a-real-256-bit-secret-in-production",
-)
+MASTER_KEY: Optional[str] = os.environ.get("AUTH_MASTER_KEY")
 
 # 令牌有效期
 ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.environ.get("JWT_ACCESS_EXPIRE_MINUTES", "30"))
@@ -22,13 +19,17 @@ REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.environ.get("JWT_REFRESH_EXPIRE_DAYS", "
 ALGORITHM: str = "HS256"
 
 
-def validate_master_key() -> None:
-    """校验主密钥是否已配置，拒绝使用默认 fallback 启动。"""
-    if not os.environ.get("AUTH_MASTER_KEY"):
+def _require_master_key() -> None:
+    if MASTER_KEY is None:
         raise RuntimeError(
-            "AUTH_MASTER_KEY 未配置，无法使用默认密钥启动。"
+            "AUTH_MASTER_KEY 未配置，无法启动。"
             "请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。"
         )
+
+
+def validate_master_key() -> None:
+    """验证 AUTH_MASTER_KEY 是否已配置（启动时调用）"""
+    _require_master_key()
 
 
 # ── 密钥工具 ──
@@ -42,6 +43,7 @@ class SecretKey:
 
     def __new__(cls) -> "SecretKey":
         if cls._instance is None:
+            _require_master_key()
             cls._instance = super().__new__(cls)
             raw = MASTER_KEY.encode("utf-8")
             # 用 SHA-256 将任意长度密钥规范化为 32 字节

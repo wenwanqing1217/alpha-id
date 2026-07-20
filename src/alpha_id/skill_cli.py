@@ -57,7 +57,7 @@ def cmd_sign(
     name: str = typer.Option("", "--name", "-n", help="技能名称（默认用文件名）"),
     version: str = typer.Option("1.0.0", "--version", "-v", help="语义版本号"),
     desc: str = typer.Option("", "--desc", "-d", help="技能描述"),
-    content_type: str = typer.Option("python", "--type", "-t", help="内容类型"),
+    content_type: str = typer.Option("text", "--type", "-t", help="内容类型"),
     tags: str = typer.Option("", "--tags", help="标签，逗号分隔"),
     output: Optional[str] = typer.Option(None, "--output", "-o", help="输出签名包路径"),
     register: bool = typer.Option(False, "--register", "-r", help="签名后注册到本地注册表"),

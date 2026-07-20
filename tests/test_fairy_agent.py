@@ -106,8 +106,8 @@ class TestFairyBrainInit:
         assert brain.api_base == ""
         assert brain.model == "gpt-4o-mini"
         assert brain._client is None
-        # 8 tools registered
-        assert len(brain.tools) == 8
+        # 8 tools registered + 6 shortdrama tools = 14 total
+        assert len(brain.tools) == 14
 
     def test_init_with_env(self, monkeypatch):
         monkeypatch.setenv("DEEPSEEK_API_KEY", "")
@@ -447,3 +447,129 @@ class TestFairyBrainRegisterTools:
         tool = brain.tools["query_memory"]
         result = tool()
         assert "未就绪" in result
+
+
+class TestFairyBrainShortDramaNLControl:
+    """测试 FairyBrain 对短剧审核工具的自然语言控制（单工具调用 + 多步链式流程）。"""
+
+    def _make_mock_chat(self, content=None, tool_calls=None):
+        choice = MagicMock()
+        choice.message.content = content
+        choice.message.tool_calls = tool_calls
+        response = MagicMock()
+        response.choices = [choice]
+        return response
+
+    def test_scan_and_submit_single_tool_call(self, monkeypatch):
+        """用户说「预审短剧」→ 自动调用 shortdrama_scan_and_submit 并返回结果。"""
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+
+        mock_tool_instance = MagicMock()
+        mock_tool_instance.scan_and_submit.return_value = {
+            "job_id": "job-abc123",
+            "status": "pending",
+            "risk_level": "safe",
+            "message": "内容已提交审核",
+            "success": True,
+        }
+
+        with patch("tools.shortdrama_tool.ShortDramaTool", return_value=mock_tool_instance):
+            brain = FairyBrain(MockFairy())
+            brain._client = MagicMock()
+
+            tc = MagicMock()
+            tc.id = "call_1"
+            tc.function.name = "shortdrama_scan_and_submit"
+            tc.function.arguments = '{"title": "test drama", "content": "test content"}'
+
+            brain._client.chat.completions.create.side_effect = [
+                self._make_mock_chat(tool_calls=[tc]),
+                self._make_mock_chat(content="已预审短剧「test drama」，审核任务ID: job-abc123，当前状态: pending"),
+            ]
+
+            result = brain._call_llm("预审短剧，标题是test drama，内容是test content")
+
+            assert "job-abc123" in result
+            assert "pending" in result
+            mock_tool_instance.scan_and_submit.assert_called_once_with(
+                title="test drama", content="test content", content_type="video"
+            )
+            assert brain._client.chat.completions.create.call_count == 2
+
+    def test_multi_step_chain(self, monkeypatch):
+        """多步链式流程：scan_and_submit → query_status → approve → copy_upload_info。"""
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+
+        mock_tool_instance = MagicMock()
+        mock_tool_instance.scan_and_submit.return_value = {
+            "job_id": "job-xyz789",
+            "status": "pending",
+            "risk_level": "safe",
+            "message": "内容已提交审核",
+            "success": True,
+        }
+        mock_tool_instance.query_status.return_value = {
+            "job_id": "job-xyz789",
+            "status": "reviewing",
+            "message": "审核中",
+            "success": True,
+        }
+        mock_tool_instance.approve_job.return_value = {
+            "job_id": "job-xyz789",
+            "status": "approved",
+            "message": "审核通过",
+            "success": True,
+        }
+        mock_tool_instance.get_upload_info.return_value = {
+            "success": True,
+            "text": "标题: test\n链接: https://example.com",
+            "upload_info": {"title": "test", "url": "https://example.com"},
+        }
+        mock_tool_instance.copy_to_clipboard.return_value = {
+            "success": True,
+            "message": "已复制到剪贴板",
+        }
+
+        with patch("tools.shortdrama_tool.ShortDramaTool", return_value=mock_tool_instance):
+            brain = FairyBrain(MockFairy())
+            brain._client = MagicMock()
+
+            tc1 = MagicMock()
+            tc1.id = "call_1"
+            tc1.function.name = "shortdrama_scan_and_submit"
+            tc1.function.arguments = '{"title": "test", "content": "content"}'
+
+            tc2 = MagicMock()
+            tc2.id = "call_2"
+            tc2.function.name = "shortdrama_query_status"
+            tc2.function.arguments = '{"job_id": "job-xyz789"}'
+
+            tc3 = MagicMock()
+            tc3.id = "call_3"
+            tc3.function.name = "shortdrama_approve"
+            tc3.function.arguments = '{"job_id": "job-xyz789"}'
+
+            tc4 = MagicMock()
+            tc4.id = "call_4"
+            tc4.function.name = "shortdrama_copy_upload_info"
+            tc4.function.arguments = '{"job_id": "job-xyz789"}'
+
+            brain._client.chat.completions.create.side_effect = [
+                self._make_mock_chat(tool_calls=[tc1]),
+                self._make_mock_chat(tool_calls=[tc2]),
+                self._make_mock_chat(tool_calls=[tc3]),
+                self._make_mock_chat(tool_calls=[tc4]),
+                self._make_mock_chat(content="短剧审核已完成，上传信息已复制到剪贴板"),
+            ]
+
+            result = brain._call_llm(
+                "预审短剧，标题是test，内容是content，然后查状态，通过，复制上传信息"
+            )
+
+            assert "剪贴板" in result or "完成" in result
+            mock_tool_instance.scan_and_submit.assert_called_once_with(
+                title="test", content="content", content_type="video"
+            )
+            mock_tool_instance.query_status.assert_called_once_with("job-xyz789")
+            mock_tool_instance.approve_job.assert_called_once_with("job-xyz789", reviewer="admin")
+            assert brain._client.chat.completions.create.call_count == 5

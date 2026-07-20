@@ -1,6 +1,6 @@
 """社交网络 API 路由"""
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from alpha_id.container import Container
 from auth.middleware import require_user

@@ -1,7 +1,9 @@
 """Alpha-ID 演示 Web 应用"""
 
+import ipaddress
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse
 
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -222,26 +224,10 @@ async def login(req: LoginRequest):
         alpha_id = req.alpha_id
         action = "login"
     else:
-        # 尝试按设备指纹查找已有用户
-        users = container.storage.load("users") or {}
-        found = None
-        for aid, data in users.items():
-            devices = data.get("devices", [])
-            if req.device_fingerprint in devices:
-                found = aid
-                break
-        if found:
-            alpha_id = found
-            action = "login"
-        else:
-            result = identity.register_user(device_fingerprint=req.device_fingerprint)
-            if not result.get("success"):
-                return JSONResponse(
-                    status_code=400,
-                    content={"error": result.get("message", "注册失败")},
-                )
-            alpha_id = result["alpha_id"]
-            action = "register"
+        return JSONResponse(
+            status_code=403,
+            content={"error": "设备未绑定，请先注册或绑定设备"},
+        )
 
     # 确保大脑已创建并唤醒
     brain = _get_or_create_brain(alpha_id)
@@ -321,6 +307,39 @@ async def _stream_llm(messages: list, model: str = "deepseek-v4-flash"):
     """调用 DeepSeek API 并流式返回 token"""
     api_key = os.getenv("OPENAI_API_KEY") or os.getenv("LLM_API_KEY", "")
     base_url = os.getenv("OPENAI_BASE_URL") or "https://api.deepseek.com/v1"
+
+    # SSRF validation for LLM base_url
+    _ALLOWED_LLM_HOSTS = {
+        "api.deepseek.com",
+        "api.openai.com",
+        "api.siliconflow.cn",
+        "open.bigmodel.cn",
+        "api.moonshot.cn",
+        "api.anthropic.com",
+        "localhost",
+        "127.0.0.1",
+    }
+    parsed_url = urlparse(base_url)
+    hostname = (parsed_url.hostname or "").lower()
+    if parsed_url.scheme not in ("http", "https"):
+        yield f"data: {json.dumps({'error': '不支持的 LLM URL scheme: ' + parsed_url.scheme})}\n\n"
+        yield "data: [DONE]\n\n"
+        return
+    if not hostname:
+        yield f"data: {json.dumps({'error': 'LLM base_url 缺少 hostname'})}\n\n"
+        yield "data: [DONE]\n\n"
+        return
+    if hostname not in _ALLOWED_LLM_HOSTS:
+        try:
+            ip = ipaddress.ip_address(hostname)
+            if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved:
+                yield f"data: {json.dumps({'error': 'LLM base_url 禁止访问内网地址: ' + hostname})}\n\n"
+                yield "data: [DONE]\n\n"
+                return
+        except ValueError:
+            yield f"data: {json.dumps({'error': 'LLM base_url 域名未授权: ' + hostname})}\n\n"
+            yield "data: [DONE]\n\n"
+            return
 
     if not api_key:
         yield f"data: {json.dumps({'error': 'LLM 未配置'})}\n\n"

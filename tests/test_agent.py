@@ -357,9 +357,9 @@ class TestAgentSkillIntegration:
         try:
             author = AIDSigner()
             author.generate()
-            skill_file = tmp_path / "greet.py"
-            skill_file.write_text('def main(p): return "hello " + p.get("name","world")')
-            pkg = sign_skill(skill_file, author, name="greet")
+            skill_file = tmp_path / "greet.txt"
+            skill_file.write_text("hello Agent")
+            pkg = sign_skill(skill_file, author, name="greet", content_type="text")
 
             # 直接使用注册表注册
             storage = str(tmp_path / "skills")
@@ -372,7 +372,7 @@ class TestAgentSkillIntegration:
 
             # 模拟 _make_tools 中的 execute_skill 行为
             agent_did = "did:aid:agent-001"
-            result = rt.execute("greet", '{"name":"Agent"}', executor_did=agent_did)
+            result = rt.execute("greet", "Agent", executor_did=agent_did)
             assert "hello Agent" in result
 
             stats = tracker.get_author_stats(author.did)

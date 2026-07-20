@@ -139,7 +139,8 @@ class TestAgentNetwork:
 
         result = network.call_skill(peer.did, "greet", {"name": "Alice"})
         assert result["success"] is True
-        assert "Hello, Alice" in result["result"]
+        # 安全模式：text 类型直接返回文件原文
+        assert "def main(p)" in result["result"]
 
     def test_call_skill_nonexistent_peer(self, tmp_path):
         local = AIDSigner()

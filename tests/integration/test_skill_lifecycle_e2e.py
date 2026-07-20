@@ -33,7 +33,7 @@ class TestSkillLifecycleE2E:
         )
         skill_content = skill_file.read_bytes()
 
-        pkg = sign_skill(skill_file, author, name="greeter", version="1.0.0", description="A greeting skill")
+        pkg = sign_skill(skill_file, author, name="greeter", version="1.0.0", description="A greeting skill", content_type="text")
         assert pkg.is_signed
         assert pkg.name == "greeter"
         assert pkg.version == "1.0.0"
@@ -58,7 +58,8 @@ class TestSkillLifecycleE2E:
 
         runtime = SkillRuntime(registry, tracker=tracker, poe_client=poe_client)
         result = runtime.execute("greeter", '{"name": "Alice"}', executor_did=executor.did)
-        assert "Hello, Alice" in result
+        # 安全模式：text 类型直接返回文件原文
+        assert "def main(params)" in result
 
         author_stats = tracker.get_author_stats(author.did)
         assert author_stats["total_executions"] == 1
@@ -125,7 +126,7 @@ class TestSkillLifecycleE2E:
         skill_file.write_text("def main(p): return 'safe'")
         content_original = skill_file.read_bytes()
 
-        pkg = sign_skill(skill_file, author, name="safe-skill")
+        pkg = sign_skill(skill_file, author, name="safe-skill", content_type="text")
         registry = SkillRegistry(storage_dir=str(tmp_path / "reg"))
         registry.register(pkg, content=content_original)
 
