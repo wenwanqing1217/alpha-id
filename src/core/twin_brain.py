@@ -405,11 +405,11 @@ class TwinBrain:
 
         # 检查是否需要转 idle/sleep
         now = time.time()
-        if self.state == BrainState.AWAKE and (now - self.last_active_time) > self.settings.idle_timeout:
+        if self.state == BrainState.AWAKE and (now - self.last_active_time) >= self.settings.idle_timeout:
             self.idle()
             results["actions_taken"].append("auto_idle")
 
-        if self.state == BrainState.IDLE and (now - self.last_active_time) > self.settings.sleep_timeout:
+        if self.state == BrainState.IDLE and (now - self.last_active_time) >= self.settings.sleep_timeout:
             self.sleep()
             results["actions_taken"].append("auto_sleep")
 
