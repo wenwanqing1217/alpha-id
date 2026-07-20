@@ -349,6 +349,7 @@ class TwinBrain:
         - 更新状态
         """
         logger.info("%s 开始自主学习周期", self.alpha_id)
+        self.last_active_time = time.time()
         results = {
             "alpha_id": self.alpha_id,
             "state": self.state.value,

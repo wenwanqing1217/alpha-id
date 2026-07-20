@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 VERSION = "0.1.0"
 
 try:
-    from mcp.server import Server
+from mcp.server import FastMCP
 
     HAS_MCP = True
 except ImportError:
@@ -63,7 +63,7 @@ class ProfileMCPServer:
     """Profile MCP Server -- 身份注入接口"""
 
     def __init__(self):
-        self.app = Server("alpha-id-profile") if HAS_MCP else None
+        self.app = FastMCP("alpha-id-profile") if HAS_MCP else None
 
     def get_identity(self) -> str:
         """profile://identity -- 用户身份摘要"""

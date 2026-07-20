@@ -315,8 +315,8 @@ class TestShortDramaBrowserAutomation:
         mock_pw = MagicMock()
         mock_pw.chromium.launch.return_value = mock_browser
 
-        with patch("tools.shortdrama_tool.sync_playwright") as mock_sync:
-            mock_sync.return_value.start.return_value = mock_pw
+        with patch("playwright.sync_api.sync_playwright") as mock_sync, patch("tools.shortdrama_tool.sync_playwright") as fallback_sync:
+            fallback_sync.return_value.start.return_value = mock_pw
             automation = ShortDramaBrowserAutomation(headless=True)
             result = automation.open_platform("https://www.shortdramas.com")
 
@@ -387,8 +387,8 @@ class TestShortDramaBrowserAutomation:
         mock_pw = MagicMock()
         mock_pw.chromium.launch.return_value = mock_browser
 
-        with patch("tools.shortdrama_tool.sync_playwright") as mock_sync:
-            mock_sync.return_value.start.return_value = mock_pw
+        with patch("playwright.sync_api.sync_playwright") as mock_sync, patch("tools.shortdrama_tool.sync_playwright") as fallback_sync:
+            fallback_sync.return_value.start.return_value = mock_pw
             automation = ShortDramaBrowserAutomation(headless=True)
             automation._playwright = mock_pw
             automation._browser = mock_browser
@@ -424,8 +424,8 @@ class TestShortDramaBrowserAutomation:
         mock_pw = MagicMock()
         mock_pw.chromium.launch.return_value = mock_browser
 
-        with patch("tools.shortdrama_tool.sync_playwright") as mock_sync:
-            mock_sync.return_value.start.return_value = mock_pw
+        with patch("playwright.sync_api.sync_playwright") as mock_sync, patch("tools.shortdrama_tool.sync_playwright") as fallback_sync:
+            fallback_sync.return_value.start.return_value = mock_pw
             automation = ShortDramaBrowserAutomation(headless=True)
             automation._playwright = mock_pw
             automation._browser = mock_browser
