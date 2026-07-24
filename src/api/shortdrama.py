@@ -1,8 +1,9 @@
 """短剧自动化 API 路由"""
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from auth.middleware import require_user
 from tools.shortdrama_tool import ShortDramaTool
 
 from .models import ShortDramaListResponse, ShortDramaQueryRequest, ShortDramaSubmitRequest
@@ -56,8 +57,8 @@ async def list_jobs(user_id: str = "default", status: str = ""):
 
 
 @router.post("/approve", response_model=dict)
-async def approve_job(body: _ApproveRequest):
-    """人工审核通过"""
+async def approve_job(body: _ApproveRequest, _: str = Depends(require_user)):
+    """人工审核通过（需认证）"""
     result = _shortdrama_tool.approve_job(body.job_id, reviewer=body.reviewer)
     if not result.get("success"):
         raise HTTPException(status_code=404, detail=result.get("error", "任务不存在"))
@@ -65,8 +66,8 @@ async def approve_job(body: _ApproveRequest):
 
 
 @router.post("/reject", response_model=dict)
-async def reject_job(body: _RejectRequest):
-    """人工审核拒绝"""
+async def reject_job(body: _RejectRequest, _: str = Depends(require_user)):
+    """人工审核拒绝（需认证）"""
     result = _shortdrama_tool.reject_job(body.job_id, reason=body.reason, reviewer=body.reviewer)
     if not result.get("success"):
         raise HTTPException(status_code=404, detail=result.get("error", "任务不存在"))
@@ -78,9 +79,10 @@ class _CopyUploadInfoRequest(BaseModel):
 
 
 @router.post("/copy-upload-info", response_model=dict)
-async def copy_upload_info(body: _CopyUploadInfoRequest):
-    """复制任务的上传信息到剪贴板"""
-    job = _shortdrama_tool.queue.get(body.job_id)
+async def copy_upload_info(body: _CopyUploadInfoRequest, _: str = Depends(require_user)):
+    """复制任务的上传信息到剪贴板（需认证）"""
+    # 修复：使用 _jobs 字典而非不存在的 .get() 方法
+    job = _shortdrama_tool.queue._jobs.get(body.job_id)
     if not job:
         raise HTTPException(status_code=404, detail="任务不存在")
     text = "\n".join([

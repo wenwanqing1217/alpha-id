@@ -148,6 +148,6 @@ def record_session(alpha_id: str, _: str = Depends(require_user)):
 
 
 @router.get("/stats/overview")
-def get_statistics():
-    """获取系统统计信息（公开）"""
+def get_statistics(_: str = Depends(require_user)):
+    """获取系统统计信息（需认证）"""
     return get_manager().get_statistics()

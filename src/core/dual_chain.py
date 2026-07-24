@@ -12,15 +12,14 @@
 """
 
 import hashlib
-import hmac
 import json
 import os
+import re
 import secrets
 import uuid
-from collections import defaultdict
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from core.memory_store import AlphaMemory, MemoryStore
 from core.storage import JsonStorage, StorageBackend
@@ -29,6 +28,22 @@ from core.storage import JsonStorage, StorageBackend
 # ═══════════════════════════════════════════
 # 加密工具
 # ═══════════════════════════════════════════
+
+def _sanitize_alpha_id(alpha_id: str) -> str:
+    """安全清洗 alpha_id，防止路径遍历攻击
+
+    - 只允许字母、数字、连字符、下划线、冒号
+    - 移除路径分隔符和 ../ 序列
+    - 限制长度防止缓冲区溢出
+    """
+    import re
+    # 只允许安全字符
+    sanitized = re.sub(r'[^a-zA-Z0-9\-_:]', '_', alpha_id)
+    # 移除任何剩余的路径遍历尝试
+    sanitized = sanitized.replace('..', '_')
+    # 限制长度
+    return sanitized[:128]
+
 
 def _derive_key(did: str, salt: bytes) -> bytes:
     """从 DID 派生 256 位加密密钥（PBKDF2-HMAC-SHA256）"""
@@ -96,11 +111,12 @@ class DualChainManager:
         self._salt = self._get_or_create_salt()
         self._key = _derive_key(alpha_id, self._salt)
 
-        # 存储路径
+        # 存储路径（使用清洗后的 alpha_id 防止路径遍历）
         if storage is None:
             base = os.getenv("COZE_WORKSPACE_PATH", os.getcwd())
-            priv_path = os.path.join(base, "assets", f"private_chain_{alpha_id.replace(':', '_')}.json")
-            know_path = os.path.join(base, "assets", f"knowledge_chain_{alpha_id.replace(':', '_')}.json")
+            safe_id = _sanitize_alpha_id(alpha_id)
+            priv_path = os.path.join(base, "assets", f"private_chain_{safe_id}.json")
+            know_path = os.path.join(base, "assets", f"knowledge_chain_{safe_id}.json")
             self._private_storage = JsonStorage(priv_path)
             self._knowledge_storage = JsonStorage(know_path)
         else:
@@ -113,7 +129,8 @@ class DualChainManager:
     def _get_or_create_salt(self) -> bytes:
         """获取或创建用户的加密 salt"""
         base = os.getenv("COZE_WORKSPACE_PATH", os.getcwd())
-        salt_path = os.path.join(base, "assets", ".salt_" + self.alpha_id.replace(":", "_"))
+        safe_id = _sanitize_alpha_id(self.alpha_id)
+        salt_path = os.path.join(base, "assets", ".salt_" + safe_id)
         try:
             with open(salt_path, "rb") as f:
                 return f.read()

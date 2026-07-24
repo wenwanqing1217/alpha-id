@@ -1,8 +1,9 @@
 """风控引擎 API 路由"""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from alpha_id.container import Container
+from auth.middleware import require_user
 from core.risk_engine import (
     BehaviorFingerprint,
     DeviceFingerprint,
@@ -20,8 +21,8 @@ def get_engine() -> RiskAssessmentEngine:
 
 
 @router.post("/evaluate")
-def evaluate(body: RiskEvaluateRequest):
-    """全量风控评估"""
+def evaluate(body: RiskEvaluateRequest, _: str = Depends(require_user)):
+    """全量风控评估（需认证）"""
     engine = get_engine()
 
     device_current = None
@@ -75,8 +76,8 @@ def evaluate(body: RiskEvaluateRequest):
 
 
 @router.post("/voice-verify")
-def voice_verify(body: VoiceVerifyRequest):
-    """声纹验证专用接口"""
+def voice_verify(body: VoiceVerifyRequest, _: str = Depends(require_user)):
+    """声纹验证专用接口（需认证）"""
 
     voice_data = {
         "voice_match": body.voice_match,

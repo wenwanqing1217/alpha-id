@@ -48,9 +48,9 @@ class UserIdentityManager:
 
     # 可通过环境变量覆盖，实现多租户配置
     FOUNDER_ALPHA_ID = os.getenv("FOUNDER_ALPHA_ID", "Alpha-1")
-    FOUNDER_DEVICE_FINGERPRINT = os.getenv("FOUNDER_DEVICE_FINGERPRINT", "FOUNDER_DEVICE_20250618")
-    # 默认 hash = sha256("Alpha-1-zx")，覆盖 FOUNDER_CODE 即可更换
-    FOUNDER_CODE_HASH = os.getenv("FOUNDER_CODE_HASH", "2147f64aa8dddda1aa5e6bd13fdebbca87a56b00f7948c9935d17da926a68a29")
+    FOUNDER_DEVICE_FINGERPRINT = os.getenv("FOUNDER_DEVICE_FINGERPRINT", "")
+    # 必须通过环境变量设置，无默认值。生成方式: python -c "import hashlib,secrets; print(hashlib.sha256(secrets.token_bytes(32)).hexdigest())"
+    FOUNDER_CODE_HASH = os.getenv("FOUNDER_CODE_HASH", "")
 
     def __init__(self, storage: Optional[StorageBackend] = None):
         # 默认使用 JSON 存储
@@ -126,7 +126,10 @@ class UserIdentityManager:
 
         # 创始人注册逻辑
         if is_founder:
-            if hashlib.sha256(founder_code.encode()).hexdigest() != self.FOUNDER_CODE_HASH:
+            if not self.FOUNDER_CODE_HASH:
+                logger.warning(f"注册失败: 创始人注册未配置 - {device_fingerprint}")
+                return {"success": False, "message": "创始人注册未配置，请联系管理员"}
+            if not founder_code or hashlib.sha256(founder_code.encode()).hexdigest() != self.FOUNDER_CODE_HASH:
                 logger.warning(f"注册失败: 创始人验证码无效 - {device_fingerprint}")
                 return {"success": False, "message": "创始人验证码无效"}
 
