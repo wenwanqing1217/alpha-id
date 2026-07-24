@@ -18,8 +18,8 @@ import json
 import os
 import sys
 
-# 将项目根路径加入 sys.path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+# 将 src/ 加入 sys.path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from core.storage import JsonStorage
 from core.storage_postgres import PostgresStorage

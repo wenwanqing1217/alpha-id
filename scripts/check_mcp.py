@@ -2,8 +2,6 @@
 import asyncio
 import sys
 
-sys.path.insert(0, "src")
-
 # Windows GBK console → force UTF-8 so emoji in tool output doesn't crash print()
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -15,7 +13,7 @@ async def test():
     # Start MCP server via stdio
     server_params = StdioServerParameters(
         command=sys.executable,
-        args=['src/aid_mcp_server.py'],
+        args=["-m", "entrypoints.aid_mcp_server"],
     )
 
     async with stdio_client(server_params) as (read, write):

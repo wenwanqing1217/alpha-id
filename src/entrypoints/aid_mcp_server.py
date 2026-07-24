@@ -3,17 +3,17 @@ AID MCP Server — 让 AID 的能力通过 MCP 协议暴露给 Claude Desktop �
 
 运行方式：
     # stdio 模式（给 Claude Desktop 用）
-    python src/aid_mcp_server.py
+    python -m entrypoints.aid_mcp_server
 
     # SSE 模式（给 Web 客户端用）
-    python src/aid_mcp_server.py --transport sse --port 8001
+    python -m entrypoints.aid_mcp_server --transport sse --port 8001
 
 Claude Desktop 配置（claude_desktop_config.json）：
     {
         "mcpServers": {
             "aid": {
                 "command": "python",
-                "args": ["-m", "src.aid_mcp_server"]
+                "args": ["-m", "entrypoints.aid_mcp_server"]
             }
         }
     }
@@ -22,26 +22,17 @@ Claude Desktop 配置（claude_desktop_config.json）：
 import json
 import os
 import sys
-from pathlib import Path
 from typing import Optional
 
 import typer
 
-# 确保能找到 src/
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__))))
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-
 from mcp.server import FastMCP
 
-# 注册 Legacy 兼容的 `aid_mcp_server` 包，避免顶层文件与包冲突。
+# 注册 Legacy 兼容的 `aid_mcp_server` 模块别名。
+# 测试通过 `import aid_mcp_server` 引用本模块，使其与真实模块共享属性，
+# 这样 monkeypatch.setattr 才能正常工作。
 if "aid_mcp_server" not in sys.modules:
-    import types
-
-    _legacy_pkg = types.ModuleType("aid_mcp_server")
-    _legacy_pkg.__path__ = [str(Path(__file__).resolve().parent)]
-    _legacy_pkg.__spec__ = None
-    _legacy_pkg.__name__ = "aid_mcp_server"
-    sys.modules["aid_mcp_server"] = _legacy_pkg
+    sys.modules["aid_mcp_server"] = sys.modules[__name__]
 
 # ── 工具导入（延迟导入，优雅降级） ──
 

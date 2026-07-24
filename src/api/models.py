@@ -23,6 +23,19 @@ class RefreshRequest(BaseModel):
     refresh_token: str
 
 
+class VerifyRequest(BaseModel):
+    token: str = Field(..., description="JWT 访问令牌")
+
+
+class VerifyResponse(BaseModel):
+    valid: bool
+    alpha_id: str = ""
+    token_type: str = ""
+    exp: int = 0
+    iat: int = 0
+    message: str = ""
+
+
 # ── 身份模块 ──
 
 
@@ -155,3 +168,27 @@ class ShortDramaListResponse(BaseModel):
     success: bool
     total: int
     jobs: List[dict]
+
+
+# ── 双链记忆模块 ──
+
+
+class DualChainSaveRequest(BaseModel):
+    content: str = Field(..., description="记忆内容")
+    category: str = Field(default="general", description="分类")
+    sensitivity: int = Field(default=0, ge=0, le=100, description="敏感度 0-100")
+    source: str = Field(default="self", description="来源")
+    tags: List[str] = Field(default_factory=list, description="标签列表")
+
+
+class DualChainQueryRequest(BaseModel):
+    chain: str = Field(default="all", description="链: private/knowledge/all")
+    keyword: str = Field(default="", description="关键词")
+    category: str = Field(default="", description="分类过滤")
+    max_sensitivity: int = Field(default=100, ge=0, le=100)
+    limit: int = Field(default=20, ge=1, le=100)
+
+
+class DualChainMigrateRequest(BaseModel):
+    memory_id: str = Field(..., description="记忆 ID")
+    target_chain: str = Field(..., description="目标链: private/knowledge")

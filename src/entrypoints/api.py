@@ -1,15 +1,12 @@
-"""aid-api CLI 入口 — 启动 Alpha-ID Web 演示服务"""
+"""aid-api CLI 入口 — 启动 Alpha-ID Web 演示服务
+
+运行方式：
+    python -m entrypoints.api
+    或安装后：aid-api
+"""
 
 import argparse
 import sys
-from pathlib import Path
-
-# Ensure `alpha_id` package is resolvable whether this module is run as:
-#   - `python -m src.entrypoints.api`
-#   - `python src/entrypoints/api.py`
-_src_dir = Path(__file__).resolve().parent.parent
-if str(_src_dir) not in sys.path:
-    sys.path.insert(0, str(_src_dir))
 
 
 def main():
@@ -28,6 +25,11 @@ def main():
         help="热重载（开发用）",
     )
     parser.add_argument(
+        "--demo",
+        action="store_true",
+        help="启动 Ghost 官网演示（默认启动完整 API 服务）",
+    )
+    parser.add_argument(
         "--version",
         "-V",
         action="version",
@@ -42,19 +44,30 @@ def main():
         except Exception:
             pass
 
-    # 延迟导入 uvicorn + app，避免启动前加载全部依赖
     import uvicorn
 
-    from alpha_id.web import app as web_app
+    if args.demo:
+        # Ghost 官网演示（纯前端 SPA，无后端依赖）
+        from alpha_id.web import app as demo_app
 
-    print(f"AID Web API 启动 -> http://{args.host}:{args.port}")
-    print("   主页: GET /")
-    print("   聊天: POST /chat")
-    print("   大脑: GET /brain/status")
-    print()
+        print(f"Ghost 演示启动 -> http://{args.host}:{args.port}")
+        print("   主页: GET /  (Ghost 官网)")
+        print()
+        run_app = demo_app
+    else:
+        # 完整 API 服务（含身份/社交/大脑等端点）
+        from src.main import app as api_app
+
+        print(f"AID Web API 启动 -> http://{args.host}:{args.port}")
+        print("   主页: GET /")
+        print("   聊天: POST /chat")
+        print("   大脑: GET /brain/status")
+        print("   健康: GET /health")
+        print()
+        run_app = api_app
 
     uvicorn.run(
-        web_app,
+        run_app,
         host=args.host,
         port=args.port,
         reload=args.reload,

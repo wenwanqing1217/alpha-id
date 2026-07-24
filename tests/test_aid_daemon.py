@@ -1,11 +1,8 @@
 """Tests for AID desktop fairy — command parsing & routing"""
 
-import os
 import pytest
 import sys
 from unittest.mock import MagicMock, patch
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 
 @pytest.fixture
@@ -48,7 +45,7 @@ def mock_all():
             patch("entrypoints.daemon.HAS_TTS", False),
             patch("entrypoints.daemon.HAS_SPEECH_RECOGNITION", False),
         ):
-            from aid_daemon import AIDFairy
+            from entrypoints.daemon import AIDFairy
 
             fairy = AIDFairy(no_mcp=True, no_brain=True)
             fairy._show_result = MagicMock()

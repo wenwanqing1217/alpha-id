@@ -4,9 +4,16 @@
 提供：
 - 单例管理（在 FastAPI lifespan 中初始化）
 - lazy init + 线程安全
-- 统一的存储后端切换点
+- 统一的存储后端切换点（SQLite / PostgreSQL）
+
+存储后端选择：
+- 默认：DATABASE_URL 环境变量决定（存在则用 Postgres，否则 SQLite）
+- 测试：通过 storage setter 注入 mock
+- 显式配置：os.environ["STORAGE_BACKEND"] = "sqlite" | "postgres"
 """
 
+import logging
+import os
 import threading
 from typing import Optional
 
@@ -16,6 +23,30 @@ from core.risk_engine import RiskAssessmentEngine
 from core.storage import StorageBackend
 from core.storage_sqlite import SqliteStorage
 from core.user_identity import UserIdentityManager
+
+logger = logging.getLogger(__name__)
+
+# 显式后端选择（可选，覆盖自动检测）
+STORAGE_BACKEND = os.getenv("STORAGE_BACKEND", "").lower()
+
+
+def _create_default_storage() -> StorageBackend:
+    """根据环境自动选择存储后端"""
+    database_url = os.getenv("DATABASE_URL")
+    if database_url and database_url.startswith("postgresql"):
+        try:
+            from core.storage_postgres import PostgresStorage
+            logger.info("Using PostgreSQL storage backend")
+            return PostgresStorage()
+        except ImportError:
+            logger.warning("psycopg not installed, falling back to SQLite")
+    elif STORAGE_BACKEND == "postgres":
+        from core.storage_postgres import PostgresStorage
+        return PostgresStorage()
+    elif STORAGE_BACKEND == "sqlite" or not database_url:
+        pass  # fall through to SQLite
+    logger.info("Using SQLite storage backend")
+    return SqliteStorage()
 
 
 class Container:
@@ -44,7 +75,7 @@ class Container:
     @property
     def storage(self) -> StorageBackend:
         if self._storage is None:
-            self._storage = SqliteStorage()
+            self._storage = _create_default_storage()
         return self._storage
 
     @storage.setter
@@ -99,5 +130,5 @@ class Container:
 
     def close(self):
         """释放资源"""
-        if isinstance(self._storage, SqliteStorage):
+        if hasattr(self._storage, "close"):
             self._storage.close()

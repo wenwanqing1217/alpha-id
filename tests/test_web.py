@@ -1,8 +1,6 @@
 """Test Web display module"""
 
-import sys, os, uuid
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+import os, uuid
 
 import pytest
 from fastapi.testclient import TestClient

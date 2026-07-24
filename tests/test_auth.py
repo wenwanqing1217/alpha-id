@@ -1,11 +1,8 @@
 """JWT 认证模块纯单元测试（零外部依赖）"""
 
-import sys, os
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-
 import time
 import json
+import pytest
 from auth.jwt import (
     create_access_token,
     create_refresh_token,
@@ -263,3 +260,95 @@ class TestGetCurrentAlphaId:
 
         with pytest.raises(ValueError):
             get_current_alpha_id("Bearer invalid-token-here")
+
+
+# ── auth_verify 端点集成测试（跨服务验证） ──
+
+
+class TestAuthVerifyEndpoint:
+    """测试 POST /api/v1/identity/auth/verify 端点"""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        """创建测试用户并获取令牌"""
+        from alpha_id.container import Container
+        from core.storage import JsonStorage
+        import tempfile, os
+
+        self.tmp_dir = tempfile.mkdtemp(prefix="aid_verify_test_")
+        os.environ["COZE_WORKSPACE_PATH"] = self.tmp_dir
+        os.makedirs(os.path.join(self.tmp_dir, "assets"), exist_ok=True)
+
+        # 重置容器单例
+        Container._instance = None
+        self.container = Container.instance()
+
+        # 注册测试用户
+        self.container.identity.register_user(
+            device_fingerprint="test-device-001",
+            is_founder=True,
+            founder_code="Alpha-1-zx",
+        )
+        # 获取令牌
+        self.access_token = create_access_token("Alpha-1")
+        self.refresh_token = create_refresh_token("Alpha-1")
+
+    def test_verify_valid_access_token(self):
+        from fastapi.testclient import TestClient
+        from src.main import app
+
+        client = TestClient(app)
+        resp = client.post("/api/v1/identity/auth/verify", json={"token": self.access_token})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["valid"] is True
+        assert data["alpha_id"] == "Alpha-1"
+        assert data["token_type"] == "access"
+
+    def test_verify_valid_refresh_token(self):
+        from fastapi.testclient import TestClient
+        from src.main import app
+
+        client = TestClient(app)
+        resp = client.post("/api/v1/identity/auth/verify", json={"token": self.refresh_token})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["valid"] is True
+        assert data["alpha_id"] == "Alpha-1"
+        assert data["token_type"] == "refresh"
+
+    def test_verify_invalid_token(self):
+        from fastapi.testclient import TestClient
+        from src.main import app
+
+        client = TestClient(app)
+        resp = client.post("/api/v1/identity/auth/verify", json={"token": "invalid.token.here"})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["valid"] is False
+        assert "message" in data
+
+    def test_verify_expired_token(self):
+        from fastapi.testclient import TestClient
+        from src.main import app
+
+        expired = _encode({
+            "sub": "Alpha-1",
+            "iat": 0,
+            "exp": 1,
+            "type": "access",
+        })
+        client = TestClient(app)
+        resp = client.post("/api/v1/identity/auth/verify", json={"token": expired})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["valid"] is False
+        assert "过期" in data["message"]
+
+    def test_verify_missing_token_field(self):
+        from fastapi.testclient import TestClient
+        from src.main import app
+
+        client = TestClient(app)
+        resp = client.post("/api/v1/identity/auth/verify", json={})
+        assert resp.status_code == 422  # Pydantic validation error

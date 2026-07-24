@@ -74,7 +74,7 @@ def _extract_from_sqlite(db_path: Path) -> Optional[list]:
         # Cursor 使用多个可能的表名
         tables = cursor.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
         table_names = [t[0] for t in tables]
-        _ALLOWED_TABLE_PREFIXES = ("cursor_", "chat_", "conversation_", "message_", "thread_")
+        _ALLOWED_TABLE_PREFIXES = ("cursor_", "chat_", "conversation_", "message_", "thread_")  # noqa: N806
 
         conversations = []
         for tbl in table_names:

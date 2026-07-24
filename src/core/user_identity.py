@@ -46,9 +46,11 @@ class StatisticsResponse:
 class UserIdentityManager:
     """用户身份管理器"""
 
-    FOUNDER_ALPHA_ID = "Alpha-1"
-    FOUNDER_DEVICE_FINGERPRINT = "FOUNDER_DEVICE_20250618"
-    FOUNDER_CODE_HASH = "2147f64aa8dddda1aa5e6bd13fdebbca87a56b00f7948c9935d17da926a68a29"  # sha256("Alpha-1-zx")
+    # 可通过环境变量覆盖，实现多租户配置
+    FOUNDER_ALPHA_ID = os.getenv("FOUNDER_ALPHA_ID", "Alpha-1")
+    FOUNDER_DEVICE_FINGERPRINT = os.getenv("FOUNDER_DEVICE_FINGERPRINT", "FOUNDER_DEVICE_20250618")
+    # 默认 hash = sha256("Alpha-1-zx")，覆盖 FOUNDER_CODE 即可更换
+    FOUNDER_CODE_HASH = os.getenv("FOUNDER_CODE_HASH", "2147f64aa8dddda1aa5e6bd13fdebbca87a56b00f7948c9935d17da926a68a29")
 
     def __init__(self, storage: Optional[StorageBackend] = None):
         # 默认使用 JSON 存储
@@ -56,7 +58,7 @@ class UserIdentityManager:
             from core.storage import JsonStorage
 
             db_path = os.path.join(
-                os.environ.get("COZE_WORKSPACE_PATH", os.getcwd()),
+                os.getenv("GHOST_WORKSPACE_PATH", os.getcwd()),
                 "assets",
                 "alpha_id_users.json",
             )

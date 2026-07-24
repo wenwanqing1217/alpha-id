@@ -1,8 +1,6 @@
 """Memory Graph 模块测试"""
 
-import sys, os, tempfile, json
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+import os, tempfile, json
 
 from memory_graph import build_graph, render_html, graph_stats_text, generate_graph_html
 from core.memory_store import MemoryStore

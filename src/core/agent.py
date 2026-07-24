@@ -508,7 +508,6 @@ def _call_llm(messages: List[Dict[str, str]], tools_schema: List[Dict[str, Any]]
     调用 LLM，返回文本响应。
     优先使用 httpx（连接复用），未安装时回退到 urllib。
     """
-    import os
 
     api_key = os.getenv("OPENAI_API_KEY") or os.getenv("COZE_WORKLOAD_IDENTITY_API_KEY")
     base_url = os.getenv("OPENAI_BASE_URL") or "https://api.openai.com/v1"

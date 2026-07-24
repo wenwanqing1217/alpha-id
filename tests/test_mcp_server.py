@@ -8,12 +8,9 @@
 """
 
 import os
-import sys
 import json
 import tempfile
 from unittest.mock import Mock, patch, MagicMock
-
-sys.path.insert(0, "src")
 
 import pytest
 import aid_mcp_server

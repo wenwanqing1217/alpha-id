@@ -300,6 +300,10 @@ class TestCallLLM:
 
         old_key = os.environ.pop("OPENAI_API_KEY", None)
         old_key2 = os.environ.pop("COZE_WORKLOAD_IDENTITY_API_KEY", None)
+        # _call_llm 会先校验 base_url；测试会话中其他模块（如 tests/integration/
+        # test_e2e_api.py 导入 src.main 触发 load_dotenv）可能把本机 .env 里的
+        # OPENAI_BASE_URL 注入进程环境，导致断言走错分支，这里一并隔离。
+        old_base_url = os.environ.pop("OPENAI_BASE_URL", None)
         try:
             from core.agent import _call_llm
 
@@ -310,6 +314,8 @@ class TestCallLLM:
                 os.environ["OPENAI_API_KEY"] = old_key
             if old_key2:
                 os.environ["COZE_WORKLOAD_IDENTITY_API_KEY"] = old_key2
+            if old_base_url:
+                os.environ["OPENAI_BASE_URL"] = old_base_url
 
 
 def test_parse_tool_call_function():

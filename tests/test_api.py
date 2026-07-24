@@ -12,10 +12,7 @@ import json
 
 import pytest
 
-# 必须在导入 app 前设置路径
-import sys, os
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+import os
 
 # 修复：pydantic_core 依赖 api-ms-win-crt-*.dll，系统缺失时手动添加搜索路径
 _crt_search_path = r"D:\QQNT"

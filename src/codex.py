@@ -99,6 +99,8 @@ def run_python(code: str) -> str:
     tmpdir = tempfile.mkdtemp(prefix="codex_")
     script_path = os.path.join(tmpdir, "script.py")
     try:
+        with open(script_path, "w", encoding="utf-8") as f:
+            f.write(code)
         result = subprocess.run(
             [sys.executable, script_path],
             capture_output=True,
@@ -106,7 +108,6 @@ def run_python(code: str) -> str:
             timeout=15,
             cwd=str(WORKSPACE),
         )
-        ret = result.returncode
         out = result.stdout.strip()
         err = result.stderr.strip()
         if err:
@@ -119,8 +120,6 @@ def run_python(code: str) -> str:
     finally:
         try:
             os.unlink(script_path)
-            os.unlink(stdout_path)
-            os.unlink(stderr_path)
             os.rmdir(tmpdir)
         except OSError:
             pass

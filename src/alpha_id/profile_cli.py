@@ -253,7 +253,7 @@ def cmd_collect_trae():
 
     profile = merge_profile(profile, source="trae", quality=QUALITY_LOCAL)
     if not profile.did:
-        from core.did import DIDRegistry
+        from alpha_id.did import DIDRegistry
 
         reg = DIDRegistry()
         profile.did = reg.generate()
@@ -282,7 +282,7 @@ def cmd_collect_browser():
 
     profile = merge_profile(profile, source="browser", quality=QUALITY_LOCAL)
     if not profile.did:
-        from core.did import DIDRegistry
+        from alpha_id.did import DIDRegistry
 
         reg = DIDRegistry()
         profile.did = reg.generate()
@@ -778,7 +778,7 @@ def cmd_daemon(
         typer.echo("[错误] 已有后台服务在运行，先运行 daemon stop")
         raise typer.Exit(1)
 
-    script = str(Path(__file__).parent.parent / "aid_mcp_server.py")
+    script = str(Path(__file__).parent.parent / "entrypoints" / "aid_mcp_server.py")
     daemon_py = "import subprocess,sys,time,os,json\n"
     daemon_py += f"script={repr(script)}\n"
     daemon_py += f"port={port}\n"

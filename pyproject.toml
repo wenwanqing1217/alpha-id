@@ -1,22 +1,38 @@
 [project]
-name = "alpha-id-zix"
+name = "alpha-id"
 version = "0.3.0"
 description = "你的数字灵魂 — 用 ChatGPT 导出认识自己，让所有 AI 工具认识同一个你"
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
+keywords = [
+    "ai", "agent", "identity", "did", "decentralized-identity",
+    "jwt", "authentication", "mcp", "llm", "chatgpt",
+    "digital-twin", "skill-signing", "web4", "pypi",
+]
+authors = [
+    { name = "wenwanqing1217", email = "wenwanqing1217@github.com" },
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
     "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Information Technology",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Security :: Cryptography",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Utilities",
 ]
 dependencies = [
     "cryptography>=42.0",
     "typer>=0.12",
     "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+    "psycopg[binary,pool]>=3.2",
 ]
 
 [project.optional-dependencies]
@@ -29,7 +45,9 @@ dev = ["alpha-id-zix[test,web,mcp]"]
 [project.urls]
 Homepage = "https://github.com/wenwanqing1217/alpha-id"
 Repository = "https://github.com/wenwanqing1217/alpha-id"
-Documentation = "https://github.com/wenwanqing1217/alpha-id#readme"
+Documentation = "https://github.com/wenwanqing1217/alpha-id/tree/main/projects#readme"
+Issues = "https://github.com/wenwanqing1217/alpha-id/issues"
+Changelog = "https://github.com/wenwanqing1217/alpha-id/commits/main/"
 
 [project.scripts]
 aid = "alpha_id.cli:app"
@@ -43,7 +61,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["aid*", "aid_*", "alpha_id*", "core*"]
+include = ["aid*", "aid_*", "alpha_id*", "core*", "entrypoints*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

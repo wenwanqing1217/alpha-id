@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from alpha_id.container import Container
@@ -158,6 +159,21 @@ _templates_dir = Path(__file__).parent / "templates"
 # Jinja2 and Vue.js both use {{ }} delimiters, causing syntax conflicts (e.g. ?. and ?? operators).
 # Since the template has no server-side Jinja2 logic, HTMLResponse is the correct approach.
 app = FastAPI(title="Alpha-ID Web Demo")
+
+# CORS：允许 Ghost.html 跨域调用
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# 静态文件服务（本地 CSS / JS，避免 CDN 被墙）
+_static_dir = Path(__file__).parent / "templates"
+app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
+
 _brain_registry = BrainRegistry()
 
 
@@ -194,7 +210,7 @@ async def api_profile() -> JSONResponse:
 
 @app.get("/", response_class=HTMLResponse)
 async def index():
-    html_path = _templates_dir / "index.html"
+    html_path = _templates_dir / "ghost.html"
     html = html_path.read_text(encoding="utf-8")
     return HTMLResponse(content=html)
 
@@ -309,7 +325,7 @@ async def _stream_llm(messages: list, model: str = "deepseek-v4-flash"):
     base_url = os.getenv("OPENAI_BASE_URL") or "https://api.deepseek.com/v1"
 
     # SSRF validation for LLM base_url
-    _ALLOWED_LLM_HOSTS = {
+    _ALLOWED_LLM_HOSTS = {  # noqa: N806
         "api.deepseek.com",
         "api.openai.com",
         "api.siliconflow.cn",

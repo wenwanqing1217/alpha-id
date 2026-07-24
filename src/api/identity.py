@@ -3,11 +3,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from alpha_id.container import Container
-from auth.jwt import create_access_token, create_refresh_token, verify_token
+from auth.jwt import create_access_token, create_refresh_token, decode_token, verify_token
 from auth.middleware import require_user
 from core.user_identity import UserIdentityManager
 
-from .models import DeviceBindRequest, LoginRequest, RefreshRequest, RegisterRequest, SyncRequest, TokenResponse
+from .models import DeviceBindRequest, LoginRequest, RefreshRequest, RegisterRequest, SyncRequest, TokenResponse, VerifyRequest, VerifyResponse
 
 router = APIRouter(prefix="/api/v1/identity", tags=["身份"])
 
@@ -72,6 +72,25 @@ def refresh_token(body: RefreshRequest):
         access_token=token,
         refresh_token=refresh,
     )
+
+
+# ── 跨服务验证端点（供其他项目验证 AID 签发的 JWT） ──
+
+
+@router.post("/auth/verify", response_model=VerifyResponse)
+def auth_verify(body: VerifyRequest):
+    """验证 AID 签发的 JWT 令牌（供 mindflow-map / DS 等服务调用）"""
+    try:
+        payload = decode_token(body.token)
+        return VerifyResponse(
+            valid=True,
+            alpha_id=payload.get("sub", ""),
+            token_type=payload.get("type", ""),
+            exp=payload.get("exp", 0),
+            iat=payload.get("iat", 0),
+        )
+    except ValueError as exc:
+        return VerifyResponse(valid=False, message=str(exc))
 
 
 # ── 受保护端点（需要 Bearer 令牌） ──

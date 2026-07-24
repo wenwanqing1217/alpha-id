@@ -13,24 +13,16 @@
 
 Windows 开机自启：
   将 scripts/start_shortdrama_service.bat 放入启动文件夹
-  %APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\
+  %APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\
 """
 
 import argparse
 import json
 import logging
 import os
-import sys
 import time
-from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Any, Dict, Optional
-
-# ── 路径设置 ──
-
-_src_dir = Path(__file__).resolve().parent.parent
-if str(_src_dir) not in sys.path:
-    sys.path.insert(0, str(_src_dir))
+from datetime import datetime
+from typing import Any, Dict
 
 # ── 日志 ──
 

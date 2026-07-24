@@ -1,9 +1,6 @@
 """集成测试 - 确保 test_e2e_profile 可被 pytest 发现"""
 
 from pathlib import Path
-import sys
-
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from alpha_id.collectors.chatgpt import collect as chatgpt_collect
 from alpha_id.did import DIDRegistry

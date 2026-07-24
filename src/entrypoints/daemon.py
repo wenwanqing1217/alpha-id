@@ -16,11 +16,6 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-# 兼容 legacy `aid_daemon` 测试导入：让 patch("aid_daemon.*") 落到当前模块。
-sys.modules.setdefault("aid_daemon", sys.modules[__name__])
-
 # ── 版本 ──
 try:
     from alpha_id import __version__
@@ -45,7 +40,6 @@ HAS_MEMORY = False
 try:
     from core.memory_store import MemoryStore
     from core.storage_sqlite import SqliteStorage
-    from fairy_agent import FairyBrain
 
     HAS_LLM = bool(os.getenv("DEEPSEEK_API_KEY", "") or os.getenv("OPENAI_API_KEY", ""))
     HAS_MEMORY = True

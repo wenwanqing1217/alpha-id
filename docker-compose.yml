@@ -14,41 +14,40 @@ services:
     restart: unless-stopped
     shm_size: 256mb
     environment:
-      POSTGRES_USER: ${PGUSER:-aid}
-      POSTGRES_PASSWORD: ${PGPASSWORD}
-      POSTGRES_DB: ${PGDATABASE:-alpha_id}
+      POSTGRES_USER: ${DB_USER:-ghost}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-ghost_secret}
+      POSTGRES_DB: ${DB_NAME:-alpha_id}
     ports:
-      - "${PGPORT:-5432}:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./sql/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${PGUSER:-aid} -d ${PGDATABASE:-alpha_id}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-ghost} -d ${DB_NAME:-alpha_id}"]
       interval: 5s
       timeout: 3s
       retries: 5
       start_period: 10s
 
   # ── API 服务 ──
-  api:
+  aid:
     build:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "${API_PORT:-8000}:8000"
+      - "${AID_API_PORT:-8000}:8000"
     environment:
       # --- 数据库 ---
-      DATABASE_URL: postgresql://${PGUSER:-aid}:${PGPASSWORD}@db:5432/${PGDATABASE:-alpha_id}
+      DATABASE_URL: postgresql://${DB_USER:-ghost}:${DB_PASSWORD:-ghost_secret}@db:5432/${DB_NAME:-alpha_id}
       # --- 日志级别 ---
       LOG_LEVEL: ${LOG_LEVEL:-info}
       # --- 环境标识 ---
-      AID_ENV: ${AID_ENV:-development}
+      AID_ENV: ${AID_ENV:-production}
     depends_on:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:${AID_API_PORT:-8000}/health')"]
       interval: 30s
       timeout: 5s
       retries: 3

@@ -7,6 +7,15 @@ import tempfile
 # 将 src 目录加入 Python 路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
+# 触发 entrypoints.aid_mcp_server 的 legacy 兼容 shim，
+# 使 `import aid_mcp_server` 在测试中可用。
+import entrypoints.aid_mcp_server  # noqa: F401
+
+# JWT 模块在导入时读取 AUTH_MASTER_KEY，必须在其他导入之前设置
+os.environ.setdefault(
+    "AUTH_MASTER_KEY", "test-master-key-for-pytest-0123456789abcdef"
+)
+
 _fallback_temp = tempfile.mkdtemp(prefix="aid_pytest_temp_")
 os.environ.setdefault("TMPDIR", _fallback_temp)
 os.environ.setdefault("TEMP", _fallback_temp)
@@ -59,6 +68,7 @@ def setup_test_env(tmp_path):
     old_aid_dir = os.environ.get("AID_DIR")
     old_deepseek_key = os.environ.get("DEEPSEEK_API_KEY")
     old_openai_key = os.environ.get("OPENAI_API_KEY")
+    old_auth_master_key = os.environ.get("AUTH_MASTER_KEY")
 
     os.environ["ALPHA_ID_DIR"] = str(tmp_path / "alpha-id")
     os.environ["AID_DIR"] = str(tmp_path / "aid")
@@ -86,6 +96,11 @@ def setup_test_env(tmp_path):
         os.environ["OPENAI_API_KEY"] = old_openai_key
     else:
         os.environ.pop("OPENAI_API_KEY", None)
+
+    if old_auth_master_key is not None:
+        os.environ["AUTH_MASTER_KEY"] = old_auth_master_key
+    else:
+        os.environ.pop("AUTH_MASTER_KEY", None)
 
 
 @pytest.fixture
@@ -134,7 +149,12 @@ def _patch_aid_daemon_compat() -> None:
     canvas.create_oval.return_value = 1
     canvas.create_arc.return_value = 2
 
-    from aid_daemon import AIDFairy
+    # winfo_id() 必须返回真实 int：把 MagicMock 传给 ctypes.windll 的函数会触发
+    # ctypes C 层对 _as_parameter_ 属性的无限递归探测，直接栈溢出杀掉测试进程
+    # （Windows fatal exception，无法被 except 捕获）。
+    tk.Tk.return_value.winfo_id.return_value = 1
+
+    from entrypoints.daemon import AIDFairy
 
     AIDFairy._show_mouse_position = lambda self: self._mouse_position_result()
     AIDFairy._show_identity = lambda self: self._show_result("AID identity ready; local DID is hidden")

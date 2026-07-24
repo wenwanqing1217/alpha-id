@@ -14,15 +14,9 @@
 
 import json
 import os
-import sys
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-
-# 确保 src 目录在路径中
-_src_dir = Path(__file__).resolve().parent / "src"
-if str(_src_dir) not in sys.path:
-    sys.path.insert(0, str(_src_dir))
 
 
 def test_ai_scan_and_submit():

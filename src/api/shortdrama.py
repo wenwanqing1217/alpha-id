@@ -4,7 +4,8 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from tools.shortdrama_tool import ShortDramaTool
-from .models import ShortDramaJobResponse, ShortDramaListResponse, ShortDramaQueryRequest, ShortDramaSubmitRequest
+
+from .models import ShortDramaListResponse, ShortDramaQueryRequest, ShortDramaSubmitRequest
 
 router = APIRouter(prefix="/api/v1/shortdrama", tags=["短剧自动化"])
 

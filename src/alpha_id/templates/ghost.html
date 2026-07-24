@@ -9,76 +9,15 @@
 <meta name="author" content="Alpha-ID Team">
 <meta name="robots" content="index, follow">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23a78bfa'/%3E%3Cstop offset='100%25' stop-color='%237c3aed'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' fill='url(%23g)'/%3E%3Ctext x='50' y='68' font-family='Arial Black' font-size='50' fill='white' text-anchor='middle'%3Eα%3C/text%3E%3C/svg%3E">
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-tailwind.config = {
-  darkMode: 'class',
-  theme: {
-    extend: {
-      fontFamily: {
-        sans: ['"Inter"', '"Noto Sans SC"', 'system-ui', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
-      },
-      colors: {
-        nebula: {
-          50: '#f5f3ff', 100: '#ede9fe', 200: '#ddd6fe', 300: '#c4b5fd',
-          400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9',
-          800: '#5b21b6', 900: '#4c1d95', 950: '#2e1065'
-        },
-        cosmic: {
-          50: '#edf6ff', 100: '#dbeafe', 200: '#b8dbfe', 300: '#93c5fd',
-          400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8',
-          800: '#1e40af', 900: '#1e3a8a', 950: '#172554'
-        },
-        aurora: {
-          50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac',
-          400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d',
-          800: '#166534', 900: '#14532d', 950: '#052e16'
-        },
-        stardust: {
-          50: '#fefce8', 100: '#fef9c3', 200: '#fef08a', 300: '#fde047',
-          400: '#facc15', 500: '#eab308', 600: '#ca8a04', 700: '#a16207',
-          800: '#854d0e', 900: '#713f12', 950: '#451a03'
-        },
-        starlight: {
-          50: '#fdf2f8', 100: '#fce7f3', 200: '#fbcfe8', 300: '#f9a8d4',
-          400: '#f472b6', 500: '#ec4899', 600: '#db2777', 700: '#be185d',
-          800: '#9d174d', 900: '#831843', 950: '#500724'
-        },
-        night: {
-          50: '#e2e8f0', 100: '#cbd5e1', 200: '#94a3b8', 300: '#64748b',
-          400: '#475569', 500: '#334155', 600: '#1e293b', 700: '#1a1f2e',
-          800: '#151922', 900: '#0f1318', 950: '#0a0418'
-        },
-      },
-      animation: {
-        'gradient-x': 'gradient-x 15s ease infinite',
-        'float-slow': 'float-slow 8s ease-in-out infinite',
-        'pulse-soft': 'pulse-soft 3s ease-in-out infinite',
-        'shimmer': 'shimmer 3s linear infinite',
-        'aurora': 'aurora 12s ease-in-out infinite',
-        'blink': 'blink 1s step-end infinite',
-        'flow': 'flow 20s linear infinite',
-        'spin-slow': 'spin 20s linear infinite',
-        'ring-pulse': 'ring-pulse 2.4s ease-in-out infinite',
-      },
-      keyframes: {
-        'gradient-x': { '0%,100%': { backgroundPosition: '0% 50%' }, '50%': { backgroundPosition: '100% 50%' } },
-        'float-slow': { '0%,100%': { transform: 'translateY(0) rotate(0deg)' }, '50%': { transform: 'translateY(-14px) rotate(1deg)' } },
-        'pulse-soft': { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.65 } },
-        shimmer: { '0%': { backgroundPosition: '-200% 0' }, '100%': { backgroundPosition: '200% 0' } },
-        aurora: { '0%,100%': { transform: 'translate(0,0) scale(1)' }, '33%': { transform: 'translate(40px,-30px) scale(1.08)' }, '66%': { transform: 'translate(-30px,20px) scale(0.95)' } },
-        blink: { '0%,100%': { opacity: 1 }, '50%': { opacity: 0 } },
-        flow: { '0%': { backgroundPosition: '0% 50%' }, '100%': { backgroundPosition: '200% 50%' } },
-        'ring-pulse': { '0%': { boxShadow: '0 0 0 0 rgba(139,92,246,0.45)' }, '70%': { boxShadow: '0 0 0 18px rgba(139,92,246,0)' }, '100%': { boxShadow: '0 0 0 0 rgba(139,92,246,0)' } },
-      },
-    },
-  },
-};
-</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,:after,:before{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/*! tailwindcss v3.4.19 | MIT License | https://tailwindcss.com*/*,:after,:before{box-sizing:border-box;border:0 solid #e5e7eb}:after,:before{--tw-content:""}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;-o-tab-size:4;tab-size:4;font-family:Inter,Noto Sans SC,system-ui,sans-serif;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:JetBrains Mono,ui-monospace,monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0}fieldset,legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.visible{visibility:visible}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.sticky{position:sticky}.-inset-1{inset:-.25rem}.-inset-1\.5{inset:-.375rem}.-inset-2\.5{inset:-.625rem}.inset-0{inset:0}.inset-1\.5{inset:.375rem}.inset-2{inset:.5rem}.inset-x-0{left:0;right:0}.-bottom-0\.5{bottom:-.125rem}.-left-0\.5{left:-.125rem}.-right-1{right:-.25rem}.-right-10{right:-2.5rem}.-right-20{right:-5rem}.-right-3{right:-.75rem}.-top-1{top:-.25rem}.-top-10{top:-2.5rem}.-top-20{top:-5rem}.left-0{left:0}.left-1\/2{left:50%}.left-1\/4{left:25%}.right-4{right:1rem}.top-0{top:0}.top-1\.5{top:.375rem}.top-1\/2{top:50%}.top-3{top:.75rem}.top-4{top:1rem}.z-10{z-index:10}.z-30{z-index:30}.mx-auto{margin-left:auto;margin-right:auto}.mb-1{margin-bottom:.25rem}.mb-1\.5{margin-bottom:.375rem}.mb-10{margin-bottom:2.5rem}.mb-12{margin-bottom:3rem}.mb-16{margin-bottom:4rem}.mb-2{margin-bottom:.5rem}.mb-20{margin-bottom:5rem}.mb-3{margin-bottom:.75rem}.mb-4{margin-bottom:1rem}.mb-5{margin-bottom:1.25rem}.mb-6{margin-bottom:1.5rem}.mb-8{margin-bottom:2rem}.ml-1{margin-left:.25rem}.ml-3{margin-left:.75rem}.ml-auto{margin-left:auto}.mr-1{margin-right:.25rem}.mt-0\.5{margin-top:.125rem}.mt-1{margin-top:.25rem}.mt-10{margin-top:2.5rem}.mt-14{margin-top:3.5rem}.mt-16{margin-top:4rem}.mt-2{margin-top:.5rem}.mt-20{margin-top:5rem}.mt-3{margin-top:.75rem}.mt-4{margin-top:1rem}.mt-6{margin-top:1.5rem}.mt-8{margin-top:2rem}.block{display:block}.inline-block{display:inline-block}.flex{display:flex}.inline-flex{display:inline-flex}.table{display:table}.grid{display:grid}.hidden{display:none}.aspect-square{aspect-ratio:1/1}.h-0\.5{height:.125rem}.h-1{height:.25rem}.h-1\.5{height:.375rem}.h-10{height:2.5rem}.h-12{height:3rem}.h-14{height:3.5rem}.h-16{height:4rem}.h-2{height:.5rem}.h-20{height:5rem}.h-24{height:6rem}.h-3{height:.75rem}.h-4{height:1rem}.h-40{height:10rem}.h-5{height:1.25rem}.h-56{height:14rem}.h-6{height:1.5rem}.h-8{height:2rem}.h-full{height:100%}.h-px{height:1px}.min-h-screen{min-height:100vh}.w-0\.5{width:.125rem}.w-1{width:.25rem}.w-1\.5{width:.375rem}.w-10{width:2.5rem}.w-12{width:3rem}.w-14{width:3.5rem}.w-16{width:4rem}.w-2{width:.5rem}.w-20{width:5rem}.w-24{width:6rem}.w-3{width:.75rem}.w-4{width:1rem}.w-40{width:10rem}.w-5{width:1.25rem}.w-56{width:14rem}.w-6{width:1.5rem}.w-8{width:2rem}.w-full{width:100%}.w-px{width:1px}.min-w-\[64px\]{min-width:64px}.max-w-2xl{max-width:42rem}.max-w-3xl{max-width:48rem}.max-w-4xl{max-width:56rem}.max-w-6xl{max-width:72rem}.max-w-7xl{max-width:80rem}.max-w-\[120px\]{max-width:120px}.flex-1{flex:1 1 0%}.flex-shrink{flex-shrink:1}.flex-shrink-0,.shrink-0{flex-shrink:0}.transform{transform:translate(var(--tw-translate-x),var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}@keyframes pulse{50%{opacity:.5}}.animate-pulse{animation:pulse 2s cubic-bezier(.4,0,.6,1) infinite}@keyframes pulse-soft{0%,to{opacity:1}50%{opacity:.65}}.animate-pulse-soft{animation:pulse-soft 3s ease-in-out infinite}.animate-spin{animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(1turn)}}.animate-spin-slow{animation:spin 20s linear infinite}.cursor-grab{cursor:grab}.cursor-pointer{cursor:pointer}.grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid-cols-5{grid-template-columns:repeat(5,minmax(0,1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-start{align-items:flex-start}.items-end{align-items:flex-end}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:.25rem}.gap-1\.5{gap:.375rem}.gap-2{gap:.5rem}.gap-3{gap:.75rem}.gap-4{gap:1rem}.gap-5{gap:1.25rem}.gap-6{gap:1.5rem}.gap-8{gap:2rem}.gap-x-4{-moz-column-gap:1rem;column-gap:1rem}.gap-y-2{row-gap:.5rem}.space-y-1>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.25rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.25rem*var(--tw-space-y-reverse))}.space-y-2>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.5rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.5rem*var(--tw-space-y-reverse))}.space-y-3>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.75rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.75rem*var(--tw-space-y-reverse))}.space-y-3\.5>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.875rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.875rem*var(--tw-space-y-reverse))}.space-y-4>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem*var(--tw-space-y-reverse))}.space-y-8>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(2rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(2rem*var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.whitespace-nowrap{white-space:nowrap}.break-all{word-break:break-all}.rounded{border-radius:.25rem}.rounded-2xl{border-radius:1rem}.rounded-3xl{border-radius:1.5rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:.5rem}.rounded-xl{border-radius:.75rem}.border{border-width:1px}.border-4{border-width:4px}.border-x-2{border-left-width:2px;border-right-width:2px}.border-b{border-bottom-width:1px}.border-b-0{border-bottom-width:0}.border-t{border-top-width:1px}.border-t-2{border-top-width:2px}.border-amber-300\/20{border-color:rgba(252,211,77,.2)}.border-amber-400\/40{border-color:rgba(251,191,36,.4)}.border-cosmic-400\/25{border-color:rgba(96,165,250,.25)}.border-cosmic-500\/30{border-color:rgba(59,130,246,.3)}.border-emerald-500{--tw-border-opacity:1;border-color:rgb(16 185 129/var(--tw-border-opacity,1))}.border-emerald-500\/20{border-color:rgba(16,185,129,.2)}.border-nebula-400\/25{border-color:rgba(167,139,250,.25)}.border-nebula-500\/10{border-color:rgba(139,92,246,.1)}.border-nebula-500\/15{border-color:rgba(139,92,246,.15)}.border-nebula-500\/20{border-color:rgba(139,92,246,.2)}.border-nebula-500\/25{border-color:rgba(139,92,246,.25)}.border-nebula-500\/30{border-color:rgba(139,92,246,.3)}.border-nebula-500\/40{border-color:rgba(139,92,246,.4)}.border-nebula-500\/50{border-color:rgba(139,92,246,.5)}.border-pink-500\/30{border-color:rgba(236,72,153,.3)}.border-slate-500\/15{border-color:rgba(100,116,139,.15)}.border-violet-500\/30{border-color:rgba(139,92,246,.3)}.border-white\/10{border-color:hsla(0,0%,100%,.1)}.border-t-violet-500{--tw-border-opacity:1;border-top-color:rgb(139 92 246/var(--tw-border-opacity,1))}.bg-amber-300{--tw-bg-opacity:1;background-color:rgb(252 211 77/var(--tw-bg-opacity,1))}.bg-amber-500\/20{background-color:rgba(245,158,11,.2)}.bg-cosmic-400{--tw-bg-opacity:1;background-color:rgb(96 165 250/var(--tw-bg-opacity,1))}.bg-cosmic-500\/10{background-color:rgba(59,130,246,.1)}.bg-cosmic-500\/15{background-color:rgba(59,130,246,.15)}.bg-cosmic-500\/20{background-color:rgba(59,130,246,.2)}.bg-emerald-400{--tw-bg-opacity:1;background-color:rgb(52 211 153/var(--tw-bg-opacity,1))}.bg-emerald-500\/20{background-color:rgba(16,185,129,.2)}.bg-emerald-500\/5{background-color:rgba(16,185,129,.05)}.bg-nebula-300{--tw-bg-opacity:1;background-color:rgb(196 181 253/var(--tw-bg-opacity,1))}.bg-nebula-400{--tw-bg-opacity:1;background-color:rgb(167 139 250/var(--tw-bg-opacity,1))}.bg-nebula-400\/70{background-color:rgba(167,139,250,.7)}.bg-nebula-500\/10{background-color:rgba(139,92,246,.1)}.bg-nebula-500\/15{background-color:rgba(139,92,246,.15)}.bg-nebula-500\/20{background-color:rgba(139,92,246,.2)}.bg-nebula-500\/30{background-color:rgba(139,92,246,.3)}.bg-nebula-500\/5{background-color:rgba(139,92,246,.05)}.bg-nebula-600\/30{background-color:rgba(124,58,237,.3)}.bg-pink-400{--tw-bg-opacity:1;background-color:rgb(244 114 182/var(--tw-bg-opacity,1))}.bg-pink-500\/10{background-color:rgba(236,72,153,.1)}.bg-pink-500\/15{background-color:rgba(236,72,153,.15)}.bg-pink-500\/20{background-color:rgba(236,72,153,.2)}.bg-rose-400\/70{background-color:rgba(251,113,133,.7)}.bg-slate-500\/20{background-color:rgba(100,116,139,.2)}.bg-slate-500\/5{background-color:rgba(100,116,139,.05)}.bg-white\/30{background-color:hsla(0,0%,100%,.3)}.bg-white\/5{background-color:hsla(0,0%,100%,.05)}.bg-white\/60{background-color:hsla(0,0%,100%,.6)}.bg-gradient-to-b{background-image:linear-gradient(to bottom,var(--tw-gradient-stops))}.bg-gradient-to-br{background-image:linear-gradient(to bottom right,var(--tw-gradient-stops))}.bg-gradient-to-r{background-image:linear-gradient(to right,var(--tw-gradient-stops))}.bg-gradient-to-t{background-image:linear-gradient(to top,var(--tw-gradient-stops))}.from-amber-400\/25{--tw-gradient-from:rgba(251,191,36,.25) var(--tw-gradient-from-position);--tw-gradient-to:rgba(251,191,36,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-cosmic-400\/15{--tw-gradient-from:rgba(96,165,250,.15) var(--tw-gradient-from-position);--tw-gradient-to:rgba(96,165,250,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-cosmic-500{--tw-gradient-from:#3b82f6 var(--tw-gradient-from-position);--tw-gradient-to:rgba(59,130,246,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-cosmic-500\/15{--tw-gradient-from:rgba(59,130,246,.15) var(--tw-gradient-from-position);--tw-gradient-to:rgba(59,130,246,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-emerald-500{--tw-gradient-from:#10b981 var(--tw-gradient-from-position);--tw-gradient-to:rgba(16,185,129,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-nebula-300{--tw-gradient-from:#c4b5fd var(--tw-gradient-from-position);--tw-gradient-to:rgba(196,181,253,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-nebula-400{--tw-gradient-from:#a78bfa var(--tw-gradient-from-position);--tw-gradient-to:rgba(167,139,250,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-nebula-400\/15{--tw-gradient-from:rgba(167,139,250,.15) var(--tw-gradient-from-position);--tw-gradient-to:rgba(167,139,250,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-nebula-500{--tw-gradient-from:#8b5cf6 var(--tw-gradient-from-position);--tw-gradient-to:rgba(139,92,246,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-nebula-500\/15{--tw-gradient-from:rgba(139,92,246,.15) var(--tw-gradient-from-position);--tw-gradient-to:rgba(139,92,246,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-nebula-500\/20{--tw-gradient-from:rgba(139,92,246,.2) var(--tw-gradient-from-position);--tw-gradient-to:rgba(139,92,246,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-nebula-500\/30{--tw-gradient-from:rgba(139,92,246,.3) var(--tw-gradient-from-position);--tw-gradient-to:rgba(139,92,246,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-pink-400{--tw-gradient-from:#f472b6 var(--tw-gradient-from-position);--tw-gradient-to:rgba(244,114,182,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-pink-500{--tw-gradient-from:#ec4899 var(--tw-gradient-from-position);--tw-gradient-to:rgba(236,72,153,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-sky-500{--tw-gradient-from:#0ea5e9 var(--tw-gradient-from-position);--tw-gradient-to:rgba(14,165,233,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-transparent{--tw-gradient-from:transparent var(--tw-gradient-from-position);--tw-gradient-to:transparent var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-violet-500{--tw-gradient-from:#8b5cf6 var(--tw-gradient-from-position);--tw-gradient-to:rgba(139,92,246,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-white\/20{--tw-gradient-from:hsla(0,0%,100%,.2) var(--tw-gradient-from-position);--tw-gradient-to:hsla(0,0%,100%,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-white\/5{--tw-gradient-from:hsla(0,0%,100%,.05) var(--tw-gradient-from-position);--tw-gradient-to:hsla(0,0%,100%,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.via-amber-300\/10{--tw-gradient-to:rgba(252,211,77,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),rgba(252,211,77,.1) var(--tw-gradient-via-position),var(--tw-gradient-to)}.via-amber-400\/5{--tw-gradient-to:rgba(251,191,36,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),rgba(251,191,36,.05) var(--tw-gradient-via-position),var(--tw-gradient-to)}.via-amber-400\/60{--tw-gradient-to:rgba(251,191,36,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),rgba(251,191,36,.6) var(--tw-gradient-via-position),var(--tw-gradient-to)}.via-cosmic-400{--tw-gradient-to:rgba(96,165,250,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),#60a5fa var(--tw-gradient-via-position),var(--tw-gradient-to)}.via-nebula-500{--tw-gradient-to:rgba(139,92,246,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),#8b5cf6 var(--tw-gradient-via-position),var(--tw-gradient-to)}.to-amber-300\/10{--tw-gradient-to:rgba(252,211,77,.1) var(--tw-gradient-to-position)}.to-blue-600{--tw-gradient-to:#2563eb var(--tw-gradient-to-position)}.to-cosmic-400{--tw-gradient-to:#60a5fa var(--tw-gradient-to-position)}.to-cyan-600{--tw-gradient-to:#0891b2 var(--tw-gradient-to-position)}.to-nebula-700{--tw-gradient-to:#6d28d9 var(--tw-gradient-to-position)}.to-pink-400{--tw-gradient-to:#f472b6 var(--tw-gradient-to-position)}.to-pink-500\/20{--tw-gradient-to:rgba(236,72,153,.2) var(--tw-gradient-to-position)}.to-purple-500{--tw-gradient-to:#a855f7 var(--tw-gradient-to-position)}.to-purple-600{--tw-gradient-to:#9333ea var(--tw-gradient-to-position)}.to-rose-600{--tw-gradient-to:#e11d48 var(--tw-gradient-to-position)}.to-teal-500{--tw-gradient-to:#14b8a6 var(--tw-gradient-to-position)}.to-transparent{--tw-gradient-to:transparent var(--tw-gradient-to-position)}.p-3{padding:.75rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.p-6{padding:1.5rem}.p-7{padding:1.75rem}.p-8{padding:2rem}.px-3{padding-left:.75rem;padding-right:.75rem}.px-4{padding-left:1rem;padding-right:1rem}.px-5{padding-left:1.25rem;padding-right:1.25rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.px-8{padding-left:2rem;padding-right:2rem}.py-16{padding-top:4rem;padding-bottom:4rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.py-2\.5{padding-top:.625rem;padding-bottom:.625rem}.py-20{padding-top:5rem;padding-bottom:5rem}.py-3{padding-top:.75rem;padding-bottom:.75rem}.py-3\.5{padding-top:.875rem;padding-bottom:.875rem}.py-4{padding-top:1rem;padding-bottom:1rem}.pb-24{padding-bottom:6rem}.pt-16{padding-top:4rem}.pt-6{padding-top:1.5rem}.text-left{text-align:left}.text-center{text-align:center}.font-mono{font-family:JetBrains Mono,ui-monospace,monospace}.text-2xl{font-size:1.5rem;line-height:2rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-4xl{font-size:2.25rem;line-height:2.5rem}.text-5xl{font-size:3rem;line-height:1}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:.75rem;line-height:1rem}.font-black{font-weight:900}.font-bold{font-weight:700}.font-medium{font-weight:500}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.leading-\[1\.05\]{line-height:1.05}.leading-relaxed{line-height:1.625}.leading-tight{line-height:1.25}.tracking-tight{letter-spacing:-.025em}.tracking-wide{letter-spacing:.025em}.tracking-wider{letter-spacing:.05em}.text-amber-300{--tw-text-opacity:1;color:rgb(252 211 77/var(--tw-text-opacity,1))}.text-cosmic-300{--tw-text-opacity:1;color:rgb(147 197 253/var(--tw-text-opacity,1))}.text-cosmic-400{--tw-text-opacity:1;color:rgb(96 165 250/var(--tw-text-opacity,1))}.text-emerald-300{--tw-text-opacity:1;color:rgb(110 231 183/var(--tw-text-opacity,1))}.text-emerald-400{--tw-text-opacity:1;color:rgb(52 211 153/var(--tw-text-opacity,1))}.text-nebula-200{--tw-text-opacity:1;color:rgb(221 214 254/var(--tw-text-opacity,1))}.text-nebula-300{--tw-text-opacity:1;color:rgb(196 181 253/var(--tw-text-opacity,1))}.text-nebula-400{--tw-text-opacity:1;color:rgb(167 139 250/var(--tw-text-opacity,1))}.text-night-300{--tw-text-opacity:1;color:rgb(100 116 139/var(--tw-text-opacity,1))}.text-pink-300{--tw-text-opacity:1;color:rgb(249 168 212/var(--tw-text-opacity,1))}.text-pink-400{--tw-text-opacity:1;color:rgb(244 114 182/var(--tw-text-opacity,1))}.text-sky-300{--tw-text-opacity:1;color:rgb(125 211 252/var(--tw-text-opacity,1))}.text-slate-200{--tw-text-opacity:1;color:rgb(226 232 240/var(--tw-text-opacity,1))}.text-slate-300{--tw-text-opacity:1;color:rgb(203 213 225/var(--tw-text-opacity,1))}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184/var(--tw-text-opacity,1))}.text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139/var(--tw-text-opacity,1))}.text-slate-600{--tw-text-opacity:1;color:rgb(71 85 105/var(--tw-text-opacity,1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255/var(--tw-text-opacity,1))}.text-white\/80{color:hsla(0,0%,100%,.8)}.text-white\/90{color:hsla(0,0%,100%,.9)}.line-through{text-decoration-line:line-through}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.opacity-50{opacity:.5}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgba(0,0,0,.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color)}.shadow-2xl,.shadow-lg{box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color),0 4px 6px -4px var(--tw-shadow-color)}.shadow-amber-400\/50{--tw-shadow-color:rgba(251,191,36,.5);--tw-shadow:var(--tw-shadow-colored)}.shadow-cosmic-500\/30{--tw-shadow-color:rgba(59,130,246,.3);--tw-shadow:var(--tw-shadow-colored)}.shadow-emerald-500\/30{--tw-shadow-color:rgba(16,185,129,.3);--tw-shadow:var(--tw-shadow-colored)}.shadow-nebula-400\/50{--tw-shadow-color:rgba(167,139,250,.5);--tw-shadow:var(--tw-shadow-colored)}.shadow-nebula-500\/30{--tw-shadow-color:rgba(139,92,246,.3);--tw-shadow:var(--tw-shadow-colored)}.shadow-nebula-500\/50{--tw-shadow-color:rgba(139,92,246,.5);--tw-shadow:var(--tw-shadow-colored)}.shadow-nebula-900\/30{--tw-shadow-color:rgba(76,29,149,.3);--tw-shadow:var(--tw-shadow-colored)}.shadow-pink-400\/30{--tw-shadow-color:rgba(244,114,182,.3);--tw-shadow:var(--tw-shadow-colored)}.shadow-pink-500\/30{--tw-shadow-color:rgba(236,72,153,.3);--tw-shadow:var(--tw-shadow-colored)}.shadow-sky-500\/30{--tw-shadow-color:rgba(14,165,233,.3);--tw-shadow:var(--tw-shadow-colored)}.shadow-violet-500\/30{--tw-shadow-color:rgba(139,92,246,.3);--tw-shadow:var(--tw-shadow-colored)}.outline{outline-style:solid}.blur{--tw-blur:blur(8px)}.blur,.blur-3xl{filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.blur-3xl{--tw-blur:blur(64px)}.grayscale{--tw-grayscale:grayscale(100%)}.filter,.grayscale{filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.backdrop-filter{-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition{transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,-webkit-backdrop-filter;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter,-webkit-backdrop-filter;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.transition-transform{transition-property:transform;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.ease-in-out{transition-timing-function:cubic-bezier(.4,0,.2,1)}.ease-out{transition-timing-function:cubic-bezier(0,0,.2,1)}.hover\:scale-105:hover{--tw-scale-x:1.05;--tw-scale-y:1.05;transform:translate(var(--tw-translate-x),var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.hover\:bg-nebula-600\/50:hover{background-color:rgba(124,58,237,.5)}.hover\:bg-white\/10:hover{background-color:hsla(0,0%,100%,.1)}.hover\:bg-white\/5:hover{background-color:hsla(0,0%,100%,.05)}.hover\:text-slate-300:hover{--tw-text-opacity:1;color:rgb(203 213 225/var(--tw-text-opacity,1))}.hover\:text-white:hover{--tw-text-opacity:1;color:rgb(255 255 255/var(--tw-text-opacity,1))}.active\:cursor-grabbing:active{cursor:grabbing}@media (min-width:640px){.sm\:flex-row{flex-direction:row}}@media (min-width:768px){.md\:col-span-2{grid-column:span 2/span 2}.md\:col-span-3{grid-column:span 3/span 3}.md\:block{display:block}.md\:inline-flex{display:inline-flex}.md\:hidden{display:none}.md\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.md\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.md\:grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}.md\:grid-cols-5{grid-template-columns:repeat(5,minmax(0,1fr))}.md\:flex-row{flex-direction:row}.md\:gap-4{gap:1rem}.md\:gap-5{gap:1.25rem}.md\:gap-6{gap:1.5rem}.md\:gap-8{gap:2rem}.md\:p-10{padding:2.5rem}.md\:p-12{padding:3rem}.md\:p-8{padding:2rem}.md\:px-8{padding-left:2rem;padding-right:2rem}.md\:py-28{padding-top:7rem;padding-bottom:7rem}.md\:pb-32{padding-bottom:8rem}.md\:pt-24{padding-top:6rem}.md\:text-3xl{font-size:1.875rem;line-height:2.25rem}.md\:text-4xl{font-size:2.25rem;line-height:2.5rem}.md\:text-5xl{font-size:3rem;line-height:1}.md\:text-7xl{font-size:4.5rem;line-height:1}.md\:text-xl{font-size:1.25rem;line-height:1.75rem}}@media (min-width:1024px){.lg\:block{display:block}.lg\:flex{display:flex}.lg\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.lg\:grid-cols-5{grid-template-columns:repeat(5,minmax(0,1fr))}.lg\:text-8xl{font-size:6rem;line-height:1}}</style>
+
+<style>
+  /* 本地系统字体回退（Google Fonts 在国内不稳定） */
+  @font-face { font-family: 'Inter'; src: local('Arial'); font-display: swap; }
+  @font-face { font-family: 'Noto Sans SC'; src: local('Microsoft YaHei'), local('PingFang SC'); font-display: swap; }
+  @font-face { font-family: 'JetBrains Mono'; src: local('Consolas'), local('Courier New'); font-display: swap; }
+</style>
 <style>
   * { scrollbar-width: thin; scrollbar-color: rgba(139,92,246,0.4) transparent; }
   ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -734,6 +673,192 @@ tailwind.config = {
     border-bottom: 1px solid rgba(139,92,246,0.12);
   }
   .compare-row:last-child { border-bottom: none; }
+
+
+  /* ============ 视图面板系统 ============ */
+  .view-panel { display: none; }
+  .view-panel.active { display: block; }
+
+  /* ============ 人脸认证模态框 ============ */
+  .face-auth-overlay {
+    position: fixed; inset: 0;
+    background: rgba(10,4,24,0.85);
+    backdrop-filter: blur(12px);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .face-auth-overlay.active { display: flex; }
+  .face-auth-modal {
+    background: linear-gradient(135deg, rgba(30,20,60,0.95) 0%, rgba(15,10,35,0.98) 100%);
+    border: 1px solid rgba(139,92,246,0.3);
+    border-radius: 24px;
+    padding: 48px 40px;
+    max-width: 420px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 24px 80px rgba(139,92,246,0.3), 0 0 0 1px rgba(139,92,246,0.15) inset;
+    position: relative;
+    overflow: hidden;
+  }
+  .face-auth-modal::before {
+    content: '';
+    position: absolute; inset: -50%;
+    background: radial-gradient(circle at 50% 50%, rgba(139,92,246,0.08) 0%, transparent 60%);
+    animation: bg-pulse 4s ease-in-out infinite;
+  }
+  .face-scan-frame {
+    width: 180px; height: 180px;
+    margin: 0 auto 24px;
+    position: relative;
+    border-radius: 50%;
+  }
+  .face-scan-frame::before {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    border: 2px solid rgba(139,92,246,0.4);
+    box-shadow: 0 0 30px rgba(139,92,246,0.3), inset 0 0 30px rgba(139,92,246,0.1);
+  }
+  .face-scan-frame.scanning::before {
+    border-color: rgba(56,189,248,0.6);
+    box-shadow: 0 0 40px rgba(56,189,248,0.4), inset 0 0 30px rgba(56,189,248,0.15);
+    animation: ring-pulse 1.5s ease-in-out infinite;
+  }
+  .face-scan-inner {
+    position: absolute; inset: 20px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, rgba(139,92,246,0.15) 0%, rgba(15,10,35,0.6) 70%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .face-scan-icon {
+    font-size: 56px;
+    filter: grayscale(0.3);
+    opacity: 0.8;
+  }
+  .face-scan-line {
+    position: absolute;
+    top: 0; left: 15%; right: 15%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(56,189,248,0.7), transparent);
+    opacity: 0;
+  }
+  .face-scan-frame.scanning .face-scan-line {
+    opacity: 1;
+    animation: scan-sweep 1.8s ease-in-out infinite;
+  }
+  @keyframes scan-sweep {
+    0% { top: 10%; }
+    50% { top: 80%; }
+    100% { top: 10%; }
+  }
+  .face-scan-progress {
+    width: 100%;
+    height: 3px;
+    background: rgba(139,92,246,0.1);
+    border-radius: 3px;
+    margin-top: 20px;
+    overflow: hidden;
+  }
+  .face-scan-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #7c3aed, #38bdf8);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+  }
+
+  /* ============ Web 4.0 工作台 ============ */
+  .wb-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid rgba(139,92,246,0.15);
+    background: rgba(15,10,35,0.6);
+    backdrop-filter: blur(16px);
+  }
+  .wb-sidebar {
+    width: 240px;
+    border-right: 1px solid rgba(139,92,246,0.15);
+    background: rgba(15,10,35,0.4);
+    backdrop-filter: blur(12px);
+    min-height: calc(100vh - 72px);
+    display: flex;
+    flex-direction: column;
+  }
+  .wb-content {
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto;
+  }
+  .router-node {
+    background: rgba(139,92,246,0.08);
+    border: 1px solid rgba(139,92,246,0.2);
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.3s ease;
+  }
+  .router-node:hover {
+    border-color: rgba(56,189,248,0.4);
+    background: rgba(56,189,248,0.06);
+    transform: translateY(-2px);
+  }
+  .router-node.active {
+    border-color: rgba(56,189,248,0.5);
+    background: rgba(56,189,248,0.1);
+    box-shadow: 0 0 20px rgba(56,189,248,0.15);
+  }
+  .intent-input {
+    background: rgba(15,10,35,0.6);
+    border: 1px solid rgba(139,92,246,0.25);
+    border-radius: 12px;
+    padding: 14px 18px;
+    color: #e2e8f0;
+    font-size: 15px;
+    width: 100%;
+    outline: none;
+    transition: all 0.3s ease;
+  }
+  .intent-input:focus {
+    border-color: rgba(56,189,248,0.5);
+    box-shadow: 0 0 0 3px rgba(56,189,248,0.1);
+  }
+  .intent-input::placeholder { color: #64748b; }
+
+  /* ============ Mindflow 工作台 ============ */
+  .mf-canvas {
+    background: rgba(10,4,24,0.6);
+    border: 1px solid rgba(139,92,246,0.15);
+    border-radius: 16px;
+    min-height: 500px;
+    position: relative;
+    overflow: hidden;
+  }
+  .mf-node {
+    position: absolute;
+    background: rgba(139,92,246,0.12);
+    border: 1px solid rgba(139,92,246,0.3);
+    border-radius: 12px;
+    padding: 12px 16px;
+    cursor: grab;
+    transition: all 0.2s ease;
+    min-width: 120px;
+    text-align: center;
+  }
+  .mf-node:hover {
+    border-color: rgba(56,189,248,0.5);
+    box-shadow: 0 4px 20px rgba(56,189,248,0.2);
+  }
+  .mf-node .node-label {
+    font-size: 13px;
+    color: #c4b5fd;
+    font-weight: 500;
+  }
+
 </style>
 </head>
 <body class="cosmic-bg text-slate-200 min-h-screen relative">
@@ -782,18 +907,26 @@ tailwind.config = {
       <a href="#architecture" class="nav-pill group relative px-4 py-2.5 rounded-lg text-slate-300 min-w-[64px] text-center">技术架构<span class="nav-underline"></span></a>
       <a href="#framework" class="nav-pill group relative px-4 py-2.5 rounded-lg text-slate-300 min-w-[64px] text-center">方法论<span class="nav-underline"></span></a>
       <a href="#execution" class="nav-pill group relative px-4 py-2.5 rounded-lg text-slate-300 min-w-[64px] text-center">执行计划<span class="nav-underline"></span></a>
-      <a href="#synthesis" class="nav-pill group relative px-4 py-2.5 rounded-lg text-slate-300 min-w-[64px] text-center">审计研判<span class="nav-underline"></span></a>
       <a href="#ecosystem" class="nav-pill group relative px-4 py-2.5 rounded-lg text-slate-300 min-w-[64px] text-center">生态<span class="nav-underline"></span></a>
     </div>
 
     <div class="flex items-center gap-2">
       <span class="hidden md:inline-flex items-center gap-1.5 tag"><span class="w-1.5 h-1.5 rounded-full bg-nebula-400 animate-pulse"></span> v1.0 · 已发布</span>
-      <a href="#concepts" class="btn-primary px-5 py-2 rounded-xl text-white text-sm font-semibold whitespace-nowrap">立即体验</a>
+      <button id="header-login-btn" class="btn-primary px-5 py-2 rounded-xl text-white text-sm font-semibold whitespace-nowrap" onclick="openFaceAuth()">登录</button>
+      <button id="profile-btn" class="hidden px-4 py-2 rounded-xl text-white text-sm font-semibold whitespace-nowrap bg-nebula-600/30 border border-nebula-500/40 hover:bg-nebula-600/50 transition" onclick="showMindflow()">
+        <span class="inline-flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-gradient-to-br from-nebula-400 to-cosmic-400 flex items-center justify-center text-[10px] font-bold">α</span>
+          个人中心
+        </span>
+      </button>
     </div>
   </nav>
 </header>
 
 <main class="relative z-10">
+
+<!-- ============ 首页视图 ============ -->
+<div id="homepageView" class="view-panel active">
 
 <!-- ============ HERO ============ -->
 <section id="hero" class="relative pt-16 md:pt-24 pb-24 md:pb-32 px-5 md:px-8">
@@ -855,7 +988,9 @@ tailwind.config = {
     </h1>
 
     <p class="text-center mt-8 text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed fade-up" style="animation-delay:0.2s">
-      你在 ChatGPT 聊了三个月，它已经认识你了。然后你打开 Claude —— 一切归零。<strong class="text-nebula-300">Alpha-ID 让这件事再也不会发生。</strong>
+      <span class="text-white/80">你</span>不再是一个孤立的用户，而是拥有<strong class="text-nebula-300">数字灵魂</strong>的独立个体。
+      <br class="hidden md:block">
+      跨平台迁移、因果推理、三层记忆 —— <strong class="text-cosmic-300">让每个 AI 都真正认识你</strong>。
     </p>
 
     <!-- 项目亮点徽章行 -->
@@ -948,7 +1083,7 @@ tailwind.config = {
           <div class="text-slate-300">  活跃时段：<span class="text-pink-300">23:30 - 03:15</span>  ·  风格：<span class="text-pink-300">简洁直接 / 功能性编程</span></div>
           <div class="text-slate-300">  关注话题：<span class="text-pink-300">MCP 协议 · DID 身份 · 因果推理 · A2A 协议</span></div>
           <div class="text-slate-500 mt-2">$ <span class="text-nebula-300">aid</span> profile serve --mcp</div>
-          <div class="text-nebula-300">→ Ghost Layer 已挂载 · Claude / Cursor / Windsurf / Codex CLI 均可看见完整的你</div>
+          <div class="text-nebula-300">→ Ghost Layer 已挂载 · Claude / Cursor / Windsurf 均可看见完整的你</div>
           <div class="mt-2 text-slate-500">$ <span class="cursor ml-1"></span></div>
         </div>
       </div>
@@ -1024,15 +1159,15 @@ tailwind.config = {
         <div class="space-y-3.5">
           <div class="flex gap-3">
             <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">+</span>
-            <div class="text-sm text-slate-400"><span class="text-white font-medium">一个身份走遍所有平台：</span>DID + Ed25519 签名，你是你，不是平台分配的用户 ID</div>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">一个 DID 走遍所有平台：</span>去中心化身份 + Ed25519 签名验证</div>
           </div>
           <div class="flex gap-3">
             <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">+</span>
-            <div class="text-sm text-slate-400"><span class="text-white font-medium">无感注入：</span>打开任何 AI 工具自动认出你，记忆跨工具迁移，不再重新自我介绍</div>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">因果图谱记忆：</span>从"文本匹配"走向"理解关系"，节点+边构建你的思维</div>
           </div>
           <div class="flex gap-3">
             <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">+</span>
-            <div class="text-sm text-slate-400"><span class="text-white font-medium">代替操作：</span>不只是聊天，真正代替你操作电脑——看屏幕、点按钮、处理文件</div>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">全局回溯决策：</span>多分支推演 + 逆向校验 + 冲突检测，避免局部最优</div>
           </div>
           <div class="flex gap-3">
             <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">+</span>
@@ -1040,11 +1175,11 @@ tailwind.config = {
           </div>
           <div class="flex gap-3">
             <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">+</span>
-            <div class="text-sm text-slate-400"><span class="text-white font-medium">A2A 社交：</span>你的数字灵魂与其他人的数字灵魂交朋友、协作。Agent-to-Agent</div>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">A2A 协议：</span>你的 Agent 与其他 Agent 可直接协作，无需平台中介</div>
           </div>
           <div class="flex gap-3">
             <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">+</span>
-            <div class="text-sm text-slate-400"><span class="text-white font-medium">PoE 可验证：</span>每条操作生成哈希链，全程可审计、可追溯</div>
+            <div class="text-sm text-slate-400"><span class="text-white font-medium">PoE 可验证：</span>每条 Skill 执行生成哈希链，全程可审计、可追溯</div>
           </div>
         </div>
 
@@ -1087,7 +1222,7 @@ tailwind.config = {
         <span class="h-px w-12 bg-nebula-500/30"></span>
       </div>
       <h2 class="text-4xl md:text-5xl font-black text-white mb-4">见证<span class="text-gradient">数字身份</span>的诞生</h2>
-      <p class="text-slate-400 max-w-2xl mx-auto">不需要注册、不需要填表。运行一个命令就行。下面是核心流程演示。</p>
+      <p class="text-slate-400 max-w-2xl mx-auto">点击下方按钮，体验 DID 生成的全过程。这只是一个演示，你的真实身份将在本地安全生成。</p>
     </div>
 
     <!-- 演示区域 -->
@@ -1263,7 +1398,7 @@ tailwind.config = {
           <div class="cmd-output"><span class="text-nebula-300">关注</span>: MCP · DID · 因果推理</div>
           <div><span class="cmd-prompt">$</span> <span class="cmd-keyword">aid</span> profile serve --mcp</div>
           <div class="cmd-output">→ Ghost Layer 已挂载</div>
-          <div class="cmd-output">→ Claude / Cursor / Windsurf / Codex CLI 均可看见你</div>
+          <div class="cmd-output">→ Claude / Cursor / Windsurf 均可看见你</div>
         </div>
         <div class="mt-4 text-xs text-slate-500 leading-relaxed">
           → <span class="text-slate-400">MCP Server 让任何 AI 工具都能通过标准协议读取你的人格画像和记忆节点。</span>
@@ -1961,6 +2096,392 @@ tailwind.config = {
   </div>
 </section>
 
+
+<div class="glow-divider max-w-4xl mx-auto"></div>
+
+<!-- ============ 02.5 · 技术架构 ============ -->
+<section id="architecture" class="py-20 md:py-28 px-5 md:px-8">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-16 reveal">
+      <div class="inline-flex items-center gap-2 mb-4">
+        <span class="chapter-num text-sm">02.5 / ARCHITECTURE</span>
+        <span class="h-px w-12 bg-nebula-500/30"></span>
+      </div>
+      <h2 class="text-4xl md:text-5xl font-black text-white mb-4">技术<span class="text-gradient">架构</span></h2>
+      <p class="text-slate-400 max-w-2xl mx-auto">从五层模型到九面拓扑，一套自洽的技术栈。向内依赖、向外服务。</p>
+    </div>
+
+    <!-- 架构总览 -->
+    <div class="glass rounded-3xl p-8 md:p-10 mb-8 reveal">
+      <div class="text-xs text-nebula-300 font-mono tracking-wider mb-4">SYSTEM · ARCHITECTURE</div>
+      <div class="grid md:grid-cols-5 gap-4 text-center">
+        <div class="glass-soft rounded-2xl p-5 node">
+          <div class="text-2xl mb-2">🔑</div>
+          <div class="text-sm font-bold text-white">身份层</div>
+          <div class="text-[10px] text-slate-500 font-mono mt-1">DID + Ed25519</div>
+        </div>
+        <div class="glass-soft rounded-2xl p-5 node">
+          <div class="text-2xl mb-2">🧠</div>
+          <div class="text-sm font-bold text-white">记忆层</div>
+          <div class="text-[10px] text-slate-500 font-mono mt-1">因果图谱 + 三层记忆</div>
+        </div>
+        <div class="glass-soft rounded-2xl p-5 node">
+          <div class="text-2xl mb-2">⚡</div>
+          <div class="text-sm font-bold text-white">决策层</div>
+          <div class="text-[10px] text-slate-500 font-mono mt-1">多跳推理 + 回溯</div>
+        </div>
+        <div class="glass-soft rounded-2xl p-5 node">
+          <div class="text-2xl mb-2">🔌</div>
+          <div class="text-sm font-bold text-white">桥接层</div>
+          <div class="text-[10px] text-slate-500 font-mono mt-1">MCP + A2A</div>
+        </div>
+        <div class="glass-soft rounded-2xl p-5 node">
+          <div class="text-2xl mb-2">🖥️</div>
+          <div class="text-sm font-bold text-white">展示层</div>
+          <div class="text-[10px] text-slate-500 font-mono mt-1">悬浮球 + 星链</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 技术栈详情 -->
+    <div class="grid md:grid-cols-2 gap-6 reveal">
+      <div class="glass rounded-2xl p-6">
+        <div class="text-xs text-nebula-300 font-mono tracking-wider mb-4">CORE · STACK</div>
+        <div class="space-y-3">
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+            <span class="text-lg">🐍</span>
+            <div>
+              <div class="text-sm font-bold text-white">Python 3.11+</div>
+              <div class="text-xs text-slate-500">核心运行时 · asyncio</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+            <span class="text-lg">🗄️</span>
+            <div>
+              <div class="text-sm font-bold text-white">SQLite</div>
+              <div class="text-xs text-slate-500">本地优先存储 · WAL 模式</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+            <span class="text-lg">🔐</span>
+            <div>
+              <div class="text-sm font-bold text-white">Ed25519</div>
+              <div class="text-xs text-slate-500">签名验证 · PyNaCl</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+            <span class="text-lg">📡</span>
+            <div>
+              <div class="text-sm font-bold text-white">MCP Server</div>
+              <div class="text-xs text-slate-500">Model Context Protocol</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="glass rounded-2xl p-6">
+        <div class="text-xs text-cosmic-300 font-mono tracking-wider mb-4">BRIDGE · STACK</div>
+        <div class="space-y-3">
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+            <span class="text-lg">🤖</span>
+            <div>
+              <div class="text-sm font-bold text-white">A2A Protocol</div>
+              <div class="text-xs text-slate-500">Agent-to-Agent 通信</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+            <span class="text-lg">🎤</span>
+            <div>
+              <div class="text-sm font-bold text-white">Whisper + Edge TTS</div>
+              <div class="text-xs text-slate-500">语音交互 · 本地识别</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+            <span class="text-lg">🌐</span>
+            <div>
+              <div class="text-sm font-bold text-white">Three.js</div>
+              <div class="text-xs text-slate-500">Web 星链可视化</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+            <span class="text-lg">📦</span>
+            <div>
+              <div class="text-sm font-bold text-white">PyPI Package</div>
+              <div class="text-xs text-slate-500">pip install alpha-id</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-divider max-w-4xl mx-auto"></div>
+
+<!-- ============ 02.6 - THREE PILLARS ============ -->
+<section id="pillars" class="py-20 md:py-28 px-5 md:px-8">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-16 reveal">
+      <div class="inline-flex items-center gap-2 mb-4">
+        <span class="chapter-num text-sm">02.6 / THREE PILLARS</span>
+        <span class="h-px w-12 bg-nebula-500/30"></span>
+      </div>
+      <h2 class="text-4xl md:text-5xl font-black text-white mb-4">Three <span class="text-gradient">Pillars</span></h2>
+      <p class="text-slate-400 max-w-2xl mx-auto">Alpha-ID knows you -> Web 4.0 understands you -> Mindflow represents you</p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6 mb-12 reveal">
+      <div class="glass rounded-3xl p-7 node relative overflow-hidden">
+        <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-nebula-500/10 blur-3xl"></div>
+        <div class="relative">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-nebula-500 to-purple-600 flex items-center justify-center text-2xl mb-5 shadow-lg shadow-nebula-500/30">ID</div>
+          <div class="text-xs text-nebula-300 font-mono tracking-wider mb-2">PILLAR 01</div>
+          <h3 class="text-xl font-bold text-white mb-3">Alpha-ID</h3>
+          <div class="text-sm text-nebula-300 font-semibold mb-3">Knows You</div>
+          <p class="text-sm text-slate-400 mb-4">Decentralized identity + Causal graph + Three-layer memory. The foundation of your digital soul.</p>
+          <div class="space-y-2">
+            <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-nebula-400"></span>DID generation + Ed25519 signatures</div>
+            <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-nebula-400"></span>20+ atomic points + 10 edge types</div>
+            <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-nebula-400"></span>Three-layer memory + Causal inference</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass rounded-3xl p-7 node relative overflow-hidden">
+        <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-cosmic-500/10 blur-3xl"></div>
+        <div class="relative">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-cosmic-500 to-blue-600 flex items-center justify-center text-2xl mb-5 shadow-lg shadow-cosmic-500/30">WEB</div>
+          <div class="text-xs text-cosmic-300 font-mono tracking-wider mb-2">PILLAR 02</div>
+          <h3 class="text-xl font-bold text-white mb-3">Web 4.0</h3>
+          <div class="text-sm text-cosmic-300 font-semibold mb-3">Understands You</div>
+          <p class="text-sm text-slate-400 mb-4">Smart router + Intent parsing -> Skill routing -> Decision tree. Understands your intent, auto-matches best execution.</p>
+          <div class="space-y-2">
+            <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-cosmic-400"></span>Intent parser + Confidence scoring</div>
+            <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-cosmic-400"></span>Skill routing + Auto-matching</div>
+            <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-cosmic-400"></span>Decision tree + Reverse verification</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass rounded-3xl p-7 node relative overflow-hidden">
+        <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-pink-500/10 blur-3xl"></div>
+        <div class="relative">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center text-2xl mb-5 shadow-lg shadow-pink-500/30">MF</div>
+          <div class="text-xs text-pink-300 font-mono tracking-wider mb-2">PILLAR 03</div>
+          <h3 class="text-xl font-bold text-white mb-3">Mindflow</h3>
+          <div class="text-sm text-pink-300 font-semibold mb-3">Represents You</div>
+          <p class="text-sm text-slate-400 mb-4">Personal workbench + Mind canvas + Task board + Notes. Your digital soul keeps running even when you are away.</p>
+          <div class="space-y-2">
+            <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-pink-400"></span>Mind canvas + Free drag nodes</div>
+            <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-pink-400"></span>Task board + Auto sync</div>
+            <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-pink-400"></span>Personality profile + AI view of you</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass rounded-3xl p-8 reveal">
+      <div class="text-xs text-slate-500 font-mono tracking-wider mb-6 text-center">PROGRESSION</div>
+      <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6">
+        <div class="text-center">
+          <div class="w-20 h-20 mx-auto rounded-full bg-nebula-500/15 border border-nebula-500/30 flex items-center justify-center text-3xl mb-2">A</div>
+          <div class="text-sm font-bold text-white">Alpha-ID</div>
+          <div class="text-[10px] text-nebula-300 font-mono">Knows</div>
+        </div>
+        <div class="text-2xl text-slate-600 hidden md:block">-></div>
+        <div class="text-xl text-slate-600 md:hidden">|</div>
+        <div class="text-center">
+          <div class="w-20 h-20 mx-auto rounded-full bg-cosmic-500/15 border border-cosmic-500/30 flex items-center justify-center text-3xl mb-2">W</div>
+          <div class="text-sm font-bold text-white">Web 4.0</div>
+          <div class="text-[10px] text-cosmic-300 font-mono">Understands</div>
+        </div>
+        <div class="text-2xl text-slate-600 hidden md:block">-></div>
+        <div class="text-xl text-slate-600 md:hidden">|</div>
+        <div class="text-center">
+          <div class="w-20 h-20 mx-auto rounded-full bg-pink-500/15 border border-pink-500/30 flex items-center justify-center text-3xl mb-2">M</div>
+          <div class="text-sm font-bold text-white">Mindflow</div>
+          <div class="text-[10px] text-pink-300 font-mono">Represents</div>
+        </div>
+        <div class="text-2xl text-slate-600 hidden md:block">-></div>
+        <div class="text-xl text-slate-600 md:hidden">|</div>
+        <div class="text-center">
+          <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-nebula-500/20 to-pink-500/20 border border-nebula-500/30 flex items-center justify-center text-3xl mb-2">G</div>
+          <div class="text-sm font-bold text-white">Ghost Layer</div>
+          <div class="text-[10px] text-nebula-300 font-mono">Digital Soul</div>
+        </div>
+      </div>
+      <div class="mt-6 text-center text-sm text-slate-400">
+        Three layers of progression, ultimately forming the <span class="text-nebula-300 font-semibold">Ghost Layer</span> above all AI tools
+      </div>
+    </div>
+  </div>
+</section>
+
+    <!-- Data flow & API -->
+    <div class="grid md:grid-cols-2 gap-6 mt-8 reveal">
+      <div class="glass rounded-2xl p-6">
+        <div class="text-xs text-nebula-300 font-mono tracking-wider mb-4">DATA FLOW</div>
+        <div class="space-y-3">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-nebula-500/15 flex items-center justify-center text-sm shrink-0">1</div>
+            <div class="text-sm text-slate-300">User input -> Intent Parser (NLP + Context)</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-nebula-500/15 flex items-center justify-center text-sm shrink-0">2</div>
+            <div class="text-sm text-slate-300">Intent -> Skill Router (Match + Rank)</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-cosmic-500/15 flex items-center justify-center text-sm shrink-0">3</div>
+            <div class="text-sm text-slate-300">Skill -> Decision Engine (3-branch)</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-cosmic-500/15 flex items-center justify-center text-sm shrink-0">4</div>
+            <div class="text-sm text-slate-300">Decision -> Executor (MCP / A2A / Local)</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-pink-500/15 flex items-center justify-center text-sm shrink-0">5</div>
+            <div class="text-sm text-slate-300">Result -> Memory Graph (Causal Node + PoE)</div>
+          </div>
+        </div>
+      </div>
+      <div class="glass rounded-2xl p-6">
+        <div class="text-xs text-cosmic-300 font-mono tracking-wider mb-4">API DESIGN</div>
+        <div class="code-block rounded-xl p-4 text-xs font-mono space-y-2">
+          <div><span class="cmd-prompt">POST</span> <span class="cmd-arg">/v1/intent/parse</span></div>
+          <div class="cmd-output">{ "intent": string, "confidence": float }</div>
+          <div class="mt-2"><span class="cmd-prompt">POST</span> <span class="cmd-arg">/v1/skill/route</span></div>
+          <div class="cmd-output">{ "skill": string, "params": object }</div>
+          <div class="mt-2"><span class="cmd-prompt">POST</span> <span class="cmd-arg">/v1/decision/branches</span></div>
+          <div class="cmd-output">{ "branches": [a, b, c] }</div>
+          <div class="mt-2"><span class="cmd-prompt">GET</span> <span class="cmd-arg">/v1/memory/graph</span></div>
+          <div class="cmd-output">{ "nodes": [...], "edges": [...] }</div>
+          <div class="mt-2"><span class="cmd-prompt">WS</span> <span class="cmd-arg">/v1/events/stream</span></div>
+          <div class="cmd-output"><- real-time events</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Deployment -->
+    <div class="glass rounded-2xl p-6 mt-6 reveal">
+      <div class="text-xs text-nebula-300 font-mono tracking-wider mb-4">DEPLOYMENT</div>
+      <div class="grid md:grid-cols-4 gap-4 text-center">
+        <div class="p-4 rounded-xl bg-white/5 border border-white/10">
+          <div class="text-2xl mb-2">PC</div>
+          <div class="text-sm font-bold text-white">Local Node</div>
+          <div class="text-[10px] text-slate-500 mt-1">SQLite + CLI</div>
+          <div class="text-[10px] text-slate-500">Data sovereignty</div>
+        </div>
+        <div class="p-4 rounded-xl bg-white/5 border border-white/10">
+          <div class="text-2xl mb-2">PLUG</div>
+          <div class="text-sm font-bold text-white">MCP Bridge</div>
+          <div class="text-[10px] text-slate-500 mt-1">Identity inject</div>
+          <div class="text-[10px] text-slate-500">Claude / Cursor</div>
+        </div>
+        <div class="p-4 rounded-xl bg-white/5 border border-white/10">
+          <div class="text-2xl mb-2">WEB</div>
+          <div class="text-sm font-bold text-white">Web Starlink</div>
+          <div class="text-[10px] text-slate-500 mt-1">Three.js viz</div>
+          <div class="text-[10px] text-slate-500">Causal graph</div>
+        </div>
+        <div class="p-4 rounded-xl bg-white/5 border border-white/10">
+          <div class="text-2xl mb-2">NET</div>
+          <div class="text-sm font-bold text-white">A2A Network</div>
+          <div class="text-[10px] text-slate-500 mt-1">Agent collab</div>
+          <div class="text-[10px] text-slate-500">Decentralized</div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Data Model -->
+    <div class="glass rounded-2xl p-6 mt-6 reveal">
+      <div class="text-xs text-pink-300 font-mono tracking-wider mb-4">DATA MODEL</div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="code-block rounded-xl p-4 text-xs font-mono">
+          <div class="text-nebula-300 mb-2">-- Causal Nodes</div>
+          <div><span class="cmd-keyword">CREATE TABLE</span> nodes (</div>
+          <div>  id <span class="cmd-arg">TEXT</span> PRIMARY KEY,</div>
+          <div>  type <span class="cmd-arg">TEXT</span>, <span class="cmd-output">-- goal/action/result/feedback</span></div>
+          <div>  content <span class="cmd-arg">TEXT</span>,</div>
+          <div>  confidence <span class="cmd-arg">REAL</span> DEFAULT 0.6,</div>
+          <div>  source <span class="cmd-arg">TEXT</span>,</div>
+          <div>  created_at <span class="cmd-arg">INTEGER</span></div>
+          <div>);</div>
+        </div>
+        <div class="code-block rounded-xl p-4 text-xs font-mono">
+          <div class="text-nebula-300 mb-2">-- Edges (Relations)</div>
+          <div><span class="cmd-keyword">CREATE TABLE</span> edges (</div>
+          <div>  id <span class="cmd-arg">TEXT</span> PRIMARY KEY,</div>
+          <div>  from_node <span class="cmd-arg">TEXT</span>,</div>
+          <div>  to_node <span class="cmd-arg">TEXT</span>,</div>
+          <div>  relation <span class="cmd-arg">TEXT</span>, <span class="cmd-output">-- causal/ownership/call</span></div>
+          <div>  strength <span class="cmd-arg">REAL</span> DEFAULT 0.6,</div>
+          <div>  evidence <span class="cmd-arg">TEXT</span></div>
+          <div>);</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Model -->
+    <div class="glass rounded-2xl p-6 mt-6 reveal">
+      <div class="text-xs text-amber-300 font-mono tracking-wider mb-4">SECURITY MODEL</div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="p-4 rounded-xl bg-white/5 border border-white/10">
+          <div class="text-sm font-bold text-white mb-2">Hard-coded Rules</div>
+          <div class="space-y-1 text-xs text-slate-500">
+            <div>- delete_file requires confirmation</div>
+            <div>- password access blocked</div>
+            <div>- rm -rf rejected</div>
+            <div>- external sends require approval</div>
+          </div>
+        </div>
+        <div class="p-4 rounded-xl bg-white/5 border border-white/10">
+          <div class="text-sm font-bold text-white mb-2">Fail-closed Design</div>
+          <div class="space-y-1 text-xs text-slate-500">
+            <div>- Safety layer blocks on any doubt</div>
+            <div>- Dependency failure = pause</div>
+            <div>- Red warning + PoE record</div>
+            <div>- Await user confirmation</div>
+          </div>
+        </div>
+        <div class="p-4 rounded-xl bg-white/5 border border-white/10">
+          <div class="text-sm font-bold text-white mb-2">Privacy First</div>
+          <div class="space-y-1 text-xs text-slate-500">
+            <div>- Local-first: data never leaves</div>
+            <div>- E2E encrypted sync (opt-in)</div>
+            <div>- Social recovery: M-of-N</div>
+            <div>- Ed25519 = ownership</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Performance Benchmarks -->
+    <div class="glass rounded-2xl p-6 mt-6 reveal">
+      <div class="text-xs text-emerald-300 font-mono tracking-wider mb-4">PERFORMANCE</div>
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div class="text-center p-3 rounded-lg bg-white/5">
+          <div class="text-lg font-bold text-nebula-300">&lt;50ms</div>
+          <div class="text-[10px] text-slate-500">Node query</div>
+        </div>
+        <div class="text-center p-3 rounded-lg bg-white/5">
+          <div class="text-lg font-bold text-cosmic-300">&lt;200ms</div>
+          <div class="text-[10px] text-slate-500">Causal path</div>
+        </div>
+        <div class="text-center p-3 rounded-lg bg-white/5">
+          <div class="text-lg font-bold text-pink-300">&lt;100ms</div>
+          <div class="text-[10px] text-slate-500">Skill match</div>
+        </div>
+        <div class="text-center p-3 rounded-lg bg-white/5">
+          <div class="text-lg font-bold text-amber-300">&lt;500ms</div>
+          <div class="text-[10px] text-slate-500">3-branch tree</div>
+        </div>
+        <div class="text-center p-3 rounded-lg bg-white/5">
+          <div class="text-lg font-bold text-emerald-300">10k+</div>
+          <div class="text-[10px] text-slate-500">Nodes/sphere</div>
+        </div>
+      </div>
+    </div>
+
 <div class="glow-divider max-w-4xl mx-auto"></div>
 
 <!-- ============ 03 · 六套思维框架 ============ -->
@@ -2179,226 +2700,6 @@ tailwind.config = {
 
 <div class="glow-divider max-w-4xl mx-auto"></div>
 
-<!-- ============ SYNTHESIS · 审计研判 ============ -->
-<section id="synthesis" class="py-20 md:py-28 px-5 md:px-8">
-  <div class="max-w-7xl mx-auto">
-
-    <div class="text-center mb-16 reveal">
-      <div class="inline-flex items-center gap-2 mb-4">
-        <span class="chapter-num text-sm">06 / SYNTHESIS</span>
-        <span class="h-px w-12 bg-nebula-500/30"></span>
-      </div>
-      <h2 class="text-4xl md:text-5xl font-black text-white mb-4">战略审计<span class="text-gradient">研判</span></h2>
-      <p class="text-slate-400 max-w-2xl mx-auto">2026-06-07 · 全量 MD 梳理 + 两次审计碰撞 + 独立判断</p>
-    </div>
-
-    <!-- 三层定义 -->
-    <div class="glass rounded-3xl p-7 md:p-10 mb-8 reveal">
-      <h3 class="text-2xl font-black text-white mb-6">数字灵魂 · 三层定义<span class="text-xs text-slate-500 font-mono ml-3">来自用户原话 #7</span></h3>
-      <div class="grid md:grid-cols-3 gap-6">
-        <div class="glass-soft rounded-2xl p-6 border-b-2 border-cosmic-400/40">
-          <div class="text-4xl mb-3">&#x1F50D;</div>
-          <h4 class="text-lg font-bold text-white mb-2">第一层 · 数据收集</h4>
-          <p class="text-sm text-slate-400 leading-relaxed">"我第一件事要做的肯定是收集他们在这些应用上面的一些信息什么的，这样才能组成我。"</p>
-          <div class="mt-4 space-y-1.5">
-            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-nebula-400"></span><span class="text-xs text-slate-300">5 采集器已统一</span></div>
-            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-nebula-400"></span><span class="text-xs text-slate-300">detect/collect/summary/info</span></div>
-            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-nebula-400"></span><span class="text-xs text-slate-300">aid collect scan 一键扫描</span></div>
-          </div>
-        </div>
-        <div class="glass-soft rounded-2xl p-6 border-b-2 border-nebula-400/40">
-          <div class="text-4xl mb-3">&#x1F441;</div>
-          <h4 class="text-lg font-bold text-white mb-2">第二层 · 无感感知</h4>
-          <p class="text-sm text-slate-400 leading-relaxed">"我一进场，不管在 Codex 还是在 Cursor 还是 Claude 里面……相当于我一出现就直接接管了我在这台电脑上的所有记忆。"</p>
-          <div class="mt-4 space-y-1.5">
-            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span><span class="text-xs text-slate-300">MCP 身份注入 — 待打通</span></div>
-            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span><span class="text-xs text-slate-300">三层记忆 — 待实现</span></div>
-            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span><span class="text-xs text-slate-300">profile 压缩 &le;200 tokens</span></div>
-          </div>
-        </div>
-        <div class="glass-soft rounded-2xl p-6 border-b-2 border-rose-400/40">
-          <div class="text-4xl mb-3">&#x1F590;</div>
-          <h4 class="text-lg font-bold text-white mb-2">第三层 · 代替操作</h4>
-          <p class="text-sm text-slate-400 leading-relaxed">"他除了知道我是我，他还得代替我直接在这个电脑上面操作。不加眼睛和手和脚，我怎么样一句话就让他去工作了？"</p>
-          <div class="mt-4 space-y-1.5">
-            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span><span class="text-xs text-slate-500">Computer Use — 规划中</span></div>
-            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span><span class="text-xs text-slate-500">Skill &rarr; Plan &rarr; Safety 闭环</span></div>
-            <div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span><span class="text-xs text-slate-500">A2A 社交协议 — 远期</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- AI 献策 · 各 AI 的智慧精华 -->
-    <div class="glass rounded-3xl p-7 mb-8 reveal">
-      <h3 class="text-2xl font-black text-white mb-2">AI 献策<span class="text-xs text-slate-500 font-mono ml-3">保留每一个值得记录的判断</span></h3>
-      <p class="text-slate-400 text-sm mb-6">以下是各 AI 在对话中提出的、经得起推敲的独立判断。不总结、不归并——让它们的思路各自说话。</p>
-      <div class="grid md:grid-cols-4 gap-4">
-        <!-- deep seek 专栏 -->
-        <div class="glass-soft rounded-2xl p-5 border-t-2 border-cosmic-400">
-          <div class="text-xs text-cosmic-300 font-bold font-mono mb-3">deep seek · 80轮对话</div>
-          <div class="text-sm text-slate-400 space-y-2.5">
-            <div><span class="text-white">"点线面球"建模方法：</span>用五层粒度（原子概念→关系→能力域→实例→生态）替代传统分层架构，使每个概念都可追溯可验证</div>
-            <div><span class="text-white">寄生策略验证：</span>从 MCP 协议下沉，不重新发明轮子，利用已有 9700 万月下载量做分发</div>
-            <div><span class="text-white">竞品矩阵分析：</span>6 个竞品按"需要你/需要平台"矩阵分类，确认 Alpha-ID 处于唯一空白象限</div>
-            <div><span class="text-white">反脆弱自检：</span>每个原则附"如果违反会怎样？"，七边形环每环带反向推翻验证</div>
-          </div>
-        </div>
-        <!-- AtomCode 上轮 -->
-        <div class="glass-soft rounded-2xl p-5 border-t-2 border-nebula-400">
-          <div class="text-xs text-nebula-300 font-bold font-mono mb-3">AtomCode · 上轮执行</div>
-          <div class="text-sm text-slate-400 space-y-2.5">
-            <div><span class="text-white">Collector 协议统一：</span>从"手工为每个数据源写采集逻辑"到 detect/collect/summary/info 四函数标准化</div>
-            <div><span class="text-white">一键扫描方案：</span>aid collect scan 自动探测全部数据源，2 秒完成画像合并</div>
-            <div><span class="text-white">Ghost Layer HTML 集成：</span>将静态可视化页面注入真实画像数据，从展示品变成产品功能</div>
-            <div><span class="text-white">画像压缩：</span>compress_profile ≤200 tokens 用于 MCP 上下文注入，让 AI 工具"认识你"</div>
-          </div>
-        </div>
-        <!-- 五路 AI 竞品分析 -->
-        <div class="glass-soft rounded-2xl p-5 border-t-2 border-pink-400">
-          <div class="text-xs text-pink-300 font-bold font-mono mb-3">五路 AI · 竞品研判</div>
-          <div class="text-sm text-slate-400 space-y-2.5">
-            <div><span class="text-white">全维度竞品检索报告：</span>星链级检索覆盖面广，每个竞品从技术/市场/生态三个维度评估</div>
-            <div><span class="text-white">技术债识别：</span>BCI 终局、寄生策略、不自己维护 LLM——三个被一致确认的去风险判断</div>
-            <div><span class="text-white">差异化确认：</span>"不做平台，做身份层"被多路 AI 独立判定为唯一可防守壁垒</div>
-            <div><span class="text-white">风险预警：</span>40% 幻觉率警告被证实——元宝的 piia-engram 确为幻觉，但竞品数据总体可靠</div>
-          </div>
-        </div>
-        <!-- 知识库生成 -->
-        <div class="glass-soft rounded-2xl p-5 border-t-2 border-emerald-400">
-          <div class="text-xs text-emerald-300 font-bold font-mono mb-3">知识库 · 架构贡献</div>
-          <div class="text-sm text-slate-400 space-y-2.5">
-            <div><span class="text-white">20 个原子点：</span>将系统概念拆到最小不可分割粒度，6 类 20 个，每点带类型/属性/验证方法</div>
-            <div><span class="text-white">10 种边类型：</span>不仅是"连接"，而是因果/归属/调用/触发/通信/存储/验证/展示/依赖/时序 10 种精确关系</div>
-            <div><span class="text-white">9 个能力面：</span>从身份面到协作面，每个面有明确输入/输出/依赖/验证标准</div>
-            <div><span class="text-white">面试展示包：</span>5 分钟 Demo 脚本 + 5 张 PPT 模板 + 投资人 3 问应答——项目外宣的全套素材</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 碰撞分析 -->
-    <div class="grid md:grid-cols-2 gap-6 reveal">
-      <div class="glass rounded-3xl p-7">
-        <h3 class="text-xl font-bold text-white mb-5">5 个关键碰撞</h3>
-        <div class="space-y-4">
-          <div class="flex gap-3">
-            <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">1</span>
-            <div class="text-sm text-slate-400"><span class="text-white font-medium">双大脑 vs 点线面球：</span>不矛盾。双大脑 = 运行时架构，点线面球 = 设计时建模。保留两套，各司其职</div>
-          </div>
-          <div class="flex gap-3">
-            <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">2</span>
-            <div class="text-sm text-slate-400"><span class="text-white font-medium">执行节奏：</span>Phase 循序（对内）+ 月度冲刺（对外）。PLAN.md 和知识库第 8 章共存</div>
-          </div>
-          <div class="flex gap-3">
-            <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">3</span>
-            <div class="text-sm text-slate-400"><span class="text-white font-medium">Computer Use 优先级：</span>已从 &#x1F7E1;40% 更正为 &#x1F534;P1。"手脚眼睛是最正确的"</div>
-          </div>
-          <div class="flex gap-3">
-            <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">4</span>
-            <div class="text-sm text-slate-400"><span class="text-white font-medium">两套 P0 清单：</span>审计 P0（文档卫生）+ 对话 P0（产品体验）。已统一执行 9/12</div>
-          </div>
-          <div class="flex gap-3">
-            <span class="text-nebula-400 font-mono text-sm mt-0.5 shrink-0">5</span>
-            <div class="text-sm text-slate-400"><span class="text-white font-medium">Collector 协议缺口：</span>已补齐 info() — 5 采集器全部四函数完整</div>
-          </div>
-        </div>
-      </div>
-      <div class="glass rounded-3xl p-7">
-        <h3 class="text-xl font-bold text-white mb-5">我的误判复盘</h3>
-        <div class="space-y-4">
-          <div class="flex gap-3">
-            <span class="text-rose-400 font-mono text-sm mt-0.5 shrink-0">&times;</span>
-            <div class="text-sm text-slate-400"><span class="text-white font-medium">Ghost Layer = 身份注入层？</span>不。数字灵魂 = 记忆 + 身份 + 代替操作。三位一体</div>
-          </div>
-          <div class="flex gap-3">
-            <span class="text-rose-400 font-mono text-sm mt-0.5 shrink-0">&times;</span>
-            <div class="text-sm text-slate-400"><span class="text-white font-medium">A2A = 身份关系协议？</span>不。你的 AID 跟别的 AID 交朋友、协作。不是技术问题</div>
-          </div>
-          <div class="flex gap-3">
-            <span class="text-rose-400 font-mono text-sm mt-0.5 shrink-0">&times;</span>
-            <div class="text-sm text-slate-400"><span class="text-white font-medium">Computer Use = 可选扩展？</span>不。没有手脚就没有"代替操作"，项目只剩身份层</div>
-          </div>
-          <div class="flex gap-3">
-            <span class="text-rose-400 font-mono text-sm mt-0.5 shrink-0">&times;</span>
-            <div class="text-sm text-slate-400"><span class="text-white font-medium">手机端暂不考虑？</span>不。"一整个 Alpha ID 都该与手机端联通"</div>
-          </div>
-          <div class="mt-4 p-3 rounded-xl bg-rose-500/5 border border-rose-500/15">
-            <div class="text-xs text-slate-400">根因：我把文档当成了<span class="text-white">代码说明书</span>，而你把文档当成了<span class="text-nebula-300">意图的载体</span>。</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 状态仪表盘 -->
-    <div class="mt-8 glass rounded-3xl p-7 reveal">
-      <h3 class="text-xl font-bold text-white mb-6">项目四层状态</h3>
-      <div class="grid md:grid-cols-4 gap-4">
-        <div class="text-center">
-          <div class="text-sm text-slate-500 mb-2">文档层</div>
-          <div class="text-3xl font-black text-gradient">52</div>
-          <div class="text-xs text-slate-500 mt-1">MD 文件</div>
-          <div class="progress-track h-1.5 mt-3"><div class="progress-fill nebula" style="width:90%"></div></div>
-          <div class="text-xs text-nebula-300 mt-1 font-mono">90% · 过密</div>
-        </div>
-        <div class="text-center">
-          <div class="text-sm text-slate-500 mb-2">设计层</div>
-          <div class="text-3xl font-black text-cosmic-400">2</div>
-          <div class="text-xs text-slate-500 mt-1">并存架构</div>
-          <div class="progress-track h-1.5 mt-3"><div class="progress-fill cosmic" style="width:65%"></div></div>
-          <div class="text-xs text-cosmic-300 mt-1 font-mono">65% · 待统一</div>
-        </div>
-        <div class="text-center">
-          <div class="text-sm text-slate-500 mb-2">代码层</div>
-          <div class="text-3xl font-black text-pink-400">5</div>
-          <div class="text-xs text-slate-500 mt-1">采集器统协</div>
-          <div class="progress-track h-1.5 mt-3"><div class="progress-fill pink" style="width:45%"></div></div>
-          <div class="text-xs text-pink-300 mt-1 font-mono">45% · 追赶中</div>
-        </div>
-        <div class="text-center">
-          <div class="text-sm text-slate-500 mb-2">体验层</div>
-          <div class="text-3xl font-black text-emerald-400">3</div>
-          <div class="text-xs text-slate-500 mt-1">可跑命令</div>
-          <div class="progress-track h-1.5 mt-3"><div class="progress-fill emerald" style="width:30%"></div></div>
-          <div class="text-xs text-emerald-300 mt-1 font-mono">30% · 最小闭环</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 下一步 -->
-    <div class="mt-8 glass rounded-3xl p-7 reveal">
-      <h3 class="text-xl font-bold text-white mb-6">下一步<span class="text-xs text-slate-500 font-mono ml-3">SYNTHESIS_2026-06-07.md</span></h3>
-      <div class="grid md:grid-cols-3 gap-4">
-        <div class="glass-soft rounded-2xl p-5 border-t-2 border-rose-400">
-          <div class="text-xs text-rose-300 font-mono mb-2">&#x1F534; 立刻</div>
-          <div class="text-sm text-slate-300 space-y-1.5">
-            <div>&bull; 更新 ARCHITECTURE.md</div>
-            <div>&bull; 全局命名统一</div>
-            <div>&bull; 创建单一数据源</div>
-          </div>
-        </div>
-        <div class="glass-soft rounded-2xl p-5 border-t-2 border-amber-400">
-          <div class="text-xs text-amber-300 font-mono mb-2">&#x1F7E1; 本月</div>
-          <div class="text-sm text-slate-300 space-y-1.5">
-            <div>&bull; 三层记忆最小版本</div>
-            <div>&bull; MCP 身份注入打通</div>
-            <div>&bull; 重写 GAP.md</div>
-          </div>
-        </div>
-        <div class="glass-soft rounded-2xl p-5 border-t-2 border-emerald-400">
-          <div class="text-xs text-emerald-300 font-mono mb-2">&#x1F7E2; 远期</div>
-          <div class="text-sm text-slate-300 space-y-1.5">
-            <div>&bull; 因果图谱引擎</div>
-            <div>&bull; Computer Use 闭环</div>
-            <div>&bull; A2A + 手机端</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</section>
-
 <!-- ============ 05 · 生态演化 ============ -->
 <section id="ecosystem" class="py-20 md:py-28 px-5 md:px-8">
   <div class="max-w-7xl mx-auto">
@@ -2434,13 +2735,12 @@ tailwind.config = {
             </div>
             <div class="text-sm text-slate-400">Agent-to-Agent 通信标准。Alpha-ID 作为身份层插件，让 Agent 之间知道"谁在调用谁"。</div>
           </div>
-          <div class="glass-soft rounded-xl p-4 border-l-2 border-rose-400/60">
+          <div class="glass-soft rounded-xl p-4">
             <div class="flex items-center gap-3 mb-2">
               <span class="text-nebula-400 font-bold">Computer Use</span>
-              <span class="tag tag-rose text-[10px] font-mono">🔴 P1 核心</span>
               <span class="tag tag-emerald text-[10px]">微软 Fara1.5 开源</span>
             </div>
-            <div class="text-sm text-slate-400">"手脚眼睛是最正确的" — 让 AI 直接操作电脑。Alpha-ID 提供操作背后的身份与记忆，不只是按键脚本。</div>
+            <div class="text-sm text-slate-400">AI 直接看屏幕操作 App。Alpha-ID 提供操作背后的"意图 + 身份"。</div>
           </div>
         </div>
       </div>
@@ -2508,7 +2808,438 @@ tailwind.config = {
   </div>
 </footer>
 
+</div><!-- end homepageView -->
+
+<!-- ============ Web 4.0 智能路由器视图 ============ -->
+<div id="workbenchView" class="view-panel">
+
+<!-- Web 4.0 Header (replaces main header when logged in) -->
+<div class="wb-header">
+  <div class="flex items-center gap-3">
+    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-nebula-400 to-cosmic-400 flex items-center justify-center text-xs font-bold text-white">α</div>
+    <span class="text-white font-semibold text-sm">Web 4.0 · 智能路由器</span>
+    <span class="tag tag-emerald text-[10px]">已登录</span>
+  </div>
+  <div class="flex items-center gap-3">
+    <span class="text-xs text-slate-400 font-mono" id="user-did-display">did:aid:...</span>
+    <button class="text-xs text-slate-400 hover:text-white transition" onclick="showHomepage()">返回首页</button>
+  </div>
+</div>
+
+<div class="flex" style="min-height:calc(100vh - 72px);">
+  <!-- Sidebar -->
+  <aside class="wb-sidebar">
+    <nav class="flex-1 p-4 space-y-1">
+      <div class="text-[10px] text-slate-500 font-mono tracking-wider mb-3 px-3">功能模块</div>
+      <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-white bg-nebula-500/15 border border-nebula-500/25 router-nav-btn active" data-route="intent">
+        <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-nebula-500/20 flex items-center justify-center text-xs">⚡</span>意图解析</span>
+      </button>
+      <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="routing">
+        <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-cosmic-500/20 flex items-center justify-center text-xs">🔀</span>Skill 路由</span>
+      </button>
+      <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="decision">
+        <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-pink-500/20 flex items-center justify-center text-xs">🌳</span>决策树</span>
+      </button>
+      <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="memory">
+        <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-amber-500/20 flex items-center justify-center text-xs">🧠</span>记忆图谱</span>
+      </button>
+      <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="agents">
+        <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-emerald-500/20 flex items-center justify-center text-xs">🤖</span>Agent 广场</span>
+      </button>
+      <div class="mt-6 text-[10px] text-slate-500 font-mono tracking-wider mb-3 px-3">系统</div>
+      <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="logs">
+        <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-slate-500/20 flex items-center justify-center text-xs">📋</span>执行日志</span>
+      </button>
+      <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="settings">
+        <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-slate-500/20 flex items-center justify-center text-xs">⚙️</span>设置</span>
+      </button>
+    </nav>
+    <div class="p-4 border-t border-nebula-500/10">
+      <div class="text-[10px] text-slate-500 font-mono mb-2">身份状态</div>
+      <div class="flex items-center gap-2 text-xs text-nebula-300">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        DID 已验证
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="wb-content">
+    <!-- 意图解析面板 -->
+    <div id="route-intent" class="wb-route-panel">
+      <h2 class="text-2xl font-bold text-white mb-2">意图解析引擎</h2>
+      <p class="text-slate-400 text-sm mb-6">输入你的意图，路由器自动解析、匹配 Skill、生成执行方案。</p>
+
+      <div class="mb-8">
+        <div class="flex gap-3">
+          <input type="text" class="intent-input flex-1" id="intent-input" placeholder="输入你的意图，例如：帮我写一个 MCP Server 的 PoC" />
+          <button class="btn-primary px-6 py-3 rounded-xl text-white font-semibold text-sm whitespace-nowrap" onclick="parseIntent()">解析</button>
+        </div>
+      </div>
+
+            <!-- Quick stats -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="router-node text-center">
+          <div class="text-2xl font-black text-gradient">1,284</div>
+          <div class="text-[10px] text-slate-500 font-mono">Causal Nodes</div>
+        </div>
+        <div class="router-node text-center">
+          <div class="text-2xl font-black text-gradient">7</div>
+          <div class="text-[10px] text-slate-500 font-mono">Active Skills</div>
+        </div>
+        <div class="router-node text-center">
+          <div class="text-2xl font-black text-gradient">94%</div>
+          <div class="text-[10px] text-slate-500 font-mono">Route Hit</div>
+        </div>
+        <div class="router-node text-center">
+          <div class="text-2xl font-black text-gradient">1.3s</div>
+          <div class="text-[10px] text-slate-500 font-mono">Avg Response</div>
+        </div>
+      </div>
+
+<!-- 解析结果 -->
+      <div id="intent-result" class="hidden space-y-4">
+        <div class="router-node active">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="tag tag-blue font-mono">意图识别</span>
+            <span class="text-xs text-slate-500 font-mono">confidence: 0.94</span>
+          </div>
+          <div class="text-sm text-slate-300" id="parsed-intent-text">构建 MCP Server 概念验证</div>
+        </div>
+
+        <div class="router-node">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="tag tag-emerald font-mono">匹配 Skill</span>
+            <span class="text-xs text-slate-500 font-mono">3 candidates</span>
+          </div>
+          <div class="space-y-2" id="skill-candidates">
+            <div class="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <div>
+                <div class="text-sm text-white font-medium">code_generate</div>
+                <div class="text-xs text-slate-500">生成 MCP Server Python 代码</div>
+              </div>
+              <span class="tag tag-emerald text-[10px]">0.92</span>
+            </div>
+            <div class="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <div>
+                <div class="text-sm text-white font-medium">doc_search</div>
+                <div class="text-xs text-slate-500">搜索 MCP 官方文档</div>
+              </div>
+              <span class="tag tag-blue text-[10px]">0.78</span>
+            </div>
+            <div class="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <div>
+                <div class="text-sm text-white font-medium">test_runner</div>
+                <div class="text-xs text-slate-500">运行测试验证</div>
+              </div>
+              <span class="tag tag-slate text-[10px]">0.65</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="router-node">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="tag tag-amber font-mono">决策树</span>
+            <span class="text-xs text-slate-500 font-mono">3 branches</span>
+          </div>
+          <div class="grid md:grid-cols-3 gap-3" id="decision-branches">
+            <div class="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+              <div class="text-xs text-emerald-300 font-mono mb-2">方案 A · 推荐</div>
+              <div class="text-sm text-white font-medium">FastMCP 框架</div>
+              <div class="text-xs text-slate-500 mt-1">Python · 200行 · 30min</div>
+            </div>
+            <div class="p-4 rounded-xl bg-white/5 border border-white/10">
+              <div class="text-xs text-slate-400 font-mono mb-2">方案 B</div>
+              <div class="text-sm text-white font-medium">官方 SDK</div>
+              <div class="text-xs text-slate-500 mt-1">TypeScript · 350行 · 45min</div>
+            </div>
+            <div class="p-4 rounded-xl bg-white/5 border border-white/10">
+              <div class="text-xs text-slate-400 font-mono mb-2">方案 C</div>
+              <div class="text-sm text-white font-medium">手写协议</div>
+              <div class="text-xs text-slate-500 mt-1">Python · 500行 · 90min</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 默认提示 -->
+      <div id="intent-placeholder" class="text-center py-16">
+        <div class="text-5xl mb-4 opacity-50">⚡</div>
+        <div class="text-slate-400 text-sm">输入意图，开始智能路由</div>
+      </div>
+    </div>
+
+    <!-- 其他路由面板（隐藏） -->
+    <div id="route-routing" class="wb-route-panel hidden">
+      <h2 class="text-2xl font-bold text-white mb-2">Skill 路由</h2>
+      <p class="text-slate-400 text-sm mb-6">管理已注册的技能和路由规则。</p>
+      <div class="space-y-3">
+        <div class="router-node">
+          <div class="flex items-center justify-between">
+            <div class="text-sm text-white">已注册 Skill</div>
+            <span class="tag tag-emerald font-mono">7 active</span>
+          </div>
+        </div>
+        <div class="router-node">
+          <div class="flex items-center justify-between">
+            <div class="text-sm text-white">路由命中率</div>
+            <span class="tag tag-blue font-mono">94.2%</span>
+          </div>
+        </div>
+        <div class="router-node">
+          <div class="flex items-center justify-between">
+            <div class="text-sm text-white">平均响应</div>
+            <span class="tag tag-amber font-mono">1.3s</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="route-decision" class="wb-route-panel hidden">
+      <h2 class="text-2xl font-bold text-white mb-2">决策树</h2>
+      <p class="text-slate-400 text-sm mb-6">可视化的多分支决策推演。</p>
+      <div class="router-node">
+        <div class="text-sm text-slate-300">决策引擎已就绪。输入意图后自动生成 3 条推演分支，支持反向验证和置信度评分。</div>
+      </div>
+    </div>
+
+    <div id="route-memory" class="wb-route-panel hidden">
+      <h2 class="text-2xl font-bold text-white mb-2">记忆图谱</h2>
+      <p class="text-slate-400 text-sm mb-6">你的因果节点和三层记忆。</p>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="router-node text-center">
+          <div class="text-3xl font-black text-gradient mb-1">1,284</div>
+          <div class="text-xs text-slate-500">因果节点</div>
+        </div>
+        <div class="router-node text-center">
+          <div class="text-3xl font-black text-gradient mb-1">312</div>
+          <div class="text-xs text-slate-500">原始记忆</div>
+        </div>
+        <div class="router-node text-center">
+          <div class="text-3xl font-black text-gradient mb-1">47</div>
+          <div class="text-xs text-slate-500">活跃关系</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="route-agents" class="wb-route-panel hidden">
+      <h2 class="text-2xl font-bold text-white mb-2">Agent 广场</h2>
+      <p class="text-slate-400 text-sm mb-6">与其他 Agent 协作，无需平台中介。</p>
+      <div class="router-node">
+        <div class="text-sm text-slate-300">A2A 协议已启用。你的 Agent 可以与其他 Agent 直接通信、协作、共享因果知识。</div>
+      </div>
+    </div>
+
+    <div id="route-logs" class="wb-route-panel hidden">
+      <h2 class="text-2xl font-bold text-white mb-2">执行日志</h2>
+      <p class="text-slate-400 text-sm mb-6">所有 Skill 执行记录，全程可审计。</p>
+      <div class="space-y-2 font-mono text-xs">
+        <div class="p-3 rounded-lg bg-white/5 border border-white/10 flex items-center gap-3">
+          <span class="text-emerald-400">✓</span>
+          <span class="text-slate-400">2026-07-23 10:32:01</span>
+          <span class="text-white">code_generate</span>
+          <span class="text-slate-500">→ MCP Server PoC 已生成</span>
+        </div>
+        <div class="p-3 rounded-lg bg-white/5 border border-white/10 flex items-center gap-3">
+          <span class="text-emerald-400">✓</span>
+          <span class="text-slate-400">2026-07-23 10:28:15</span>
+          <span class="text-white">doc_search</span>
+          <span class="text-slate-500">→ 找到 12 篇相关文档</span>
+        </div>
+        <div class="p-3 rounded-lg bg-white/5 border border-white/10 flex items-center gap-3">
+          <span class="text-emerald-400">✓</span>
+          <span class="text-slate-400">2026-07-23 10:15:42</span>
+          <span class="text-white">memory_query</span>
+          <span class="text-slate-500">→ 返回 8 个因果节点</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="route-settings" class="wb-route-panel hidden">
+      <h2 class="text-2xl font-bold text-white mb-2">设置</h2>
+      <p class="text-slate-400 text-sm mb-6">管理你的身份、隐私和偏好。</p>
+      <div class="space-y-4">
+        <div class="router-node">
+          <div class="text-sm text-white font-medium mb-2">DID 身份</div>
+          <div class="code-block rounded-lg p-3 text-xs font-mono text-nebula-300" id="settings-did">did:aid:7b3c8d9e-f1a2-4e5b-8c3d-2f6e1a9b4c8d</div>
+        </div>
+        <div class="router-node">
+          <div class="text-sm text-white font-medium mb-2">隐私模式</div>
+          <div class="text-sm text-slate-400">本地优先 · 端到端加密 · 社交恢复</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end workbenchView -->
+
+<!-- ============ Mindflow 个人工作台视图 ============ -->
+<div id="mindflowView" class="view-panel">
+
+  <div class="wb-header">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-xs font-bold text-white">M</div>
+      <span class="text-white font-semibold text-sm">Mindflow · 个人工作台</span>
+      <span class="tag tag-pink text-[10px]">个人中心</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <button class="text-xs text-slate-400 hover:text-white transition" onclick="showWorkbench()">返回 Web 4.0</button>
+      <button class="text-xs text-slate-400 hover:text-white transition" onclick="showHomepage()">返回首页</button>
+    </div>
+  </div>
+
+  <div class="flex" style="min-height:calc(100vh - 72px);">
+    <!-- Sidebar -->
+    <aside class="wb-sidebar">
+      <nav class="flex-1 p-4 space-y-1">
+        <div class="text-[10px] text-slate-500 font-mono tracking-wider mb-3 px-3">工作台</div>
+        <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-white bg-nebula-500/15 border border-nebula-500/25" onclick="switchMindflowTab('canvas')">
+          <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-nebula-500/20 flex items-center justify-center text-xs">🗺️</span>思维画布</span>
+        </button>
+        <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition" onclick="switchMindflowTab('tasks')">
+          <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-cosmic-500/20 flex items-center justify-center text-xs">✅</span>任务看板</span>
+        </button>
+        <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition" onclick="switchMindflowTab('notes')">
+          <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-pink-500/20 flex items-center justify-center text-xs">📝</span>笔记库</span>
+        </button>
+        <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition" onclick="switchMindflowTab('profile')">
+          <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-amber-500/20 flex items-center justify-center text-xs">👤</span>人格画像</span>
+        </button>
+      </nav>
+    </aside>
+
+    <!-- Content -->
+    <div class="wb-content">
+      <div id="mf-canvas-panel">
+        <h2 class="text-2xl font-bold text-white mb-2">思维画布</h2>
+        <p class="text-slate-400 text-sm mb-6">自由拖拽节点，构建你的思维图谱。</p>
+        <div class="mf-canvas" id="mindflow-canvas">
+          <div class="mf-node" style="top:40px;left:40px;"><span class="node-label">项目构想</span></div>
+          <div class="mf-node" style="top:40px;left:220px;"><span class="node-label">MVP 定义</span></div>
+          <div class="mf-node" style="top:140px;left:130px;"><span class="node-label">技术选型</span></div>
+          <div class="mf-node" style="top:140px;left:320px;"><span class="node-label">团队分工</span></div>
+          <div class="mf-node" style="top:240px;left:40px;"><span class="node-label">身份层</span></div>
+          <div class="mf-node" style="top:240px;left:220px;"><span class="node-label">记忆层</span></div>
+          <div class="mf-node" style="top:240px;left:400px;"><span class="node-label">执行层</span></div>
+          <div class="mf-node" style="top:340px;left:130px;"><span class="node-label">MCP 桥接</span></div>
+          <div class="mf-node" style="top:340px;left:320px;"><span class="node-label">A2A 协议</span></div>
+          <!-- SVG edges -->
+          <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;">
+            <line x1="100" y1="72" x2="220" y2="72" stroke="rgba(139,92,246,0.3)" stroke-width="1.5" stroke-dasharray="4 4"/>
+            <line x1="160" y1="72" x2="160" y2="140" stroke="rgba(139,92,246,0.3)" stroke-width="1.5" stroke-dasharray="4 4"/>
+            <line x1="280" y1="72" x2="280" y2="140" stroke="rgba(139,92,246,0.3)" stroke-width="1.5" stroke-dasharray="4 4"/>
+            <line x1="100" y1="172" x2="100" y2="240" stroke="rgba(139,92,246,0.3)" stroke-width="1.5" stroke-dasharray="4 4"/>
+            <line x1="280" y1="172" x2="280" y2="240" stroke="rgba(139,92,246,0.3)" stroke-width="1.5" stroke-dasharray="4 4"/>
+            <line x1="160" y1="272" x2="160" y2="340" stroke="rgba(139,92,246,0.3)" stroke-width="1.5" stroke-dasharray="4 4"/>
+            <line x1="340" y1="272" x2="340" y2="340" stroke="rgba(139,92,246,0.3)" stroke-width="1.5" stroke-dasharray="4 4"/>
+          </svg>
+        </div>
+      </div>
+
+      <div id="mf-tasks-panel" class="hidden">
+        <h2 class="text-2xl font-bold text-white mb-2">任务看板</h2>
+        <p class="text-slate-400 text-sm mb-6">管理你的待办事项。</p>
+        <div class="space-y-3">
+          <div class="router-node flex items-center gap-3">
+            <span class="w-4 h-4 rounded border border-emerald-500 bg-emerald-500/20 flex items-center justify-center text-[10px]">✓</span>
+            <span class="text-sm text-slate-400 line-through">DID 身份生成</span>
+            <span class="tag tag-emerald text-[10px] ml-auto">已完成</span>
+          </div>
+          <div class="router-node flex items-center gap-3">
+            <span class="w-4 h-4 rounded border border-emerald-500 bg-emerald-500/20 flex items-center justify-center text-[10px]">✓</span>
+            <span class="text-sm text-slate-400 line-through">ChatGPT 记忆导入</span>
+            <span class="tag tag-emerald text-[10px] ml-auto">已完成</span>
+          </div>
+          <div class="router-node flex items-center gap-3">
+            <span class="w-4 h-4 rounded border border-nebula-500/50"></span>
+            <span class="text-sm text-white">MCP Server PoC</span>
+            <span class="tag tag-blue text-[10px] ml-auto">进行中</span>
+          </div>
+          <div class="router-node flex items-center gap-3">
+            <span class="w-4 h-4 rounded border border-nebula-500/50"></span>
+            <span class="text-sm text-white">因果图谱引擎</span>
+            <span class="tag tag-slate text-[10px] ml-auto">待开始</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="mf-notes-panel" class="hidden">
+        <h2 class="text-2xl font-bold text-white mb-2">笔记库</h2>
+        <p class="text-slate-400 text-sm mb-6">你的知识卡片。</p>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="router-node">
+            <div class="text-sm text-white font-medium mb-1">MCP 协议核心</div>
+            <div class="text-xs text-slate-500">Model Context Protocol · 标准化 AI 工具接口</div>
+          </div>
+          <div class="router-node">
+            <div class="text-sm text-white font-medium mb-1">因果推理 vs 文本匹配</div>
+            <div class="text-xs text-slate-500">从关键词匹配到理解"为什么"</div>
+          </div>
+          <div class="router-node">
+            <div class="text-sm text-white font-medium mb-1">数字灵魂三支柱</div>
+            <div class="text-xs text-slate-500">Alpha-ID 认识你 · Web 4.0 理解你 · Mindflow 代表你</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="mf-profile-panel" class="hidden">
+        <h2 class="text-2xl font-bold text-white mb-2">人格画像</h2>
+        <p class="text-slate-400 text-sm mb-6">AI 眼中的你。</p>
+        <div class="space-y-4">
+          <div class="router-node">
+            <div class="text-sm text-white font-medium mb-2">活跃时段</div>
+            <div class="text-sm text-slate-400">23:30 - 03:15 · 夜猫子模式</div>
+          </div>
+          <div class="router-node">
+            <div class="text-sm text-white font-medium mb-2">沟通风格</div>
+            <div class="text-sm text-slate-400">简洁直接 · 功能性编程 · 结果导向</div>
+          </div>
+          <div class="router-node">
+            <div class="text-sm text-white font-medium mb-2">关注话题</div>
+            <div class="flex flex-wrap gap-2 mt-2">
+              <span class="tag tag-blue">MCP 协议</span>
+              <span class="tag tag-blue">DID 身份</span>
+              <span class="tag tag-blue">因果推理</span>
+              <span class="tag tag-blue">A2A 协议</span>
+              <span class="tag tag-blue">Web 4.0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end mindflowView -->
+
 </main>
+
+<!-- ============ 人脸认证模态框 ============ -->
+<div class="face-auth-overlay" id="face-auth-modal">
+  <div class="face-auth-modal">
+    <button class="absolute top-4 right-4 text-slate-500 hover:text-white transition z-10" onclick="closeFaceAuth()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+
+    <div class="relative z-10">
+      <div class="face-scan-frame" id="face-scan-frame">
+        <div class="face-scan-inner">
+          <span class="face-scan-icon">👤</span>
+        </div>
+        <div class="face-scan-line"></div>
+      </div>
+
+      <h3 class="text-xl font-bold text-white mb-2" id="face-auth-title">面部识别登录</h3>
+      <p class="text-sm text-slate-400 mb-6" id="face-auth-subtitle">请将面部对准圆圈，保持光线充足</p>
+
+      <div class="face-scan-progress">
+        <div class="face-scan-progress-fill" id="face-scan-progress-fill"></div>
+      </div>
+
+      <div class="mt-4 text-xs text-slate-500 font-mono" id="face-auth-status">等待开始...</div>
+    </div>
+  </div>
+</div>
 
 <!-- 滚动显现脚本 -->
 <script>
@@ -2883,6 +3614,184 @@ document.addEventListener('DOMContentLoaded', function() {
   if (resetDemoBtn) {
     resetDemoBtn.addEventListener('click', resetDemo);
   }
+
+  // ============ 登录系统 ============
+  var isLoggedIn = false;
+  var currentUserDID = '';
+
+  window.openFaceAuth = function() {
+    var modal = document.getElementById('face-auth-modal');
+    var frame = document.getElementById('face-scan-frame');
+    var title = document.getElementById('face-auth-title');
+    var subtitle = document.getElementById('face-auth-subtitle');
+    var status = document.getElementById('face-auth-status');
+    var progressFill = document.getElementById('face-scan-progress-fill');
+
+    if (!modal) return;
+    modal.classList.add('active');
+    frame.classList.add('scanning');
+    title.textContent = '面部识别登录';
+    subtitle.textContent = '请将面部对准圆圈，保持光线充足';
+    status.textContent = '扫描中...';
+    progressFill.style.width = '0%';
+
+    // 模拟扫描进度
+    var progress = 0;
+    var scanInterval = setInterval(function() {
+      progress += Math.random() * 15;
+      if (progress > 100) progress = 100;
+      progressFill.style.width = progress + '%';
+
+      if (progress > 30 && progress < 60) {
+        status.textContent = '特征点提取中...';
+      } else if (progress >= 60 && progress < 90) {
+        status.textContent = 'DID 验证中...';
+      } else if (progress >= 90) {
+        status.textContent = '即将完成...';
+      }
+
+      if (progress >= 100) {
+        clearInterval(scanInterval);
+        setTimeout(function() {
+          simulateScanSuccess();
+        }, 400);
+      }
+    }, 300);
+  };
+
+  window.closeFaceAuth = function() {
+    var modal = document.getElementById('face-auth-modal');
+    var frame = document.getElementById('face-scan-frame');
+    if (modal) modal.classList.remove('active');
+    if (frame) frame.classList.remove('scanning');
+  };
+
+  function simulateScanSuccess() {
+    closeFaceAuth();
+    isLoggedIn = true;
+    currentUserDID = generateDid();
+
+    // 更新 UI
+    var loginBtn = document.getElementById('header-login-btn');
+    var profileBtn = document.getElementById('profile-btn');
+    if (loginBtn) loginBtn.classList.add('hidden');
+    if (profileBtn) profileBtn.classList.remove('hidden');
+
+    // 显示 DID
+    var didDisplay = document.getElementById('user-did-display');
+    if (didDisplay) didDisplay.textContent = currentUserDID.substring(0, 20) + '…';
+
+    var settingsDid = document.getElementById('settings-did');
+    if (settingsDid) settingsDid.textContent = currentUserDID;
+
+    // 跳转到 Web 4.0
+    showWorkbench();
+  }
+
+  // ============ 视图切换 ============
+  window.showWorkbench = function() {
+    document.getElementById('homepageView').classList.remove('active');
+    document.getElementById('mindflowView').classList.remove('active');
+    document.getElementById('workbenchView').classList.add('active');
+    window.scrollTo(0, 0);
+  };
+
+  window.showHomepage = function() {
+    document.getElementById('workbenchView').classList.remove('active');
+    document.getElementById('mindflowView').classList.remove('active');
+    document.getElementById('homepageView').classList.add('active');
+  };
+
+  window.showMindflow = function() {
+    document.getElementById('homepageView').classList.remove('active');
+    document.getElementById('workbenchView').classList.remove('active');
+    document.getElementById('mindflowView').classList.add('active');
+    window.scrollTo(0, 0);
+  };
+
+  // ============ 导航处理 ============
+  window.navigateToSection = function(sectionId) {
+    // 如果已登录且点击的是 Web 4.0 相关
+    if (isLoggedIn && sectionId === 'architecture') {
+      showWorkbench();
+      return;
+    }
+    showHomepage();
+    setTimeout(function() {
+      var el = document.getElementById(sectionId);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
+
+  // 为导航链接添加点击处理
+  document.querySelectorAll('.nav-pill').forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      var href = this.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        e.preventDefault();
+        var sectionId = href.substring(1);
+        navigateToSection(sectionId);
+      }
+    });
+  });
+
+  // ============ Web 4.0 路由切换 ============
+  document.querySelectorAll('.router-nav-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var route = this.getAttribute('data-route');
+      if (!route) return;
+
+      // 更新按钮状态
+      document.querySelectorAll('.router-nav-btn').forEach(function(b) {
+        b.classList.remove('active', 'bg-nebula-500/15', 'border-nebula-500/25', 'text-white');
+        b.classList.add('text-slate-400');
+      });
+      this.classList.add('active', 'bg-nebula-500/15', 'border-nebula-500/25', 'text-white');
+      this.classList.remove('text-slate-400');
+
+      // 切换面板
+      document.querySelectorAll('.wb-route-panel').forEach(function(p) {
+        p.classList.add('hidden');
+      });
+      var target = document.getElementById('route-' + route);
+      if (target) target.classList.remove('hidden');
+    });
+  });
+
+  // ============ 意图解析 ============
+  window.parseIntent = function() {
+    var input = document.getElementById('intent-input');
+    var placeholder = document.getElementById('intent-placeholder');
+    var result = document.getElementById('intent-result');
+    var parsedText = document.getElementById('parsed-intent-text');
+
+    if (!input || !placeholder || !result) return;
+    var text = input.value.trim();
+    if (!text) return;
+
+    if (parsedText) parsedText.textContent = text;
+    placeholder.classList.add('hidden');
+    result.classList.remove('hidden');
+  };
+
+  // 回车触发解析
+  var intentInput = document.getElementById('intent-input');
+  if (intentInput) {
+    intentInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') parseIntent();
+    });
+  }
+
+  // ============ Mindflow Tab 切换 ============
+  window.switchMindflowTab = function(tab) {
+    ['canvas', 'tasks', 'notes', 'profile'].forEach(function(t) {
+      var panel = document.getElementById('mf-' + t + '-panel');
+      if (panel) panel.classList.add('hidden');
+    });
+    var target = document.getElementById('mf-' + tab + '-panel');
+    if (target) target.classList.remove('hidden');
+  };
+
 });
 </script>
 
