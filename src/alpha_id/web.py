@@ -1,6 +1,7 @@
 """Alpha-ID 演示 Web 应用"""
 
 import ipaddress
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
@@ -160,14 +161,19 @@ _templates_dir = Path(__file__).parent / "templates"
 # Since the template has no server-side Jinja2 logic, HTMLResponse is the correct approach.
 app = FastAPI(title="Alpha-ID Web Demo")
 
-# CORS：允许 Ghost.html 跨域调用
+# CORS：显式允许列表（禁止 wildcard + credentials 组合）
 from fastapi.middleware.cors import CORSMiddleware
+_allowed = os.environ.get("AID_ALLOWED_ORIGINS", "").strip()
+if _allowed:
+    _origins = [o.strip() for o in _allowed.split(",") if o.strip()]
+else:
+    _origins = ["http://localhost:3000", "http://localhost:8000", "http://localhost:5173"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 # 静态文件服务（本地 CSS / JS，避免 CDN 被墙）

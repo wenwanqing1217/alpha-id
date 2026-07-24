@@ -97,7 +97,12 @@ class Container:
     @property
     def social(self) -> AlphaSocialManager:
         if self._social is None:
-            self._social = AlphaSocialManager(storage=self.storage)
+            # 注入用户存在性检查回调（H4: 社交功能验证目标用户存在）
+            identity = self.identity
+            self._social = AlphaSocialManager(
+                storage=self.storage,
+                user_exists_fn=identity.user_exists,
+            )
         return self._social
 
     @property

@@ -177,6 +177,10 @@ class UserIdentityManager:
         users = self._storage.load("users") or {}
         return users.get(alpha_id)
 
+    def user_exists(self, alpha_id: str) -> bool:
+        """检查用户是否存在"""
+        return self.get_user_profile(alpha_id) is not None
+
     def update_device_binding(self, alpha_id: str, new_device: str) -> Dict:
         """更新设备绑定"""
         users = self._storage.load("users") or {}

@@ -42,7 +42,7 @@ class AlphaMessage:
 class AlphaSocialManager:
     """Alpha社交管理器"""
 
-    def __init__(self, storage: Optional[StorageBackend] = None):
+    def __init__(self, storage: Optional[StorageBackend] = None, user_exists_fn=None):
         if storage is None:
             import tempfile
 
@@ -52,6 +52,9 @@ class AlphaSocialManager:
             self._storage = JsonStorage(db_path)
         else:
             self._storage = storage
+
+        # 用户存在性检查回调（可选，用于验证目标用户）
+        self._user_exists_fn = user_exists_fn
 
         self._init_database()
 
@@ -71,6 +74,10 @@ class AlphaSocialManager:
 
     def send_friend_request(self, from_alpha_id: str, to_alpha_id: str, message: str) -> Dict:
         """发送好友请求"""
+        # H4: 验证目标用户存在
+        if self._user_exists_fn and not self._user_exists_fn(to_alpha_id):
+            return {"success": False, "message": "目标用户不存在"}
+
         friends = self._storage.load("friends") or {}
         requests = self._storage.load("friend_requests") or {}
 
@@ -137,10 +144,16 @@ class AlphaSocialManager:
 
     def send_message(self, from_alpha_id: str, to_alpha_id: str, content: str, message_type: str = "text") -> Dict:
         """发送消息给好友"""
-        friends = self._storage.load("friends") or {}
+        # H4: 验证目标用户存在
+        if self._user_exists_fn and not self._user_exists_fn(to_alpha_id):
+            return {"success": False, "message": "目标用户不存在"}
 
+        # H5: 双向好友检查（防止数据不一致导致绕过）
+        friends = self._storage.load("friends") or {}
         if to_alpha_id not in friends.get(from_alpha_id, []):
             return {"success": False, "message": "对方不是你的好友"}
+        if from_alpha_id not in friends.get(to_alpha_id, []):
+            return {"success": False, "message": "对方不是你的好友（单向数据异常）"}
 
         messages = self._storage.load("messages") or {}
 

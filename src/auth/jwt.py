@@ -5,6 +5,7 @@ import hashlib
 import hmac
 import os
 import time
+import uuid
 from typing import Optional
 
 # ── 配置（生产环境请从环境变量或密钥管理服务读取） ──
@@ -78,13 +79,15 @@ def _hmac_sign(payload_b64: str, key: bytes) -> str:
 
 
 def create_access_token(alpha_id: str, extra_claims: Optional[dict] = None) -> str:
-    """创建访问令牌（短有效期）"""
+    """创建访问令牌（短有效期，含 jti 用于撤销）"""
     now = int(time.time())
+    jti = str(uuid.uuid4())
     payload = {
         "sub": alpha_id,
         "iat": now,
         "exp": now + ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         "type": "access",
+        "jti": jti,
     }
     if extra_claims:
         payload.update(extra_claims)
@@ -92,13 +95,15 @@ def create_access_token(alpha_id: str, extra_claims: Optional[dict] = None) -> s
 
 
 def create_refresh_token(alpha_id: str) -> str:
-    """创建刷新令牌（长有效期）"""
+    """创建刷新令牌（长有效期，含 jti 用于轮换）"""
     now = int(time.time())
+    jti = str(uuid.uuid4())
     payload = {
         "sub": alpha_id,
         "iat": now,
         "exp": now + REFRESH_TOKEN_EXPIRE_DAYS * 86400,
         "type": "refresh",
+        "jti": jti,
     }
     return _encode(payload)
 
@@ -141,6 +146,13 @@ def decode_token(token: str) -> dict:
     if token_type not in ("access", "refresh"):
         raise ValueError("未知的令牌类型")
 
+    # 验证是否已被撤销
+    jti = payload.get("jti")
+    if jti:
+        from auth.token_store import get_token_store
+        if get_token_store().is_revoked(jti):
+            raise ValueError("令牌已被撤销")
+
     return payload
 
 
@@ -162,6 +174,42 @@ def get_current_alpha_id(authorization: Optional[str] = None) -> str:
         raise ValueError("Authorization 必须是 Bearer 令牌")
 
     return verify_token(token, expected_type="access")
+
+
+def revoke_token(token: str):
+    """撤销指定令牌（用于登出）"""
+    payload = decode_token(token)
+    jti = payload.get("jti")
+    exp = payload.get("exp", 0)
+    if jti:
+        from auth.token_store import get_token_store
+        get_token_store().revoke(jti, exp)
+
+
+def rotate_token(old_refresh_token: str) -> tuple:
+    """
+    刷新令牌轮换：验证旧 refresh token，撤销它，颁发新的 access + refresh 对。
+    返回 (new_access_token, new_refresh_token)。
+    如果旧 token 已被撤销（重复使用），抛出 ValueError。
+    """
+    payload = decode_token(old_refresh_token)
+    if payload.get("type") != "refresh":
+        raise ValueError("需要 refresh 令牌")
+
+    alpha_id = payload["sub"]
+    old_jti = payload.get("jti")
+    old_exp = payload.get("exp", 0)
+
+    # 撤销旧 refresh token
+    if old_jti:
+        from auth.token_store import get_token_store
+        get_token_store().revoke(old_jti, old_exp)
+
+    # 颁发新对
+    new_access = create_access_token(alpha_id)
+    new_refresh = create_refresh_token(alpha_id)
+
+    return new_access, new_refresh
 
 
 # ── 内部编码 ──

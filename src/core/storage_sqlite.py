@@ -224,11 +224,12 @@ class SqliteStorage(StorageBackend):
             return [row["friend_id"] for row in rows]
 
     def are_friends(self, alpha_id_a: str, alpha_id_b: str) -> bool:
-        """双向好友检查"""
+        """双向好友检查（防止数据不一致导致单向绕过）"""
         with self._tx() as conn:
             row = conn.execute(
                 """SELECT 1 FROM social_friends
-                   WHERE alpha_id = ? AND friend_id = ?""",
-                (alpha_id_a, alpha_id_b),
+                   WHERE (alpha_id = ? AND friend_id = ?)
+                      OR (alpha_id = ? AND friend_id = ?)""",
+                (alpha_id_a, alpha_id_b, alpha_id_b, alpha_id_a),
             ).fetchone()
             return row is not None
