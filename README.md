@@ -1,8 +1,8 @@
 # Alpha-ID — 你的数字灵魂
 
-[![PyPI version](https://img.shields.io/pypi/v/alpha-id.svg)](https://pypi.org/project/alpha-id/)
-[![Python](https://img.shields.io/pypi/pyversions/alpha-id.svg)](https://pypi.org/project/alpha-id/)
-[![License](https://img.shields.io/pypi/l/alpha-id.svg)](https://github.com/wenwanqing1217/alpha-id/blob/main/LICENSE)
+[![PyPI version](https://img.shields.io/pypi/v/alpha-id-zix.svg)](https://pypi.org/project/alpha-id-zix/)
+[![Python](https://img.shields.io/pypi/pyversions/alpha-id-zix.svg)](https://pypi.org/project/alpha-id-zix/)
+[![License](https://img.shields.io/pypi/l/alpha-id-zix.svg)](https://github.com/wenwanqing1217/alpha-id/blob/main/LICENSE)
 [![Tests](https://img.shields.io/badge/tests-928%20passing-brightgreen.svg)](https://github.com/wenwanqing1217/alpha-id)
 [![Coverage](https://img.shields.io/badge/coverage-68%25-blue.svg)](https://github.com/wenwanqing1217/alpha-id)
 
