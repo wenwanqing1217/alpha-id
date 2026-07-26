@@ -3110,26 +3110,9 @@
 
     <div id="route-logs" class="wb-route-panel hidden">
       <h2 class="text-2xl font-bold text-white mb-2">执行日志</h2>
-      <p class="text-slate-400 text-sm mb-6">所有 Skill 执行记录，全程可审计。</p>
-      <div class="space-y-2 font-mono text-xs">
-        <div class="p-3 rounded-lg bg-white/5 border border-white/10 flex items-center gap-3">
-          <span class="text-emerald-400">✓</span>
-          <span class="text-slate-400">2026-07-23 10:32:01</span>
-          <span class="text-white">code_generate</span>
-          <span class="text-slate-500">→ MCP Server PoC 已生成</span>
-        </div>
-        <div class="p-3 rounded-lg bg-white/5 border border-white/10 flex items-center gap-3">
-          <span class="text-emerald-400">✓</span>
-          <span class="text-slate-400">2026-07-23 10:28:15</span>
-          <span class="text-white">doc_search</span>
-          <span class="text-slate-500">→ 找到 12 篇相关文档</span>
-        </div>
-        <div class="p-3 rounded-lg bg-white/5 border border-white/10 flex items-center gap-3">
-          <span class="text-emerald-400">✓</span>
-          <span class="text-slate-400">2026-07-23 10:15:42</span>
-          <span class="text-white">memory_query</span>
-          <span class="text-slate-500">→ 返回 8 个因果节点</span>
-        </div>
+      <p class="text-slate-400 text-sm mb-6">系统操作记录，全程可审计。</p>
+      <div class="space-y-2 font-mono text-xs" id="exec-logs">
+        <div class="text-center text-slate-500 py-8">加载中...</div>
       </div>
     </div>
 
@@ -4114,6 +4097,24 @@ document.addEventListener('DOMContentLoaded', function() {
     fetch(GATEWAY_URL + '/health').then(function(r){return r.json()}).then(function(d){
       var el = document.getElementById('stats-health');
       if (el) el.textContent = d.data && d.data.alphaid === 'ok' ? '🟢' : '🔴';
+      // Generate log entries from health data
+      var logsEl = document.getElementById('exec-logs');
+      if (logsEl && d.data) {
+        var now = new Date();
+        var ts = now.toISOString().slice(0,19).replace('T',' ');
+        var entries = [
+          {icon: d.data.alphaid === 'ok' ? '🟢' : '🔴', ts: ts, service: 'alphaid', msg: d.data.alphaid === 'ok' ? '服务正常' : '异常' },
+          {icon: d.data.gateway === 'ok' ? '🟢' : '🔴', ts: ts, service: 'gateway', msg: d.data.gateway === 'ok' ? '运行中' : '异常' },
+          {icon: d.data.obsidian === 'ok' ? '📄' : '❌', ts: ts, service: 'obsidian', msg: d.data.obsidian === 'ok' ? '知识库已关联' : '未连接' },
+        ];
+        logsEl.innerHTML = entries.map(function(e){
+          return '<div class="p-3 rounded-lg bg-white/5 border border-white/10 flex items-center gap-3">' +
+            '<span>' + e.icon + '</span>' +
+            '<span class="text-slate-400">' + e.ts + '</span>' +
+            '<span class="text-white">' + e.service + '</span>' +
+            '<span class="text-slate-500">→ ' + e.msg + '</span></div>';
+        }).join('');
+      }
     }).catch(function(){});
   };
 

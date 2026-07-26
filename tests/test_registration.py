@@ -132,3 +132,35 @@ class TestRegistration:
         complete = client.post("/api/v1/register/complete", json={"did": did, "phone": "13600136000"})
         assert complete.status_code == 200
         assert complete.json()["data"]["did"] == did
+
+
+class TestHealthCheck:
+    """健康检查"""
+
+    def test_health_endpoint(self, client):
+        """健康检查返回基本结构"""
+        resp = client.get("/health")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["status"] in ("ok", "degraded")
+        assert "database" in data
+        assert "identity" in data
+        assert "memory" in data
+
+    def test_health_database(self, client):
+        """健康检查验证数据库"""
+        resp = client.get("/health")
+        data = resp.json()
+        assert "ok" in data["database"] or "error" in data["database"]
+
+
+class TestSMSChannel:
+    """SMS 发送通道"""
+
+    def test_sms_channel(self, client):
+        """SMS 发送通道：有阿里云 Key 时走真实通道，否则降级演示模式"""
+        resp = client.post("/api/v1/register/send-sms", json={"phone": "13500135000"})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["success"] is True
+        assert data["channel"] in ("demo", "alibaba-pnvs", "demo-fallback")

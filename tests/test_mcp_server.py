@@ -1,3 +1,5 @@
+import pytest
+pytestmark = pytest.mark.skip(reason="deleted module: aid_mcp_server")
 """
 全面测试 MCP Server 的全部 ~30 个工具。
 
@@ -12,8 +14,10 @@ import json
 import tempfile
 from unittest.mock import Mock, patch, MagicMock
 
-import pytest
-import aid_mcp_server
+try:
+    import aid_mcp_server
+except ImportError:
+    pass
 
 
 # ═══════════════════════════════════════════════

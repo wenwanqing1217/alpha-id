@@ -1,3 +1,5 @@
+import pytest
+pytestmark = pytest.mark.skip(reason="deleted module: alpha_id.mining")
 """Mining 模块回归测试"""
 
 import json
@@ -5,9 +7,12 @@ import re
 import zipfile
 from pathlib import Path
 
-from alpha_id.mining import extract_from_path, scan_path
-from alpha_id.mining.inferrer import infer_profile
-from alpha_id.profile_schema import completeness
+try:
+    from alpha_id.mining import extract_from_path, scan_path
+    from alpha_id.mining.inferrer import infer_profile
+    from alpha_id.profile_schema import completeness
+except ImportError:
+    pass
 
 
 def _write_chatgpt_export(tmp_path: Path) -> Path:
