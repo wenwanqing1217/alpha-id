@@ -5,12 +5,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Callable
 import logging
-import os as _os
 import json
 
+from core.settings import settings
+
 logger = logging.getLogger(__name__)
-GATEWAY_URL = _os.getenv("GATEWAY_URL", "http://localhost:18080")
-DEFAULT_ALPHA_ID = _os.getenv("DEFAULT_ALPHA_ID", "Alpha-001")
+GATEWAY_URL = settings.gateway_url
+DEFAULT_ALPHA_ID = settings.default_alpha_id
 
 
 @dataclass

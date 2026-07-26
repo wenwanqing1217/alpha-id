@@ -20,6 +20,7 @@ import json
 import logging
 import time
 import uuid
+from core.http_client import request
 from dataclasses import asdict, dataclass, field
 from typing import Any, Callable, Dict, List, Optional
 
@@ -358,8 +359,6 @@ class A2AClient:
         timeout: float = 30.0,
     ) -> A2ACallResponse:
         """Synchronous call to remote Agent skill"""
-        import urllib.request
-
         call_req = A2ACallRequest(
             caller=self._my_did,
             skill=skill,
@@ -370,41 +369,41 @@ class A2AClient:
         if self._signer:
             call_req.proof = self._signer.sign(call_req.signable_bytes())
 
-        # Send request
-        body = json.dumps(call_req.to_dict()).encode("utf-8")
-        req = urllib.request.Request(
-            f"{target_url.rstrip('/')}/a2a/call",
-            data=body,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-
         try:
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                return A2ACallResponse(**{k: v for k, v in data.items() if k in A2ACallResponse.__dataclass_fields__})
+            resp = request(
+                "POST",
+                f"{target_url.rstrip('/')}/a2a/call",
+                json=call_req.to_dict(),
+                timeout=timeout,
+            )
+            data = resp.json()
+            return A2ACallResponse(**{k: v for k, v in data.items() if k in A2ACallResponse.__dataclass_fields__})
         except Exception as e:
             return A2ACallResponse(success=False, error=str(e), request_id=call_req.request_id)
 
     def discover(self, target_url: str, timeout: float = 10.0) -> Optional[A2AAgentInfo]:
         """Discover remote Agent"""
-        import urllib.request
         try:
-            req = urllib.request.Request(f"{target_url.rstrip('/')}/a2a/discover")
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                return A2AAgentInfo(**{k: v for k, v in data.items() if k in A2AAgentInfo.__dataclass_fields__})
+            resp = request(
+                "GET",
+                f"{target_url.rstrip('/')}/a2a/discover",
+                timeout=timeout,
+            )
+            data = resp.json()
+            return A2AAgentInfo(**{k: v for k, v in data.items() if k in A2AAgentInfo.__dataclass_fields__})
         except Exception as e:
             logger.warning(f"Discovery failed: {e}")
             return None
 
     def health_check(self, target_url: str, timeout: float = 5.0) -> bool:
         """Health check"""
-        import urllib.request
         try:
-            req = urllib.request.Request(f"{target_url.rstrip('/')}/a2a/health")
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                return data.get("status") == "ok"
+            resp = request(
+                "GET",
+                f"{target_url.rstrip('/')}/a2a/health",
+                timeout=timeout,
+            )
+            data = resp.json()
+            return data.get("status") == "ok"
         except Exception:
             return False

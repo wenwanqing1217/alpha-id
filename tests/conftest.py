@@ -4,6 +4,9 @@ import os
 import sys
 import tempfile
 
+# 禁止写 .pyc 文件，避免沙箱在导入第三方包时报错
+os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
+
 # 将 src 目录加入 Python 路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
@@ -15,6 +18,10 @@ import entrypoints.aid_mcp_server  # noqa: F401
 os.environ.setdefault(
     "AUTH_MASTER_KEY", "test-master-key-for-pytest-0123456789abcdef"
 )
+
+# 强制重新加载 settings，确保环境变量生效
+from core.settings import reload_settings as _reload
+_reload()
 
 _fallback_temp = tempfile.mkdtemp(prefix="aid_pytest_temp_")
 os.environ.setdefault("TMPDIR", _fallback_temp)
@@ -63,17 +70,37 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def setup_test_env(tmp_path):
-    """自动设置测试环境变量，将数据目录指向临时目录"""
+    """自动设置测试环境变量，将数据目录指向临时目录，强制演示模式"""
     old_alpha_id_dir = os.environ.get("ALPHA_ID_DIR")
     old_aid_dir = os.environ.get("AID_DIR")
     old_deepseek_key = os.environ.get("DEEPSEEK_API_KEY")
     old_openai_key = os.environ.get("OPENAI_API_KEY")
+    # ── JWT 密钥：保留 AUTH_MASTER_KEY，不清除 ──
     old_auth_master_key = os.environ.get("AUTH_MASTER_KEY")
+    # ── 演示模式隔离：清除外发通道的密钥，确保测试走演示模式 ──
+    old_alibaba_key = os.environ.get("ALIBABA_ACCESS_KEY_ID")
+    old_alibaba_secret = os.environ.get("ALIBABA_ACCESS_KEY_SECRET")
+    old_alibaba_sign = os.environ.get("ALIBABA_SMS_SIGN_NAME")
+    old_alipay_app = os.environ.get("ALIPAY_APP_ID")
+    old_alipay_priv = os.environ.get("ALIPAY_PRIVATE_KEY")
+    old_alipay_demo = os.environ.get("ALIPAY_DEMO_MODE")
 
     os.environ["ALPHA_ID_DIR"] = str(tmp_path / "alpha-id")
     os.environ["AID_DIR"] = str(tmp_path / "aid")
     os.environ.pop("DEEPSEEK_API_KEY", None)
     os.environ.pop("OPENAI_API_KEY", None)
+    # ── 强制演示模式：设为空字符串而非删除 ──
+    # load_dotenv(override=False) 不会覆盖已存在的变量（即使是空字符串）
+    os.environ["ALIPAY_DEMO_MODE"] = "true"
+    os.environ["ALIBABA_ACCESS_KEY_ID"] = ""
+    os.environ["ALIBABA_ACCESS_KEY_SECRET"] = ""
+    os.environ["ALIBABA_SMS_SIGN_NAME"] = ""
+    os.environ["ALIPAY_APP_ID"] = ""
+    os.environ["ALIPAY_PRIVATE_KEY"] = ""
+
+    # ── 强制重载 settings，使新环境变量生效 ──
+    from core.settings import reload_settings
+    reload_settings()
 
     yield
 
@@ -97,10 +124,25 @@ def setup_test_env(tmp_path):
     else:
         os.environ.pop("OPENAI_API_KEY", None)
 
-    if old_auth_master_key is not None:
+    # ── JWT 密钥始终保留，不清除 ──
+    if old_auth_master_key:
         os.environ["AUTH_MASTER_KEY"] = old_auth_master_key
+
+    # ── 恢复外发通道密钥 ──
+    if old_alibaba_key is not None:
+        os.environ["ALIBABA_ACCESS_KEY_ID"] = old_alibaba_key
+    if old_alibaba_secret is not None:
+        os.environ["ALIBABA_ACCESS_KEY_SECRET"] = old_alibaba_secret
+    if old_alibaba_sign is not None:
+        os.environ["ALIBABA_SMS_SIGN_NAME"] = old_alibaba_sign
+    if old_alipay_app is not None:
+        os.environ["ALIPAY_APP_ID"] = old_alipay_app
+    if old_alipay_priv is not None:
+        os.environ["ALIPAY_PRIVATE_KEY"] = old_alipay_priv
+    if old_alipay_demo is not None:
+        os.environ["ALIPAY_DEMO_MODE"] = old_alipay_demo
     else:
-        os.environ.pop("AUTH_MASTER_KEY", None)
+        os.environ.pop("ALIPAY_DEMO_MODE", None)
 
 
 @pytest.fixture

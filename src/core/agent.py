@@ -16,11 +16,15 @@ import json
 import logging
 import os
 import re
+import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 from urllib.parse import urlparse
 
 from core.interfaces import AgentContainer
+from core.settings import settings
+from core.http_client import request
+from core.observability import record_llm_call, observe_llm_call
 
 try:
     import httpx
@@ -509,8 +513,8 @@ def _call_llm(messages: List[Dict[str, str]], tools_schema: List[Dict[str, Any]]
     优先使用 httpx（连接复用），未安装时回退到 urllib。
     """
 
-    api_key = os.getenv("OPENAI_API_KEY") or os.getenv("COZE_WORKLOAD_IDENTITY_API_KEY")
-    base_url = os.getenv("OPENAI_BASE_URL") or "https://api.openai.com/v1"
+    api_key = settings.llm_api_key
+    base_url = settings.llm_base_url
 
     try:
         base_url = _validate_llm_base_url(base_url)
@@ -521,7 +525,7 @@ def _call_llm(messages: List[Dict[str, str]], tools_schema: List[Dict[str, Any]]
         return "[LLM 未配置：请设置 OPENAI_API_KEY 环境变量]"
 
     if not model:
-        model = os.getenv("LLM_MODEL", "deepseek-v4-flash")
+        model = settings.llm_model
 
     body = {
         "model": model,
@@ -531,6 +535,8 @@ def _call_llm(messages: List[Dict[str, str]], tools_schema: List[Dict[str, Any]]
     }
     if tools_schema:
         body["tools"] = [{"type": "function", "function": t} for t in tools_schema]
+
+    start = time.perf_counter()
 
     try:
         if HAS_HTTPX:
@@ -546,19 +552,22 @@ def _call_llm(messages: List[Dict[str, str]], tools_schema: List[Dict[str, Any]]
             resp.raise_for_status()
             result = resp.json()
         else:
-            import urllib.error
-            import urllib.request
-
-            req = urllib.request.Request(
+            resp = request(
+                "POST",
                 f"{base_url.rstrip('/')}/chat/completions",
-                data=json.dumps(body).encode("utf-8"),
+                json=body,
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {api_key}",
                 },
+                timeout=60,
             )
-            with urllib.request.urlopen(req, timeout=60) as resp:
-                result = json.loads(resp.read().decode("utf-8"))
+            result = resp.json()
+
+        duration = time.perf_counter() - start
+        usage = result.get("usage", {}) or {}
+        completion_tokens = usage.get("completion_tokens", 0)
+        record_llm_call(model, True, duration, completion_tokens)
 
         choice = result["choices"][0]
         msg = choice["message"]
@@ -573,6 +582,8 @@ def _call_llm(messages: List[Dict[str, str]], tools_schema: List[Dict[str, Any]]
         return msg.get("content", "") or ""
 
     except Exception as e:
+        duration = time.perf_counter() - start
+        record_llm_call(model, False, duration)
         return f"[LLM 调用异常] {e}"
 
 
@@ -735,8 +746,8 @@ class AgentLoop:
         """执行一次完整的 LLM + Tools + Loop（支持多个 tool call）"""
         logger.info(f"用户输入: {user_input}")
         messages = self._build_messages(user_input)
-        api_key = os.getenv("OPENAI_API_KEY") or os.getenv("COZE_WORKLOAD_IDENTITY_API_KEY")
-        base_url = os.getenv("OPENAI_BASE_URL") or "https://api.openai.com/v1"
+        api_key = settings.llm_api_key
+        base_url = settings.llm_base_url
 
         if not api_key:
             return "[LLM 未配置：请设置 OPENAI_API_KEY 环境变量]"
@@ -808,6 +819,101 @@ class AgentLoop:
 
         final = f"[达到最大轮次 {self.max_turns}，未完成]"
         logger.warning(f"达到最大轮次 {self.max_turns}，未完成")
+        self.history.append({"role": "user", "content": user_input})
+        self.history.append({"role": "assistant", "content": final})
+        return final
+
+    async def arun(self, user_input: str) -> str:
+        """异步版本：执行一次完整的 LLM + Tools + Loop
+
+        使用 AsyncLLMClient（连接池复用 + 流式支持 + Prometheus 指标）。
+        工具执行仍为同步（大部分工具是 CPU 密集/IO 同步），
+        如果工具是异步的，可改用 async_to_sync 包装。
+        """
+        logger.info(f"[async] 用户输入: {user_input}")
+        messages = self._build_messages(user_input)
+
+        if not settings.llm_api_key:
+            return "[LLM 未配置：请设置 OPENAI_API_KEY 环境变量]"
+
+        tools_payload = (
+            [{"type": "function", "function": t.to_schema()} for t in self.tools]
+            if self.tools else None
+        )
+
+        from core.llm_async import get_llm_client
+        llm_client = await get_llm_client()
+
+        for turn in range(self.max_turns):
+            logger.info(f"[async] 第 {turn + 1} 轮 LLM 调用")
+
+            try:
+                data = await llm_client.chat(
+                    messages,
+                    temperature=0.7,
+                    max_tokens=2048,
+                    tools=tools_payload,
+                )
+                choice = data["choices"][0]
+                msg = choice["message"]
+            except Exception as e:
+                logger.warning(f"[async] LLM 调用异常: {e}")
+                raise
+
+            content = msg.get("content") or ""
+            tool_calls = msg.get("tool_calls")
+
+            if not tool_calls:
+                self.history.append({"role": "user", "content": user_input})
+                self.history.append({"role": "assistant", "content": content})
+                return content
+
+            # Execute all tool calls
+            messages.append(
+                {
+                    "role": "assistant",
+                    "content": content if content else None,
+                    "tool_calls": [
+                        {
+                            "id": tc["id"],
+                            "type": "function",
+                            "function": {
+                                "name": tc["function"]["name"],
+                                "arguments": tc["function"]["arguments"],
+                            },
+                        }
+                        for tc in tool_calls
+                    ],
+                }
+            )
+
+            for tc in tool_calls:
+                name = tc["function"]["name"]
+                try:
+                    args = (
+                        json.loads(tc["function"]["arguments"])
+                        if tc["function"]["arguments"]
+                        else {}
+                    )
+                except json.JSONDecodeError:
+                    args = {}
+                logger.info(f"[async] 工具调用: {name}({args})")
+                tool = self.tool_map.get(name)
+                if tool is None:
+                    result = f"[未知工具: {name}]"
+                    logger.warning(f"[async] 未知工具: {name}")
+                else:
+                    try:
+                        result = tool(**args)
+                    except Exception as e:
+                        logger.warning(f"[async] 工具执行异常 {name}: {e}")
+                        result = f"[工具错误] {e}"
+                messages.append(
+                    {"role": "tool", "tool_call_id": tc["id"], "content": result}
+                )
+
+        final = f"[达到最大轮次 {self.max_turns}，未完成]"
+        logger.warning(f"[async] 达到最大轮次 {self.max_turns}，未完成")
         self.history.append({"role": "user", "content": user_input})
         self.history.append({"role": "assistant", "content": final})
         return final

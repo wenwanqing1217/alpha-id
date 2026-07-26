@@ -10,9 +10,9 @@ Storage Factory —— 存储后端工厂
   storage = get_storage()  # 自动选择
 """
 import logging
-import os
 from typing import Optional
 
+from core.settings import settings
 from core.storage import StorageBackend, JsonStorage
 
 logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ def get_storage(db_path: str = None) -> StorageBackend:
     Returns:
         StorageBackend 实例
     """
-    database_url = os.getenv("DATABASE_URL")
+    database_url = settings.database_url
 
     if database_url:
         try:
@@ -45,11 +45,7 @@ def get_storage(db_path: str = None) -> StorageBackend:
 
     # 默认：JSON 文件
     if db_path is None:
-        db_path = os.path.join(
-            os.getenv("GHOST_WORKSPACE_PATH", os.getcwd()),
-            "assets",
-            "ghost_data.json",
-        )
+        db_path = str(settings.ghost_workspace / "assets" / "ghost_data.json")
     storage = JsonStorage(db_path)
     logger.info(f"存储后端: JSON ({db_path})")
     return storage

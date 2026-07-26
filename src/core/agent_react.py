@@ -19,6 +19,7 @@ from typing import Any, Dict, List, Optional
 
 from core.agent import Tool, _call_llm, _parse_tool_call
 from core.interfaces import AgentContainer
+from core.settings import settings
 
 # ── 思考系统提示 ──
 
@@ -63,10 +64,10 @@ class ReActEngine:
         self.alpha_id = alpha_id
         self.brain = brain  # Optional[TwinBrain]
         self._backends = backends
-        self.api_key = llm_api_key or os.environ.get("LLM_API_KEY", "") or os.environ.get("OPENAI_API_KEY", "")
-        self.base_url = llm_base_url or os.environ.get("LLM_BASE_URL", "")
-        self.model = model or os.environ.get("LLM_MODEL", "deepseek-v4-flash")
-        self.max_turns = int(os.environ.get("REACT_MAX_TURNS", "5"))
+        self.api_key = llm_api_key or settings.llm_api_key
+        self.base_url = llm_base_url or settings.llm_base_url
+        self.model = model or settings.llm_model
+        self.max_turns = settings.react_max_turns
         self.tools: List[Tool] = []
         self._register_tools()
 

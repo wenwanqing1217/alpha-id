@@ -13,6 +13,8 @@ import threading
 from contextlib import contextmanager
 from typing import Any, Dict, List, Optional
 
+from core.observability import record_db_op
+from core.settings import settings
 from core.storage import StorageBackend
 
 
@@ -22,7 +24,7 @@ class SqliteStorage(StorageBackend):
     def __init__(self, db_path: Optional[str] = None):
         if db_path is None:
             db_path = os.path.join(
-                os.getenv("COZE_WORKSPACE_PATH", os.getcwd()),
+                str(settings.coze_workspace),
                 "assets",
                 "alpha_id.db",
             )
@@ -118,51 +120,78 @@ class SqliteStorage(StorageBackend):
 
     def load(self, key: str) -> Optional[Dict[str, Any]]:
         """加载整个集合（兼容旧 JSON 的 load/save 模式）"""
-        with self._tx() as conn:
-            row = conn.execute(
-                "SELECT data FROM collections WHERE collection_name = ?",
-                (key,),
-            ).fetchone()
-            if row is None:
-                return None
-            return json.loads(row["data"])
+        try:
+            with self._tx() as conn:
+                row = conn.execute(
+                    "SELECT data FROM collections WHERE collection_name = ?",
+                    (key,),
+                ).fetchone()
+                if row is None:
+                    return None
+                result = json.loads(row["data"])
+            record_db_op("load", True)
+            return result
+        except Exception:
+            record_db_op("load", False)
+            raise
 
     def save(self, key: str, data: Dict[str, Any]):
         """保存整个集合"""
-        with self._tx() as conn:
-            conn.execute(
-                """INSERT OR REPLACE INTO collections (collection_name, doc_id, data)
-                   VALUES (?, '_default', ?)""",
-                (key, json.dumps(data, ensure_ascii=False)),
-            )
+        try:
+            with self._tx() as conn:
+                conn.execute(
+                    """INSERT OR REPLACE INTO collections (collection_name, doc_id, data)
+                       VALUES (?, '_default', ?)""",
+                    (key, json.dumps(data, ensure_ascii=False)),
+                )
+            record_db_op("save", True)
+        except Exception:
+            record_db_op("save", False)
+            raise
 
     def get(self, collection: str, record_id: str) -> Optional[Dict[str, Any]]:
         """获取单条记录"""
-        with self._tx() as conn:
-            row = conn.execute(
-                "SELECT data FROM collections WHERE collection_name = ?",
-                (f"{collection}_item_{record_id}",),
-            ).fetchone()
-            if row is None:
-                return None
-            return json.loads(row["data"])
+        try:
+            with self._tx() as conn:
+                row = conn.execute(
+                    "SELECT data FROM collections WHERE collection_name = ?",
+                    (f"{collection}_item_{record_id}",),
+                ).fetchone()
+                if row is None:
+                    return None
+                result = json.loads(row["data"])
+            record_db_op("get", True)
+            return result
+        except Exception:
+            record_db_op("get", False)
+            raise
 
     def put(self, collection: str, record_id: str, record: Dict[str, Any]):
         """写入单条记录"""
-        with self._tx() as conn:
-            conn.execute(
-                """INSERT OR REPLACE INTO collections (collection_name, doc_id, data)
-                   VALUES (?, '_default', ?)""",
-                (f"{collection}_item_{record_id}", json.dumps(record, ensure_ascii=False)),
-            )
+        try:
+            with self._tx() as conn:
+                conn.execute(
+                    """INSERT OR REPLACE INTO collections (collection_name, doc_id, data)
+                       VALUES (?, '_default', ?)""",
+                    (f"{collection}_item_{record_id}", json.dumps(record, ensure_ascii=False)),
+                )
+            record_db_op("put", True)
+        except Exception:
+            record_db_op("put", False)
+            raise
 
     def delete(self, collection: str, record_id: str):
         """删除单条记录"""
-        with self._tx() as conn:
-            conn.execute(
-                "DELETE FROM collections WHERE collection_name = ?",
-                (f"{collection}_item_{record_id}",),
-            )
+        try:
+            with self._tx() as conn:
+                conn.execute(
+                    "DELETE FROM collections WHERE collection_name = ?",
+                    (f"{collection}_item_{record_id}",),
+                )
+            record_db_op("delete", True)
+        except Exception:
+            record_db_op("delete", False)
+            raise
 
     def list(self, collection: str, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """列出集合中的记录，支持按字段过滤"""

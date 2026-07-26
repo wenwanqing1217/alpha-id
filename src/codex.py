@@ -5,6 +5,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from core.retry import create_retry_decorator
+
 WORKSPACE = Path(__file__).resolve().parent
 
 
@@ -78,24 +80,29 @@ def edit_code(path: str, old_string: str, new_string: str) -> str:
 
 def run_python(code: str) -> str:
     import tempfile
-    for attempt in range(2):
-        try:
-            result = subprocess.run(
-                [sys.executable, "-c", code],
-                capture_output=True,
-                text=True,
-                timeout=15,
-                cwd=str(WORKSPACE),
-            )
-            out = result.stdout.strip()
-            err = result.stderr.strip()
-            if err:
-                return f"STDERR:\n{err}" + (f"\n\nSTDOUT:\n{out}" if out else "")
-            return out or "(no output)"
-        except subprocess.TimeoutExpired:
-            return "[Error] Execution timed out"
-        except OSError:
-            break
+
+    @create_retry_decorator(max_attempts=2, retry_exceptions=(OSError,))
+    def _run_inline():
+        result = subprocess.run(
+            [sys.executable, "-c", code],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            cwd=str(WORKSPACE),
+        )
+        out = result.stdout.strip()
+        err = result.stderr.strip()
+        if err:
+            return f"STDERR:\n{err}" + (f"\n\nSTDOUT:\n{out}" if out else "")
+        return out or "(no output)"
+
+    try:
+        return _run_inline()
+    except subprocess.TimeoutExpired:
+        return "[Error] Execution timed out"
+    except OSError:
+        pass
+
     tmpdir = tempfile.mkdtemp(prefix="codex_")
     script_path = os.path.join(tmpdir, "script.py")
     try:

@@ -633,13 +633,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 500);
   };
   // ============ 视图切换 ============
-  window.showWorkbench = function() {
-    document.getElementById('homepageView').classList.remove('active');
-    document.getElementById('mindflowView').classList.remove('active');
-    document.getElementById('workbenchView').classList.add('active');
-    window.scrollTo(0, 0);
-  };
-
   window.showHomepage = function() {
     document.getElementById('workbenchView').classList.remove('active');
     document.getElementById('mindflowView').classList.remove('active');

@@ -19,6 +19,8 @@ import time
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 
+from core.settings import settings
+
 logger = logging.getLogger(__name__)
 
 
@@ -105,7 +107,7 @@ class MasterOrchestrator:
 
             agent = AgentLoop(
                 alpha_id=self.alpha_id,
-                model=os.getenv("LLM_MODEL", "deepseek-v4-flash"),
+                model=settings.llm_model,
             )
 
             self._brain = TwinBrain(
@@ -113,7 +115,7 @@ class MasterOrchestrator:
                 storage=self._storage,
                 settings=BrainSettings(
                     use_agent_chat=True,
-                    agent_model=os.getenv("LLM_MODEL", "deepseek-v4-flash"),
+                    agent_model=settings.llm_model,
                 ),
             )
             self._brain._agent = agent
@@ -298,7 +300,7 @@ def get_orchestrator(alpha_id: str = None, **kwargs) -> MasterOrchestrator:
     global _orchestrator
     if _orchestrator is None:
         if alpha_id is None:
-            alpha_id = os.getenv("GHOST_ALPHA_ID", "Ghost-001")
+            alpha_id = settings.ghost_alpha_id
         _orchestrator = MasterOrchestrator(alpha_id=alpha_id, **kwargs)
     return _orchestrator
 

@@ -13,9 +13,10 @@
 """
 
 import logging
-import os
 import threading
 from typing import Optional
+
+from core.settings import settings
 
 from core.alpha_social import AlphaSocialManager
 from core.memory_store import MemoryStore
@@ -27,12 +28,12 @@ from core.user_identity import UserIdentityManager
 logger = logging.getLogger(__name__)
 
 # 显式后端选择（可选，覆盖自动检测）
-STORAGE_BACKEND = os.getenv("STORAGE_BACKEND", "").lower()
+STORAGE_BACKEND = settings.storage_backend
 
 
 def _create_default_storage() -> StorageBackend:
     """根据环境自动选择存储后端"""
-    database_url = os.getenv("DATABASE_URL")
+    database_url = settings.database_url
     if database_url and database_url.startswith("postgresql"):
         try:
             from core.storage_postgres import PostgresStorage

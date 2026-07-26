@@ -17,10 +17,11 @@
 
 import json
 import logging
-import os
 import urllib.parse
 import urllib.request
 from typing import Optional
+
+from core.settings import settings
 
 logger = logging.getLogger("mindflow.agents.travel")
 
@@ -30,7 +31,7 @@ API_BASE = "https://api.map.baidu.com/agent_plan/v1"
 
 def _get_token() -> str:
     """获取百度地图 Auth Token"""
-    token = os.getenv("BAIDU_MAP_AUTH_TOKEN", "")
+    token = settings.baidu_map_auth_token
     if not token:
         logger.warning("⚠️ BAIDU_MAP_AUTH_TOKEN 未配置")
     return token

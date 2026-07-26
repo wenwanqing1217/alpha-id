@@ -17,20 +17,21 @@ MindFlow 自然语言日程解析器
 
 import json
 import logging
-import os
 import re
 import urllib.request
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
+
+from core.settings import settings
 
 logger = logging.getLogger("mindflow.schedule_parser")
 
 
 def _llm_parse_schedule(text: str, user_context: str = "") -> Optional[List[Dict]]:
     """用 LLM 解析自然语言日程"""
-    api_key = os.getenv("OPENAI_API_KEY", "")
-    base_url = os.getenv("OPENAI_BASE_URL", "")
-    model = os.getenv("LLM_MODEL", "LongCat-2.0")
+    api_key = settings.llm_api_key
+    base_url = settings.llm_base_url
+    model = settings.llm_model
 
     if not api_key or not base_url:
         return None

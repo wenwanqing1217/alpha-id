@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
+from core.settings import settings
+
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -301,13 +303,13 @@ async def chat(req: ChatRequest):
     brain = _get_or_create_brain(req.alpha_id)
     brain.awake()
 
-    # 发送消息给大脑
+    # 发送消息给大脑（异步版本，不阻塞事件循环）
     msg = Message.create_chat(
         sender=req.alpha_id,
         recipient=req.alpha_id,
         text=req.message,
     )
-    response = brain.receive(msg)
+    response = await brain.areceive(msg)
 
     reply = response.message or response.data.get("reply", "ok")
 
@@ -392,8 +394,8 @@ from starlette.responses import StreamingResponse  # noqa: E402
 
 async def _stream_llm(messages: list, model: str = "deepseek-v4-flash"):
     """调用 DeepSeek API 并流式返回 token"""
-    api_key = os.getenv("OPENAI_API_KEY") or os.getenv("LLM_API_KEY", "")
-    base_url = os.getenv("OPENAI_BASE_URL") or "https://api.deepseek.com/v1"
+    api_key = settings.llm_api_key
+    base_url = settings.llm_base_url
 
     # SSRF validation for LLM base_url
     _ALLOWED_LLM_HOSTS = {  # noqa: N806

@@ -18,6 +18,7 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
+from core.settings import settings
 from core.storage import StorageBackend
 
 # ── 恢复流程状态 ──
@@ -174,7 +175,7 @@ class RecoveryEngine:
 
             from core.storage_sqlite import SqliteStorage
 
-            db_path = os.path.join(os.getenv("COZE_WORKSPACE_PATH", os.getcwd()), "assets", "alpha_id.db")
+            db_path = os.path.join(str(settings.coze_workspace), "assets", "alpha_id.db")
             self._storage = SqliteStorage(db_path)
         return self._storage
 

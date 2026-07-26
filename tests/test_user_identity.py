@@ -27,6 +27,9 @@ class TestUserIdentityManager:
         os.environ["GHOST_WORKSPACE_PATH"] = str(tmp_path)
         # 配置创始人验证码哈希，使测试可以用 "Alpha-1-zx" 注册创始人
         os.environ["FOUNDER_CODE_HASH"] = hashlib.sha256(b"Alpha-1-zx").hexdigest()
+        # 强制重载 settings 使新环境变量生效
+        from core.settings import reload_settings
+        reload_settings()
         m = UserIdentityManager()
         yield m
         # 恢复
@@ -38,6 +41,7 @@ class TestUserIdentityManager:
             os.environ["FOUNDER_CODE_HASH"] = old_code_hash
         else:
             os.environ.pop("FOUNDER_CODE_HASH", None)
+        reload_settings()
 
     def test_init_creates_empty_db(self, manager):
         """初始化应创建空的 JSON 数据库"""

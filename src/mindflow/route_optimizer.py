@@ -23,10 +23,11 @@ MindFlow 多目的地智能路线规划
 
 import json
 import logging
-import os
 import urllib.parse
 import urllib.request
 from typing import Any, Dict, List, Optional, Tuple
+
+from core.settings import settings
 
 logger = logging.getLogger("mindflow.route_optimizer")
 
@@ -35,7 +36,7 @@ GEOCODING_URL = "https://api.map.baidu.com/geocoding/v3/"
 
 
 def _get_token() -> str:
-    return os.getenv("BAIDU_MAP_AUTH_TOKEN", "")
+    return settings.baidu_map_auth_token
 
 
 def geocode_address(address: str, city: str = "北京市") -> Optional[Dict]:

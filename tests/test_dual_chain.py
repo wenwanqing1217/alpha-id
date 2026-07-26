@@ -84,6 +84,9 @@ class TestDualChainManager(unittest.TestCase):
         # 重定向存储路径到临时目录
         self.patcher = patch.dict(os.environ, {"COZE_WORKSPACE_PATH": self.tmpdir})
         self.patcher.start()
+        # 强制重载 settings，使新环境变量生效
+        from core.settings import reload_settings
+        reload_settings()
         # 清理可能存在的 salt
         salt_path = os.path.join(self.tmpdir, "assets", ".salt_" + self.alpha_id.replace(":", "_"))
         if os.path.exists(salt_path):
@@ -92,6 +95,9 @@ class TestDualChainManager(unittest.TestCase):
 
     def tearDown(self):
         self.patcher.stop()
+        # 恢复 settings
+        from core.settings import reload_settings
+        reload_settings()
         # 清理临时目录
         import shutil
         shutil.rmtree(self.tmpdir, ignore_errors=True)
@@ -127,7 +133,7 @@ class TestDualChainManager(unittest.TestCase):
         """私有链内容在存储中加密"""
         self.mgr.save("绝密：我的私钥是abc123", sensitivity=95, category="secret")
         # 直接读取存储文件，确认内容已加密
-        priv_data = self.mgr._private_storage.load(self.alpha_id)
+        priv_data = self.mgr._private_storage.load(self.mgr._chain_key_private)
         memories = priv_data.get("memories", {})
         self.assertTrue(len(memories) > 0)
         for mem in memories.values():
@@ -139,7 +145,7 @@ class TestDualChainManager(unittest.TestCase):
     def test_knowledge_content_plain(self):
         """知识链内容明文存储"""
         self.mgr.save("公开知识：Python 3.12发布了", sensitivity=10, category="knowledge")
-        know_data = self.mgr._knowledge_storage.load(self.alpha_id)
+        know_data = self.mgr._knowledge_storage.load(self.mgr._chain_key_knowledge)
         memories = know_data.get("memories", {})
         for mem in memories.values():
             self.assertFalse(mem.get("encrypted", False))

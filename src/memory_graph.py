@@ -11,6 +11,8 @@ import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from core.settings import settings
+
 try:
     from core.memory_store import MemoryStore
     from core.storage_sqlite import SqliteStorage
@@ -441,7 +443,7 @@ def memory_graph_html(
         return "[Error] 无法加载 MemoryStore / SqliteStorage"
 
     db_path = os.path.join(
-        os.getenv("COZE_WORKSPACE_PATH", os.getcwd()),
+        str(settings.coze_workspace),
         "assets",
         "alpha_id.db",
     )
@@ -464,7 +466,7 @@ def memory_graph_stats(alpha_id: str = "Alpha-001") -> str:
         return "[Error] 无法加载 MemoryStore / SqliteStorage"
 
     db_path = os.path.join(
-        os.getenv("COZE_WORKSPACE_PATH", os.getcwd()),
+        str(settings.coze_workspace),
         "assets",
         "alpha_id.db",
     )
@@ -487,7 +489,7 @@ def memory_graph_search(
         return "[Error] 无法加载 MemoryStore / SqliteStorage"
 
     db_path = os.path.join(
-        os.getenv("COZE_WORKSPACE_PATH", os.getcwd()),
+        str(settings.coze_workspace),
         "assets",
         "alpha_id.db",
     )
@@ -572,7 +574,7 @@ def memory_graph_save(
         return "[Error] 无法加载 MemoryStore / SqliteStorage"
 
     db_path = os.path.join(
-        os.getenv("COZE_WORKSPACE_PATH", os.getcwd()),
+        str(settings.coze_workspace),
         "assets",
         "alpha_id.db",
     )
@@ -602,7 +604,7 @@ def memory_graph_delete(alpha_id: str = "Alpha-001", memory_id: str = "") -> str
         return "[Error] 无法加载 MemoryStore / SqliteStorage"
 
     db_path = os.path.join(
-        os.getenv("COZE_WORKSPACE_PATH", os.getcwd()),
+        str(settings.coze_workspace),
         "assets",
         "alpha_id.db",
     )
@@ -636,7 +638,7 @@ def memory_graph_update(
         return "[Error] 无法加载 MemoryStore / SqliteStorage"
 
     db_path = os.path.join(
-        os.getenv("COZE_WORKSPACE_PATH", os.getcwd()),
+        str(settings.coze_workspace),
         "assets",
         "alpha_id.db",
     )
@@ -752,7 +754,7 @@ def cli():
         db_path = args.db
     else:
         db_path = os.path.join(
-            os.getenv("COZE_WORKSPACE_PATH", os.getcwd()),
+            str(settings.coze_workspace),
             "assets",
             "alpha_id.db",
         )

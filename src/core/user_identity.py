@@ -13,6 +13,8 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Dict, List, Optional
 
+from core.cache import cached_user_lookup, invalidate_user_cache
+from core.settings import settings
 from core.storage import StorageBackend
 
 logger = logging.getLogger(__name__)
@@ -49,15 +51,15 @@ class UserIdentityManager:
 
     def __init__(self, storage: Optional[StorageBackend] = None):
         # 运行时读取环境变量（避免类变量在 import 时固化，导致测试无法注入）
-        self._founder_alpha_id = os.getenv("FOUNDER_ALPHA_ID", "Alpha-000")
-        self._founder_code_hash = os.getenv("FOUNDER_CODE_HASH", "")
+        self._founder_alpha_id = settings.founder_alpha_id
+        self._founder_code_hash = settings.founder_code_hash
 
         # 默认使用 JSON 存储
         if storage is None:
             from core.storage_sqlite import SqliteStorage
 
             db_path = os.path.join(
-                os.getenv("GHOST_WORKSPACE_PATH", os.getcwd()),
+                str(settings.ghost_workspace),
                 "assets",
                 "alpha_id.db",
             )
@@ -96,7 +98,13 @@ class UserIdentityManager:
         self._storage.save("founder_registered", data.get("founder_registered", False))
 
     def register_user(
-        self, device_fingerprint: str, is_founder: bool = False, founder_code: Optional[str] = None
+        self,
+        device_fingerprint: str,
+        is_founder: bool = False,
+        founder_code: Optional[str] = None,
+        alpha_id: Optional[str] = None,
+        did_document: Optional[Dict] = None,
+        phone: Optional[str] = None,
     ) -> Dict:
         """
         注册新用户
@@ -105,6 +113,9 @@ class UserIdentityManager:
             device_fingerprint: 设备指纹
             is_founder: 是否创始人
             founder_code: 创始人验证码
+            alpha_id: 自定义 alpha_id（DID 注册流程传入，为空则自动生成）
+            did_document: DID 文档（可选，存入用户档案）
+            phone: 手机号（可选，存入用户档案）
 
         Returns:
             注册结果
@@ -138,9 +149,17 @@ class UserIdentityManager:
 
             alpha_id = self._founder_alpha_id
             founder_registered = True
-        else:
+        elif alpha_id is None:
             counter += 1
             alpha_id = f"Alpha-{uuid.uuid4().hex[:7].upper()}"
+        else:
+            # 使用外部传入的 alpha_id（DID 流程），counter 仍然递增保持统计
+            counter += 1
+
+        # 检查 alpha_id 是否已被占用
+        if alpha_id in users:
+            logger.warning(f"注册失败: alpha_id 已存在 - {alpha_id}")
+            return {"success": False, "message": "该 Alpha-ID 已被注册"}
 
         user_id = f"user_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{alpha_id.replace('-', '')}"
         user_profile = UserProfile(
@@ -152,10 +171,19 @@ class UserIdentityManager:
             last_active=datetime.now().isoformat(),
             total_sessions=0,
             devices=[device_fingerprint],
-            status="locked",
+            status="active",  # DID 流程完成即激活
         )
 
-        users[alpha_id] = asdict(user_profile)
+        # 扩展档案：存入 DID 文档和手机号
+        user_data = asdict(user_profile)
+        if did_document:
+            user_data["did_document"] = did_document
+        if phone:
+            user_data["phone"] = phone
+
+        users[alpha_id] = user_data
+
+        invalidate_user_cache(alpha_id)
 
         self._storage.save("users", users)
         self._storage.save("counter", counter)
@@ -171,6 +199,7 @@ class UserIdentityManager:
             "is_founder": is_founder,
         }
 
+    @cached_user_lookup
     def get_user_profile(self, alpha_id: str) -> Optional[Dict]:
         """获取用户档案"""
         users = self._storage.load("users") or {}
@@ -197,6 +226,7 @@ class UserIdentityManager:
         user_data["last_active"] = datetime.now().isoformat()
 
         users[alpha_id] = user_data
+        invalidate_user_cache(alpha_id)
         self._storage.save("users", users)
 
         logger.info(f"设备绑定已更新: alpha_id={alpha_id}, new_device={new_device}, devices={user_data['devices']}")
@@ -232,6 +262,7 @@ class UserIdentityManager:
         user_data["device_fingerprint"] = to_device
 
         users[alpha_id] = user_data
+        invalidate_user_cache(alpha_id)
         self._storage.save("users", users)
 
         return {
@@ -253,6 +284,7 @@ class UserIdentityManager:
         user_data["last_active"] = datetime.now().isoformat()
 
         users[alpha_id] = user_data
+        invalidate_user_cache(alpha_id)
         self._storage.save("users", users)
 
         return {

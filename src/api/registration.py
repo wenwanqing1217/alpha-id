@@ -3,6 +3,7 @@
 覆盖：短信验证码发送/校验、支付宝人脸认证、DID 生成、注册完成。
 """
 
+import hashlib
 import json
 import os
 import random
@@ -80,10 +81,15 @@ async def send_sms(request: Request):
     data[phone] = {"code": code, "expires_at": time.time() + 300}
     _sms_save(data)
 
-    # 尝试发真实短信（有阿里云 Key 时）
-    alibab_key = os.environ.get("ALIBABA_ACCESS_KEY_ID", "")
-    alibab_secret = os.environ.get("ALIBABA_ACCESS_KEY_SECRET", "")
-    sign_name = os.environ.get("ALIBABA_SMS_SIGN_NAME", "")
+    # 尝试发真实短信（有阿里云 Key 且未强制演示模式时）
+    demo_mode = os.environ.get("SMS_DEMO_MODE", "true").lower() != "false"
+    if not demo_mode:
+        alibab_key = os.environ.get("ALIBABA_ACCESS_KEY_ID", "")
+        alibab_secret = os.environ.get("ALIBABA_ACCESS_KEY_SECRET", "")
+        sign_name = os.environ.get("ALIBABA_SMS_SIGN_NAME", "")
+    else:
+        alibab_key = alibab_secret = sign_name = ""
+
     if alibab_key and alibab_secret and sign_name:
         try:
             from alibabacloud_dypnsapi20170525.client import Client as DysmsapiClient
@@ -241,18 +247,41 @@ async def generate_did(request: Request):
 
 @router.post("/complete")
 async def complete_registration(request: Request):
-    """完成注册"""
+    """完成注册 — 将用户写入数据库"""
     body = await request.json()
     did = body.get("did", "")
     phone = body.get("phone", "")
+    did_document = body.get("document", None)
 
     if not did:
         raise HTTPException(status_code=400, detail="缺少 DID")
+
+    # 使用 Container 获取身份管理器
+    container = Container.instance()
+
+    # 以手机号哈希作为设备指纹（Web 端无真实设备指纹）
+    if phone:
+        device_fp = f"web_{hashlib.sha256(phone.encode()).hexdigest()[:16]}"
+    else:
+        device_fp = f"web_{int(time.time())}"
+
+    # 真正写入用户记录
+    result = container.identity.register_user(
+        device_fingerprint=device_fp,
+        alpha_id=did,  # DID 作为 alpha_id
+        did_document=did_document,
+        phone=phone,
+    )
+
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("message", "注册失败"))
 
     return {
         "success": True,
         "data": {
             "did": did,
+            "alphaId": result.get("alpha_id", did),
+            "userId": result.get("user_id", ""),
             "ghostKey": "",
             "providerInfo": None,
             "registeredAt": __import__("datetime").datetime.now().isoformat(),

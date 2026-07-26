@@ -12,7 +12,9 @@ router = APIRouter(prefix="/api/v1/dual-chain", tags=["双链记忆"])
 
 
 def get_manager(alpha_id: str) -> DualChainManager:
-    return DualChainManager(alpha_id=alpha_id)
+    """创建 DualChainManager，注入 Container 的存储后端"""
+    container = Container.instance()
+    return DualChainManager(alpha_id=alpha_id, storage=container.storage)
 
 
 # ── 写入 ──

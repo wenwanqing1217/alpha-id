@@ -1976,6 +1976,7 @@
   </div>
   <div class="flex items-center gap-3">
     <span class="text-xs text-slate-400 font-mono" id="user-did-display">did:aid:...</span>
+    <button class="text-xs px-3 py-1 rounded-full bg-pink-500/15 border border-pink-500/30 text-pink-300 hover:bg-pink-500/25 transition" onclick="showMindflow()" title="切换到人机协作模式">协作模式 →</button>
     <button class="text-xs text-slate-400 hover:text-white transition" onclick="showHomepage()">返回首页</button>
   </div>
 </div>
@@ -1999,19 +2000,6 @@
       </button>
       <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="agents">
         <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-emerald-500/20 flex items-center justify-center text-xs">🤖</span>Agent 广场</span>
-      </button>
-      <div class="mt-4 text-[10px] text-slate-500 font-mono tracking-wider mb-2 px-3">我的思维</div>
-      <button class="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="canvas">
-        <span class="inline-flex items-center gap-2"><span class="w-4 h-4 rounded bg-nebula-500/20 flex items-center justify-center text-[10px]">🗺️</span>思维画布</span>
-      </button>
-      <button class="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="tasks">
-        <span class="inline-flex items-center gap-2"><span class="w-4 h-4 rounded bg-cosmic-500/20 flex items-center justify-center text-[10px]">✅</span>任务看板</span>
-      </button>
-      <button class="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="notes">
-        <span class="inline-flex items-center gap-2"><span class="w-4 h-4 rounded bg-pink-500/20 flex items-center justify-center text-[10px]">📝</span>笔记库</span>
-      </button>
-      <button class="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="profile-panel">
-        <span class="inline-flex items-center gap-2"><span class="w-4 h-4 rounded bg-amber-500/20 flex items-center justify-center text-[10px]">👤</span>人格画像</span>
       </button>
       <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="doubao">
         <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-sky-500/20 flex items-center justify-center text-xs">💬</span>豆包记忆桥</span>
@@ -2310,77 +2298,6 @@
       </div>
     </div>
   </div>
-</div>
-
-<!-- 思维画布面板 -->
-<div id="route-canvas" class="wb-route-panel hidden">
-  <h2 class="text-2xl font-bold text-white mb-2">思维画布</h2>
-  <p class="text-slate-400 text-sm mb-6">自由拖拽节点，构建你的思维图谱。</p>
-  <div class="mf-canvas" id="mindflow-canvas">
-    <div class="mf-node" style="top:40px;left:40px;"><span class="node-label">项目构想</span></div>
-    <div class="mf-node" style="top:40px;left:220px;"><span class="node-label">MVP 定义</span></div>
-    <div class="mf-node" style="top:140px;left:130px;"><span class="node-label">技术选型</span></div>
-    <div class="mf-node" style="top:140px;left:320px;"><span class="node-label">团队分工</span></div>
-    <div class="mf-node" style="top:240px;left:40px;"><span class="node-label">身份层</span></div>
-    <div class="mf-node" style="top:240px;left:220px;"><span class="node-label">记忆层</span></div>
-  </div>
-</div>
-
-<!-- 任务看板面板 -->
-<div id="route-tasks" class="wb-route-panel hidden">
-  <h2 class="text-2xl font-bold text-white mb-2">任务看板</h2>
-  <p class="text-slate-400 text-sm mb-6">管理你的待办事项。</p>
-  <div class="space-y-3">
-    <div class="router-node flex items-center gap-3">
-      <span class="w-4 h-4 rounded border border-emerald-500 bg-emerald-500/20 flex items-center justify-center text-[10px]">✓</span>
-      <span class="text-sm text-slate-400 line-through">DID 身份生成</span>
-      <span class="tag tag-emerald text-[10px] ml-auto">已完成</span>
-    </div>
-    <div class="router-node flex items-center gap-3">
-      <span class="w-4 h-4 rounded border border-emerald-500 bg-emerald-500/20 flex items-center justify-center text-[10px]">✓</span>
-      <span class="text-sm text-slate-400 line-through">ChatGPT 记忆导入</span>
-      <span class="tag tag-emerald text-[10px] ml-auto">已完成</span>
-    </div>
-    <div class="router-node flex items-center gap-3">
-      <span class="w-4 h-4 rounded border border-nebula-500/50"></span>
-      <span class="text-sm text-white">MCP Server PoC</span>
-      <span class="tag tag-blue text-[10px] ml-auto">进行中</span>
-    </div>
-  </div>
-</div>
-
-<!-- 笔记库面板 -->
-<div id="route-notes" class="wb-route-panel hidden">
-  <h2 class="text-2xl font-bold text-white mb-2">笔记库</h2>
-  <p class="text-slate-400 text-sm mb-6">你的知识卡片。</p>
-  <div class="grid md:grid-cols-2 gap-4">
-    <div class="router-node">
-      <div class="text-sm text-white font-medium mb-1">MCP 协议核心</div>
-      <div class="text-xs text-slate-500">Model Context Protocol · 标准化 AI 工具接口</div>
-    </div>
-    <div class="router-node">
-      <div class="text-sm text-white font-medium mb-1">数字灵魂三支柱</div>
-      <div class="text-xs text-slate-500">Alpha-ID 认识你 · Ghost 理解你 · Mindflow 代表你</div>
-    </div>
-  </div>
-</div>
-
-<!-- 人格画像面板 -->
-<div id="route-profile-panel" class="wb-route-panel hidden">
-  <h2 class="text-2xl font-bold text-white mb-2">人格画像</h2>
-  <p class="text-slate-400 text-sm mb-6">AI 眼中的你。</p>
-  <div class="space-y-4">
-    <div class="router-node">
-      <div class="text-sm text-white font-medium mb-2">活跃时段</div>
-      <div class="text-sm text-slate-400">23:30 - 03:15 · 夜猫子模式</div>
-    </div>
-    <div class="router-node">
-      <div class="text-sm text-white font-medium mb-2">沟通风格</div>
-      <div class="text-sm text-slate-400">简洁直接 · 结构化表达 · 偏好文本</div>
-    </div>
-  </div>
-</div>
-
 </div><!-- end workbenchView -->
 
 <!-- ============ Mindflow 个人工作台视图 ============ -->
@@ -2393,7 +2310,7 @@
       <span class="tag tag-pink text-[10px]">个人中心</span>
     </div>
     <div class="flex items-center gap-3">
-      <button class="text-xs text-slate-400 hover:text-white transition" onclick="showWorkbench()">返回工作台</button>
+      <button class="text-xs text-slate-400 hover:text-white transition" onclick="showWorkbench()">← 返回生态区</button>
       <button class="text-xs text-slate-400 hover:text-white transition" onclick="showHomepage()">返回首页</button>
     </div>
   </div>
@@ -2572,7 +2489,7 @@
         支付宝人脸核身
       </button>
       <button class="reg-btn reg-btn-secondary" id="reg-face-skip" onclick="skipFaceVerify()" style="margin-top:8px;">
-        跳过（演示模式）
+        跳过
       </button>
       <div class="reg-loading" id="reg-face-loading" style="display:none;margin:16px auto;"></div>
       <div class="reg-error" id="reg-face-error"></div>

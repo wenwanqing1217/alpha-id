@@ -15,17 +15,18 @@ import psycopg
 import psycopg.rows
 from psycopg_pool import ConnectionPool
 
+from core.settings import settings
 from core.storage import StorageBackend
 
 logger = logging.getLogger(__name__)
 
 
 def _get_database_url() -> str:
-    """从环境变量获取 PostgreSQL 连接串"""
-    url = os.getenv("DATABASE_URL")
+    """从 settings 获取 PostgreSQL 连接串"""
+    url = settings.database_url
     if not url:
         raise ValueError(
-            "DATABASE_URL environment variable is required for PostgresStorage. "
+            "DATABASE_URL is required for PostgresStorage. "
             "Example: postgresql://user:pass@host:5432/dbname"
         )
     return url

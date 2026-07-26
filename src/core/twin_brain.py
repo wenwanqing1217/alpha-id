@@ -290,6 +290,39 @@ class TwinBrain:
             logger.warning("%s 不支持的消息类型: %s", self.alpha_id, msg_type)
             return Response.fail(f"不支持的消息类型: {msg_type}", error_code="UNSUPPORTED_TYPE")
 
+    async def areceive(self, message: "Message") -> "Response":  # noqa: F821
+        """
+        异步版本：接收并处理外部消息。
+
+        聊天消息走异步 LLM 调用（AsyncLLMClient，不阻塞事件循环）。
+        其他消息类型回退到同步实现。
+        """
+        from core.message import MessageType, Response
+
+        logger.info("%s [async] 收到消息 type=%s sender=%s", self.alpha_id, message.msg_type, message.sender)
+
+        if self.state == BrainState.SLEEP:
+            if self.settings.auto_reply:
+                return Response.ok(data={"auto_reply": True}, message=self.settings.auto_reply_text)
+            logger.warning("%s [async] 消息被拒: 大脑休眠中", self.alpha_id)
+            return Response.fail("该 Alpha-ID 当前不在线", error_code="SLEEPING")
+
+        if self.state == BrainState.ERROR:
+            logger.warning("%s [async] 消息被拒: 大脑异常状态", self.alpha_id)
+            return Response.fail("该 Alpha-ID 当前异常，请稍后再试", error_code="ERROR")
+
+        self._message_count += 1
+        self.last_active_time = time.time()
+
+        msg_type = message.msg_type
+
+        # 只有聊天消息走异步 LLM 路径
+        if msg_type == MessageType.CHAT:
+            return await self._ahandle_chat(message)
+
+        # 其他消息类型回退到同步实现
+        return self.receive(message)
+
     # ── 行动引擎处理器 ──
 
     def _handle_action_confirm(self, message) -> "Response":  # noqa: F821
@@ -446,6 +479,42 @@ class TwinBrain:
                     )
             except Exception as e:
                 logger.error("%s AgentLoop 异常: %s", self.alpha_id, e, exc_info=True)
+
+        # 降级：LLM 不可用时给出友好提示
+        return Response.ok(
+            data={},
+            message="我在思考时遇到了一点小问题，请稍后再问我一次 \U0001f64f"
+        )
+
+    async def _ahandle_chat(self, message) -> "Response":  # noqa: F821
+        """异步版本聊天处理 — 使用 AsyncLLMClient"""
+        from core.message import Response
+
+        text = message.payload.get("text", "")
+        is_self_chat = message.sender == self.alpha_id
+
+        # 如果是跟自己大脑对话，不走社交层
+        if not is_self_chat:
+            social = self.social  # 触发惰性加载
+            stored = social.send_message(
+                from_alpha_id=message.sender,
+                to_alpha_id=self.alpha_id,
+                content=text,
+            )
+            if not stored.get("success"):
+                return Response.fail(stored.get("message", "发送消息失败"))
+
+        # 使用 AgentLoop 异步版本生成智能回复
+        if self.settings.use_agent_chat and text.strip():
+            try:
+                agent_reply = await self.agent.arun(text)
+                if agent_reply and not agent_reply.startswith("[LLM"):
+                    return Response.ok(
+                        data={"reply": agent_reply},
+                        message=agent_reply,
+                    )
+            except Exception as e:
+                logger.error("%s AgentLoop 异步异常: %s", self.alpha_id, e, exc_info=True)
 
         # 降级：LLM 不可用时给出友好提示
         return Response.ok(

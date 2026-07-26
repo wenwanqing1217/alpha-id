@@ -2,18 +2,18 @@
 Alpha-ID 记忆存储 —— 孪生大脑的本地记忆模块
 
 替代旧的 Coze Knowledge 依赖，使用本地存储（JSON 文件 / PostgreSQL）。
-V1 支持关键词搜索，V2 升级向量搜索。
+V1 支持关键词搜索，V2 使用 ChromaDB 向量嵌入语义搜索。
 
 记忆按 sensitivity（敏感度 0-100）分级，配合可见度模型使用。
 """
 
-import math
 import uuid
-from collections import defaultdict
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from core.settings import settings
 from core.storage import JsonStorage, StorageBackend
 
 
@@ -47,7 +47,7 @@ class MemoryStore:
             import os
 
             db_path = os.path.join(
-                os.getenv("COZE_WORKSPACE_PATH", os.getcwd()), "assets", f"memory_{alpha_id.replace('-', '_')}.json"
+                str(settings.coze_workspace), "assets", f"memory_{alpha_id.replace('-', '_')}.json"
             )
             self._storage = JsonStorage(db_path)
         else:
@@ -99,7 +99,10 @@ class MemoryStore:
 
         # 更新向量索引（如果已存在）
         if self._vector_index is not None:
-            self._vector_index.add(memory.memory_id, content, tags or [])
+            self._vector_index.add(
+                memory.memory_id, content, tags or [],
+                metadata={"category": memory.category, "sensitivity": memory.sensitivity},
+            )
 
         return {"success": True, "memory_id": memory.memory_id, "message": "记忆已保存"}
 
@@ -253,29 +256,21 @@ class MemoryStore:
         return {"success": True, "message": "所有记忆已清空"}
 
 
-class VectorMemoryIndex:
+class _SimpleEmbeddingFunction:
+    """轻量级嵌入函数——基于字符 n-gram 的哈希 TF 向量化，无需下载外部模型。
+
+    使用固定哈希映射将 n-gram 投影到 512 维空间（无状态设计），
+    保证文档嵌入和查询嵌入使用完全相同的算法，支持余弦相似度匹配。
     """
-    向量记忆索引 —— 字符 n-gram TF-IDF + 余弦相似度语义搜索。
 
-    纯 Python 实现，无需外部依赖。用于 V2 记忆搜索升级。
-    """
+    def __init__(self, ngram_range=(2, 4), dim: int = 512):
+        self.ngram_range = ngram_range
+        self.dim = dim
 
-    def __init__(self, alpha_id: str, ngram_range: tuple = (2, 4), top_k: int = 50):
-        self.alpha_id = alpha_id
-        self.ngram_range = ngram_range  # (min_n, max_n)
-        self.top_k = top_k
-        self._doc_freq: Dict[str, int] = defaultdict(int)  # n-gram -> 文档频率
-        self._vectors: Dict[str, Dict[str, float]] = {}  # memory_id -> TF-IDF 向量
-        self._total_docs: int = 0
-
-    # ── 内部方法 ──
+    def name(self) -> str:
+        return "simple_ngram_tf"
 
     def _tokenize(self, text: str) -> List[str]:
-        """
-        提取字符 n-gram。
-        例如 "hello" 且 ngram_range=(2,4) 返回：
-        "he","el","ll","lo","hel","ell","llo","hell","ello"
-        """
         ngrams = []
         min_n, max_n = self.ngram_range
         text_len = len(text)
@@ -284,130 +279,272 @@ class VectorMemoryIndex:
                 ngrams.append(text[i : i + n])
         return ngrams
 
-    def _tfidf(self, ngrams: List[str]) -> Dict[str, float]:
-        """
-        从 n-gram 列表计算 TF-IDF 向量。
+    def _ngram_to_dim(self, ngram: str) -> int:
+        import hashlib
 
-        TF = 词频 / 总 n-gram 数
-        IDF = log(1 + total_docs / (1 + doc_freq))
+        h = hashlib.md5(ngram.encode("utf-8")).digest()
+        return int.from_bytes(h[:4], "big") % self.dim
 
-        公式保证 IDF > 0 即使只有一个文档。
-        """
-        if not ngrams:
-            return {}
+    def _embed(self, text: str) -> List[float]:
+        import math
 
-        total_ngrams = len(ngrams)
-        tf_raw: Dict[str, int] = defaultdict(int)
-        for ng in ngrams:
-            tf_raw[ng] += 1
-
-        result: Dict[str, float] = {}
-        for ng, count in tf_raw.items():
-            tf = count / total_ngrams
-            idf = math.log(1 + (self._total_docs) / (1 + self._doc_freq.get(ng, 0)))
-            result[ng] = tf * idf
-
-        return result
-
-    def _cosine_sim(self, v1: Dict[str, float], v2: Dict[str, float]) -> float:
-        """计算两个稀疏向量的余弦相似度。"""
-        # 点积
-        dot = 0.0
-        for key in v1:
-            if key in v2:
-                dot += v1[key] * v2[key]
-
-        # 模长
-        norm1 = math.sqrt(sum(v * v for v in v1.values()))
-        norm2 = math.sqrt(sum(v * v for v in v2.values()))
-
-        if norm1 == 0 or norm2 == 0:
-            return 0.0
-
-        return dot / (norm1 * norm2)
-
-    # ── 索引方法 ──
-
-    def add(self, memory_id: str, content: str, tags: List[str]) -> None:
-        """索引一条记忆的内容和标签。"""
-        text = content + " " + " ".join(tags)
         ngrams = self._tokenize(text)
+        if not ngrams:
+            return [0.0] * self.dim
+        total = len(ngrams)
+        tf: Dict[str, int] = {}
+        for ng in ngrams:
+            tf[ng] = tf.get(ng, 0) + 1
+        vec = [0.0] * self.dim
+        for ng, count in tf.items():
+            dim = self._ngram_to_dim(ng)
+            vec[dim] = count / total
+        norm = math.sqrt(sum(v * v for v in vec))
+        if norm > 0:
+            vec = [v / norm for v in vec]
+        return vec
 
-        # 更新文档频率
-        seen = set(ngrams)
-        for ng in seen:
-            self._doc_freq[ng] += 1
-        self._total_docs += 1
+    def embed_documents(self, input: List[str]) -> List[List[float]]:
+        return [self._embed(t) for t in input]
 
-        # 计算并缓存向量
-        self._vectors[memory_id] = self._tfidf(ngrams)
+    def embed_query(self, input: List[str]) -> List[List[float]]:
+        return [self._embed(t) for t in input]
+
+    def __call__(self, input: List[str]) -> List[List[float]]:
+        return [self._embed(t) for t in input]
+
+
+class VectorMemoryIndex:
+    """
+    向量记忆索引 —— 基于 ChromaDB 的语义搜索。
+
+    使用 ChromaDB 嵌入式模式（无需服务端）。
+    默认使用轻量级嵌入函数（无需下载外部模型），
+    可配置为真实语义嵌入（需预下载 ONNX 模型）。
+    """
+
+    def __init__(
+        self,
+        alpha_id: str,
+        persist_dir: Optional[str] = None,
+        top_k: int = 50,
+        min_similarity: float = 0.1,
+        use_native_embedding: bool = False,
+    ):
+        self.alpha_id = alpha_id
+        self.top_k = top_k
+        self.min_similarity = min_similarity
+        self._client = None
+        self._collection = None
+
+        if persist_dir is None:
+            persist_dir = str(Path.home() / ".alpha-id" / "chroma" / alpha_id.replace("-", "_"))
+
+        try:
+            import chromadb
+            from chromadb.config import Settings
+
+            self._client = chromadb.PersistentClient(
+                path=persist_dir,
+                settings=Settings(anonymized_telemetry=False),
+            )
+
+            embedding_fn = None
+            if use_native_embedding:
+                try:
+                    from chromadb.utils.embedding_functions import ONNXMiniLM_L6_V2
+                    embedding_fn = ONNXMiniLM_L6_V2()
+                except Exception:
+                    pass
+
+            if embedding_fn is None:
+                embedding_fn = _SimpleEmbeddingFunction()
+
+            self._collection = self._client.get_or_create_collection(
+                name=f"memory_{alpha_id.replace('-', '_')}",
+                metadata={"hnsw:space": "cosine"},
+                embedding_function=embedding_fn,
+            )
+        except ImportError:
+            self._client = None
+            self._collection = None
+        except Exception:
+            self._client = None
+            self._collection = None
+
+    @property
+    def is_available(self) -> bool:
+        return self._collection is not None
+
+    def add(self, memory_id: str, content: str, tags: List[str], metadata: Optional[Dict[str, Any]] = None) -> None:
+        if not self.is_available:
+            return
+        doc = content + " " + " ".join(tags)
+        meta = metadata or {}
+        meta["tags"] = ",".join(tags) if tags else ""
+        try:
+            self._collection.upsert(
+                ids=[memory_id],
+                documents=[doc],
+                metadatas=[meta],
+            )
+        except Exception:
+            pass
 
     def remove(self, memory_id: str) -> None:
-        """从索引中移除一条记忆。"""
-        if memory_id in self._vectors:
-            del self._vectors[memory_id]
+        if not self.is_available:
+            return
+        try:
+            self._collection.delete(ids=[memory_id])
+        except Exception:
+            pass
 
     def build_index(self, memories: Dict[str, Any]) -> None:
-        """从所有记忆重建完整索引。"""
-        self._doc_freq.clear()
-        self._vectors.clear()
-        self._total_docs = 0
-
+        if not self.is_available:
+            return
+        ids = []
+        docs = []
+        metadatas = []
         for mid, mem in memories.items():
+            ids.append(mid)
             content = mem.get("content", "")
             tags = mem.get("tags", [])
-            self.add(mid, content, tags)
+            cat = mem.get("category", "")
+            sens = mem.get("sensitivity", 0)
+            doc = content + " " + " ".join(tags)
+            metadatas.append({"tags": ",".join(tags) if tags else "", "category": cat, "sensitivity": sens})
+            docs.append(doc)
+        if ids:
+            try:
+                self._collection.upsert(ids=ids, documents=docs, metadatas=metadatas)
+            except Exception:
+                pass
 
-    def search(self, query: str, memories: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """
-        语义搜索记忆。
+    def search(
+        self,
+        query: str,
+        memories: Dict[str, Any],
+        min_similarity: Optional[float] = None,
+        category: Optional[str] = None,
+        max_sensitivity: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
+        threshold = min_similarity if min_similarity is not None else self.min_similarity
+        if not query or not self.is_available:
+            return []
+        try:
+            count = self._collection.count()
+            if count == 0:
+                return []
 
-        1. 对查询文本提取 n-gram 并计算 TF-IDF 向量
-        2. 对每个已索引记忆计算余弦相似度
-        3. 取 top_k 候选并按相似度降序排序
-        4. 从原始 memories dict 中获取完整数据并附加 score
+            where_filter = {}
+            if category:
+                where_filter["category"] = category
+            if max_sensitivity is not None:
+                where_filter["sensitivity"] = {"$lte": max_sensitivity}
 
-        Returns:
-            带 score 的记忆列表（不修改原始 dict）
-        """
-        if not query or not self._vectors:
+            query_kwargs = {
+                "query_texts": [query],
+                "n_results": min(self.top_k, count),
+                "include": ["distances", "metadatas"],
+            }
+            if where_filter:
+                query_kwargs["where"] = where_filter
+
+            results = self._collection.query(**query_kwargs)
+        except Exception:
             return []
 
-        # 将查询视为一个文档来计算 TF-IDF
-        query_ngrams = self._tokenize(query)
-        if not query_ngrams:
+        if not results or not results["ids"] or not results["ids"][0]:
             return []
 
-        # 查询的 TF（无 IDF — 查询本身不改变文档频率）
-        total_q = len(query_ngrams)
-        tf_raw: Dict[str, int] = defaultdict(int)
-        for ng in query_ngrams:
-            tf_raw[ng] += 1
+        ids = results["ids"][0]
+        distances = results.get("distances", [[]])[0] if results.get("distances") else []
 
-        query_vec: Dict[str, float] = {}
-        for ng, count in tf_raw.items():
-            tf = count / total_q
-            idf = math.log(1 + (self._total_docs) / (1 + self._doc_freq.get(ng, 0)))
-            query_vec[ng] = tf * idf
-
-        # 计算相似度
-        scored: List[tuple[float, str]] = []
-        for mid, vec in self._vectors.items():
-            sim = self._cosine_sim(query_vec, vec)
-            if sim > 0:
+        scored = []
+        for i, mid in enumerate(ids):
+            dist = distances[i] if i < len(distances) else 1.0
+            sim = 1.0 - dist
+            if sim >= threshold:
                 scored.append((sim, mid))
 
-        # 取 top_k 候选，按相似度降序
         scored.sort(key=lambda x: x[0], reverse=True)
         candidates = scored[: self.top_k]
 
-        # 组装结果（不修改原始 dict）
-        results = []
+        output = []
         for sim, mid in candidates:
             mem = memories.get(mid)
             if mem:
                 result = dict(mem)
                 result["score"] = round(sim, 6)
+                output.append(result)
+        return output
+
+    def hybrid_search(
+        self,
+        query: str,
+        memories: Dict[str, Any],
+        min_similarity: Optional[float] = None,
+        keyword_weight: float = 0.3,
+        vector_weight: float = 0.7,
+    ) -> List[Dict[str, Any]]:
+        """混合搜索：关键词匹配 + 向量语义"""
+        vector_results = self.search(query, memories, min_similarity)
+        keyword_results = self._keyword_search(query, memories)
+
+        scores: Dict[str, float] = {}
+        for r in vector_results:
+            mid = r.get("memory_id", "")
+            scores[mid] = scores.get(mid, 0.0) + vector_weight * r.get("score", 0.0)
+        for r in keyword_results:
+            mid = r.get("memory_id", "")
+            scores[mid] = scores.get(mid, 0.0) + keyword_weight * r.get("_keyword_score", 0.0)
+
+        sorted_ids = sorted(scores.keys(), key=lambda k: scores[k], reverse=True)
+        output = []
+        for mid in sorted_ids[: self.top_k]:
+            mem = memories.get(mid)
+            if mem:
+                result = dict(mem)
+                result["score"] = round(scores[mid], 6)
+                output.append(result)
+        return output
+
+    def _keyword_search(self, query: str, memories: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """关键词匹配搜索（轻量补充）"""
+        query_lower = query.lower()
+        results = []
+        for mid, mem in memories.items():
+            content = mem.get("content", "").lower()
+            tags = " ".join(mem.get("tags", [])).lower()
+            cat = mem.get("category", "").lower()
+
+            score = 0.0
+            if query_lower in content:
+                score += 0.8
+            if query_lower in tags:
+                score += 0.6
+            if query_lower in cat:
+                score += 0.4
+
+            if score > 0:
+                result = dict(mem)
+                result["_keyword_score"] = score
                 results.append(result)
 
-        return results
+        results.sort(key=lambda x: x.get("_keyword_score", 0), reverse=True)
+        return results[: self.top_k]
+
+    def optimize(self) -> None:
+        """优化索引：压缩存储、重建 HNSW 索引"""
+        if not self.is_available:
+            return
+        try:
+            count = self._collection.count()
+            if count > 0:
+                self._collection.upsert(
+                    ids=self._collection.get()["ids"],
+                    documents=self._collection.get()["documents"],
+                    metadatas=self._collection.get()["metadatas"],
+                )
+        except Exception:
+            pass

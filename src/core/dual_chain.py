@@ -22,6 +22,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from core.memory_store import AlphaMemory, MemoryStore
+from core.settings import settings
 from core.storage import JsonStorage, StorageBackend
 
 
@@ -113,7 +114,7 @@ class DualChainManager:
 
         # 统一存储后端：SQLite
         if storage is None:
-            base = os.getenv("GHOST_WORKSPACE_PATH", os.getcwd())
+            base = settings.coze_workspace_path or settings.ghost_workspace_path or os.getcwd()
             db_path = os.path.join(base, "assets", "alpha_id.db")
             from core.storage_sqlite import SqliteStorage
             self._private_storage = SqliteStorage(db_path)
@@ -130,7 +131,7 @@ class DualChainManager:
 
     def _get_or_create_salt(self) -> bytes:
         """获取或创建用户的加密 salt"""
-        base = os.getenv("COZE_WORKSPACE_PATH", os.getcwd())
+        base = settings.coze_workspace_path or settings.ghost_workspace_path or os.getcwd()
         safe_id = _sanitize_alpha_id(self.alpha_id)
         salt_path = os.path.join(base, "assets", ".salt_" + safe_id)
         try:
@@ -145,10 +146,13 @@ class DualChainManager:
 
     def _init_stores(self):
         """初始化两条链的存储"""
-        for store in [self._private_storage, self._knowledge_storage]:
-            data = store.load(self.alpha_id)
+        for store, key in [
+            (self._private_storage, self._chain_key_private),
+            (self._knowledge_storage, self._chain_key_knowledge),
+        ]:
+            data = store.load(key)
             if data is None:
-                store.save(self.alpha_id, {"memories": {}, "chain_meta": {"created_at": datetime.now().isoformat()}})
+                store.save(key, {"memories": {}, "chain_meta": {"created_at": datetime.now().isoformat()}})
 
     # ── 核心写入 ──
 
@@ -182,10 +186,15 @@ class DualChainManager:
         else:
             return self._save_to_chain("knowledge", memory.memory_id, record)
 
+    def _get_storage(self, chain: str):
+        storage = self._private_storage if chain == "private" else self._knowledge_storage
+        key = self._chain_key_private if chain == "private" else self._chain_key_knowledge
+        return storage, key
+
     def _save_to_chain(self, chain: str, memory_id: str, record: Dict) -> Dict[str, Any]:
         """写入指定链"""
-        storage = self._private_storage if chain == "private" else self._knowledge_storage
-        data = storage.load(self.alpha_id) or {"memories": {}, "chain_meta": {}}
+        storage, key = self._get_storage(chain)
+        data = storage.load(key) or {"memories": {}, "chain_meta": {}}
 
         if chain == "private":
             # 加密内容
@@ -195,7 +204,7 @@ class DualChainManager:
             record["encrypted"] = True
 
         data["memories"][memory_id] = record
-        storage.save(self.alpha_id, data)
+        storage.save(key, data)
 
         return {
             "success": True,
@@ -210,8 +219,8 @@ class DualChainManager:
     def get(self, memory_id: str, chain: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """获取单条记忆（自动搜索两条链）"""
         for c in (["private", "knowledge"] if chain is None else [chain]):
-            storage = self._private_storage if c == "private" else self._knowledge_storage
-            data = storage.load(self.alpha_id) or {}
+            storage, key = self._get_storage(c)
+            data = storage.load(key) or {}
             memories = data.get("memories", {})
             if memory_id in memories:
                 record = dict(memories[memory_id])
@@ -250,8 +259,8 @@ class DualChainManager:
         chains = ["private", "knowledge"] if chain == "all" else [chain]
 
         for c in chains:
-            storage = self._private_storage if c == "private" else self._knowledge_storage
-            data = storage.load(self.alpha_id) or {}
+            storage, key = self._get_storage(c)
+            data = storage.load(key) or {}
             memories = data.get("memories", {})
 
             for mid, mem in memories.items():
@@ -312,8 +321,8 @@ class DualChainManager:
         source_chain = None
         record = None
         for c in ["private", "knowledge"]:
-            storage = self._private_storage if c == "private" else self._knowledge_storage
-            data = storage.load(self.alpha_id) or {}
+            storage, key = self._get_storage(c)
+            data = storage.load(key) or {}
             memories = data.get("memories", {})
             if memory_id in memories:
                 source_chain = c
@@ -346,12 +355,12 @@ class DualChainManager:
             record["sensitivity"] = min(record.get("sensitivity", PRIVACY_THRESHOLD), PRIVACY_THRESHOLD - 1)
 
         # 从源链删除
-        src_storage = self._private_storage if source_chain == "private" else self._knowledge_storage
-        src_data = src_storage.load(self.alpha_id) or {}
+        src_storage, src_key = self._get_storage(source_chain)
+        src_data = src_storage.load(src_key) or {}
         src_memories = src_data.get("memories", {})
         if memory_id in src_memories:
             del src_memories[memory_id]
-            src_storage.save(self.alpha_id, {**src_data, "memories": src_memories})
+            src_storage.save(src_key, {**src_data, "memories": src_memories})
 
         # 写入目标链
         result = self._save_to_chain(target_chain, memory_id, record)
@@ -362,8 +371,10 @@ class DualChainManager:
 
     def stats(self) -> ChainStats:
         """获取双链统计"""
-        priv_data = self._private_storage.load(self.alpha_id) or {}
-        know_data = self._knowledge_storage.load(self.alpha_id) or {}
+        priv_storage, priv_key = self._get_storage("private")
+        know_storage, know_key = self._get_storage("knowledge")
+        priv_data = priv_storage.load(priv_key) or {}
+        know_data = know_storage.load(know_key) or {}
         priv_memories = priv_data.get("memories", {})
         know_memories = know_data.get("memories", {})
 
@@ -386,29 +397,29 @@ class DualChainManager:
     def delete(self, memory_id: str) -> Dict[str, Any]:
         """从任一链删除记忆"""
         for c in ["private", "knowledge"]:
-            storage = self._private_storage if c == "private" else self._knowledge_storage
-            data = storage.load(self.alpha_id) or {}
+            storage, key = self._get_storage(c)
+            data = storage.load(key) or {}
             memories = data.get("memories", {})
             if memory_id in memories:
                 del memories[memory_id]
-                storage.save(self.alpha_id, {**data, "memories": memories})
+                storage.save(key, {**data, "memories": memories})
                 return {"success": True, "message": f"已从{'私有' if c == 'private' else '知识'}链删除"}
         return {"success": False, "message": "记忆不存在"}
 
     def clear_chain(self, chain: str) -> Dict[str, Any]:
         """清空指定链"""
-        storage = self._private_storage if chain == "private" else self._knowledge_storage
-        data = storage.load(self.alpha_id) or {}
+        storage, key = self._get_storage(chain)
+        data = storage.load(key) or {}
         data["memories"] = {}
-        storage.save(self.alpha_id, data)
+        storage.save(key, data)
         return {"success": True, "message": f"{'私有' if chain == 'private' else '知识'}链已清空"}
 
     # ── 批量操作 ──
 
     def list_chain(self, chain: str, limit: int = 50) -> List[Dict[str, Any]]:
         """列出指定链的所有记忆（不解密私有链摘要）"""
-        storage = self._private_storage if chain == "private" else self._knowledge_storage
-        data = storage.load(self.alpha_id) or {}
+        storage, key = self._get_storage(chain)
+        data = storage.load(key) or {}
         memories = data.get("memories", {})
         results = []
         for mid, mem in list(memories.items())[:limit]:

@@ -1,6 +1,6 @@
 [project]
 name = "alpha-id-zix"
-version = "0.3.2"
+version = "0.3.3"
 description = "你的数字灵魂 — 用 ChatGPT 导出认识自己，让所有 AI 工具认识同一个你"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -33,14 +33,44 @@ dependencies = [
     "pyyaml>=6.0",
     "python-dotenv>=1.0",
     "psycopg[binary,pool]>=3.2",
+    "PyJWT>=2.9",
+    "pydantic-settings>=2.0",
+    "pydantic>=2.0",
+    "blinker>=1.7",
+    "structlog>=24.0",
+    "limits>=3.0",
+    "chromadb>=0.5",
+    "cachetools>=5.0",
+    "tenacity>=8.0",
+    "httpx>=0.27",
+    "prometheus-client>=0.20",
+    "alembic>=1.13",
+    "aiosqlite>=0.20",
+    "SQLAlchemy>=2.0",
 ]
 
 [project.optional-dependencies]
 web = ["fastapi>=0.115", "uvicorn[standard]>=0.30"]
 mcp = ["mcp>=1.0"]
 fairy = ["openai>=1.0", "pyautogui>=0.9", "Pillow>=10.0"]
-test = ["pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.5", "pyright>=1.1"]
-dev = ["pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.5", "fastapi>=0.115", "uvicorn[standard]>=0.30", "mcp>=1.0"]
+test = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.5",
+    "pyright>=1.1",
+    "hypothesis>=6.100",
+    "schemathesis>=3.30",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.5",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "mcp>=1.0",
+    "hypothesis>=6.100",
+    "schemathesis>=3.30",
+]
 
 [project.urls]
 Homepage = "https://github.com/wenwanqing1217/alpha-id"
@@ -61,7 +91,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["aid*", "aid_*", "alpha_id*", "core*", "entrypoints*"]
+include = ["aid*", "aid_*", "alpha_id*", "core*", "entrypoints*", "fairy*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -87,7 +117,7 @@ exclude_lines = [
     "except ImportError",
     "HAS_",
 ]
-fail_under = 68
+fail_under = 80
 
 [tool.coverage.html]
 directory = "htmlcov"
@@ -104,7 +134,7 @@ reportOptionalMemberAccess = false
 
 [tool.ruff]
 target-version = "py312"
-line-length = 120
+line-length = 100
 
 [tool.ruff.lint]
 select = [
@@ -148,6 +178,15 @@ format = "ruff format src/ tests/"
 typecheck = "pyright src/"
 check-all = "ruff format --check src/ tests/ && ruff check src/ && pyright src/ && python -m pytest tests/ -q --tb=short"
 
+# 数据库迁移
+db-migrate = "alembic upgrade head"
+db-rollback = "alembic downgrade -1"
+db-history = "alembic history --verbose"
+db-autogenerate = "alembic revision --autogenerate -m"
+
+# 加密工具
+encrypt-secret = "python -m src.core.secrets encrypt"
+
 # 维护
 clean = "python -c \"import shutil, pathlib; [shutil.rmtree(p) for p in pathlib.Path('.').rglob('__pycache__') if p.is_dir()]; [p.unlink() for p in pathlib.Path('.').rglob('*.pyc')]\""
 pre-commit-run = "pre-commit run --all-files"
@@ -157,6 +196,7 @@ python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
+disallow_untyped_defs = false
 follow_imports = "silent"
 exclude = ["tests/"]
 
@@ -164,4 +204,23 @@ exclude = ["tests/"]
 skip = "*.pyc,*.git,*.db,*.png,*.jpg,htmlcov,node_modules,.venv"
 ignore-words-list = "ba,hte"
 check-hidden = true
+
+# ── uv 依赖管理配置 ──
+# 使用 uv 替代 pip：10-100x 更快，内置锁文件
+# 安装 uv: pip install uv
+# 使用: uv sync, uv add <pkg>, uv lock
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.5",
+    "pyright>=1.1",
+    "hypothesis>=6.100",
+    "schemathesis>=3.30",
+    "pre-commit>=3.7",
+]
+
+[tool.uv.pip]
+# 生成锁文件时包含 extras
+all-extras = true
 
