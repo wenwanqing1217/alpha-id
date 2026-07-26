@@ -6,6 +6,7 @@
 """
 
 import os
+from pathlib import Path
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -16,6 +17,8 @@ load_dotenv()
 
 from fastapi import FastAPI  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+from fastapi.responses import HTMLResponse  # noqa: E402
+from fastapi.staticfiles import StaticFiles  # noqa: E402
 
 from alpha_id.container import Container  # noqa: E402
 from auth.jwt import validate_master_key  # noqa: E402
@@ -76,6 +79,19 @@ app.include_router(identity_router)
 app.include_router(social_router)
 app.include_router(risk_router)
 app.include_router(dual_chain_router)
+
+# ── 前端页面 ──
+_templates_dir = Path(__file__).parent / "alpha_id" / "templates"
+_static_dir = _templates_dir
+app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
+
+
+@app.get("/", response_class=HTMLResponse)
+def index():
+    """Ghost.html 官网首页"""
+    html_path = _templates_dir / "ghost.html"
+    html = html_path.read_text(encoding="utf-8")
+    return HTMLResponse(content=html)
 
 
 @app.get("/health")
