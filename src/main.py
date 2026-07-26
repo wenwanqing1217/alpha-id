@@ -29,11 +29,13 @@ if __package__:
     from .api.risk import router as risk_router
     from .api.social import router as social_router
     from .api.dual_chain import router as dual_chain_router
+    from .api.registration import router as registration_router
 else:
     from api.identity import router as identity_router
     from api.risk import router as risk_router
     from api.social import router as social_router
     from api.dual_chain import router as dual_chain_router
+    from api.registration import router as registration_router
 
 
 @asynccontextmanager
@@ -79,6 +81,7 @@ app.include_router(identity_router)
 app.include_router(social_router)
 app.include_router(risk_router)
 app.include_router(dual_chain_router)
+app.include_router(registration_router)
 
 # ── 前端页面 ──
 _templates_dir = Path(__file__).parent / "alpha_id" / "templates"
@@ -96,5 +99,42 @@ def index():
 
 @app.get("/health")
 def health():
-    """健康检查"""
-    return {"status": "ok", "version": "0.2.0", "service": "alpha-id"}
+    """真实健康检查：验证关键组件可达性"""
+    import sqlite3, os
+
+    checks = {"status": "ok", "version": "0.2.0", "service": "alpha-id"}
+
+    # 1. SQLite 数据库
+    db_path = os.path.join(
+        os.path.dirname(__file__), "..", "assets", "alpha_id.db"
+    )
+    try:
+        conn = sqlite3.connect(db_path)
+        conn.execute("SELECT 1")
+        conn.close()
+        checks["database"] = "ok"
+    except Exception as e:
+        checks["database"] = f"error: {e}"
+        checks["status"] = "degraded"
+
+    # 2. 用户身份 API 路由
+    try:
+        from alpha_id.container import Container
+        container = Container.instance()
+        stats = container.identity.get_statistics()
+        checks["identity"] = f"ok ({stats.total_users} users)"
+    except Exception as e:
+        checks["identity"] = f"error: {e}"
+        checks["status"] = "degraded"
+
+    # 3. 双链记忆存储
+    try:
+        from core.dual_chain import DualChainManager
+        mgr = DualChainManager("did:aid:healthcheck")
+        stats = mgr.stats()
+        checks["memory"] = f"ok (private={stats.private_count}, knowledge={stats.knowledge_count})"
+    except Exception as e:
+        checks["memory"] = f"error: {e}"
+        checks["status"] = "degraded"
+
+    return checks
