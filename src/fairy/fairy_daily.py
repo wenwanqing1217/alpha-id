@@ -1,5 +1,5 @@
 """
-FAIRY 每日总结 — 事后总结 + 锐评
+NURO 每日总结 — 事后总结 + 锐评
 
 功能：
 - 记录当日观察到的活动
@@ -16,7 +16,7 @@ from typing import Optional, List, Dict, Any
 
 logger = logging.getLogger(__name__)
 
-DAILY_PATH = os.getenv("FAIRY_DAILY_PATH", os.path.expanduser("~/.fairy/daily"))
+DAILY_PATH = os.getenv("NURO_DAILY_PATH", os.path.expanduser("~/.fairy/daily"))
 
 
 class FairyDaily:
@@ -29,9 +29,11 @@ class FairyDaily:
     - 中文为主，偶尔夹英文
     """
 
-    def __init__(self, daily_path: str = DAILY_PATH, brain=None):
+    def __init__(self, daily_path: str = DAILY_PATH, brain=None, memory=None, observer=None):
         self.daily_path = daily_path
-        self.brain = brain  # FairyBrain 实例，用于生成锐评
+        self.brain = brain        # FairyBrain 实例，用于生成锐评
+        self.memory = memory      # FairyMemory 实例
+        self.observer = observer  # FairyObserver 实例
         self._today_activities: List[Dict[str, Any]] = []
         os.makedirs(self.daily_path, exist_ok=True)
 
@@ -52,7 +54,7 @@ class FairyDaily:
             总结文本
         """
         if not self._today_activities:
-            return "今天没什么记录，FAIRY 在睡觉。"
+            return "今天没什么记录，NURO 在睡觉。"
 
         # 统计各场景时长
         scene_counts: Dict[str, int] = {}
@@ -61,7 +63,7 @@ class FairyDaily:
             scene_counts[scene] = scene_counts.get(scene, 0) + act.get("duration", 0)
 
         # 构建总结
-        lines = [f"📊 FAIRY 日报 ({date.today().isoformat()})\n"]
+        lines = [f"📊 NURO 日报 ({date.today().isoformat()})\n"]
         lines.append(f"今日记录 {len(self._today_activities)} 项活动：\n")
 
         for scene, total_secs in sorted(scene_counts.items(), key=lambda x: -x[1]):
@@ -106,10 +108,10 @@ class FairyDaily:
         if "gaming" in scenes and "working" not in scenes:
             return "今天游戏通关了吗？还是说……你已经被游戏通关了？🎮"
         if len(self._today_activities) > 50:
-            return "今天可真忙啊，FAIRY 的眼睛都快跟不上你的手速了。"
+            return "今天可真忙啊，NURO 的眼睛都快跟不上你的手速了。"
         if "working" in scenes:
-            return "工作也是一种修行，FAIRY 为你点赞。💪"
-        return "平淡的一天，但 FAIRY 一直陪着。✨"
+            return "工作也是一种修行，NURO 为你点赞。💪"
+        return "平淡的一天，但 NURO 一直陪着。✨"
 
     def _save_summary(self, summary: str):
         """保存总结到文件"""

@@ -1,5 +1,5 @@
 """
-FAIRY 通知系统 — 气泡/弹幕/Toast
+NURO 通知系统 — 气泡/弹幕/Toast
 
 通知类型：
 - Bubble: 角色旁边的对话气泡
@@ -138,7 +138,7 @@ class FairyPopup:
         try:
             from win10toast import Notifier
             toaster = Notifier()
-            toaster.show_toast("FAIRY", message, duration=5, threaded=True)
+            toaster.show_toast("NURO", message, duration=5, threaded=True)
         except ImportError:
             # fallback to barrage
             logger.info("win10toast 未安装，fallback 到弹幕")

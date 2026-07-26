@@ -1,5 +1,5 @@
 """
-FAIRY Desktop Pet v3 — 纯本地 AI 贾维斯
+NURO Desktop Pet v3 — 纯本地 AI 贾维斯
 
 v2 → v3 重构：
   - 角色：药丸 Dynamic Island → 2D 卡通角色（fairy_character）
@@ -7,13 +7,13 @@ v2 → v3 重构：
   - 语音：Google STT + SAPI TTS → Whisper + Coqui TTS（fairy_voice）
   - 观察：无 → 主动观察循环（fairy_observer）
   - 记忆：独立 fairy_memory.db → 双链记忆（fairy_memory）
-  - 身份：无 → FOUNDER → FAIRY DID 派生（fairy_identity）
+  - 身份：无 → FOUNDER → NURO DID 派生（fairy_identity）
   - 通知：无 → 气泡/弹幕/Toast（fairy_popup）
   - 总结：无 → 每日总结 + 锐评（fairy_daily）
   - OCR：内部使用 pytesseract → 仅保留给外部 MCP 客户端
   - Computer Use：复用现有 MCP tools（不新建模块）
 
-依赖模块（fairy/）:
+依赖模块（nuro/）:
   fairy_brain, fairy_voice, fairy_character, fairy_observer,
   fairy_popup, fairy_identity, fairy_memory, fairy_daily
 
@@ -44,9 +44,9 @@ logger = logging.getLogger(__name__)
 
 # ── 版本 ──
 try:
-    from fairy import __version__ as FAIRY_VERSION
+    from fairy import __version__ as NURO_VERSION
 except ImportError:
-    FAIRY_VERSION = "3.0.0"
+    NURO_VERSION = "3.0.0"
 
 try:
     from alpha_id import __version__ as AID_VERSION
@@ -63,7 +63,7 @@ try:
 except Exception:
     pass
 
-# ── 导入 FAIRY 模块（优雅降级） ──
+# ── 导入 NURO 模块（优雅降级） ──
 _HAS_BRAIN = False
 _HAS_VOICE = False
 _HAS_OBSERVER = False
@@ -241,13 +241,13 @@ class Palette:
 
 
 # ══════════════════════════════════════════════════════════
-#  FAIRY 桌面精灵 v3
+#  NURO 桌面精灵 v3
 # ══════════════════════════════════════════════════════════
 
 
-class AIDFairy:
+class AidNuro:
     """
-    FAIRY 桌面精灵 v3
+    NURO 桌面精灵 v3
 
     - 2D 卡通角色（悬浮在屏幕角落）
     - 点击打开对话面板
@@ -260,7 +260,7 @@ class AIDFairy:
     BALL_SIZE = 140  # 角色窗口尺寸
     PANEL_W = 420
     PANEL_H = 580
-    WAKE_WORDS = ["你好fairy", "你好 fairy", "嘿fairy", "嘿 fairy", "hey fairy", "fairy"]
+    WAKE_WORDS = ["你好nuro", "你好 nuro", "嘿nuro", "嘿 nuro", "hey nuro", "nuro"]
 
     def __init__(self, no_mcp=False, no_brain=False, debug=False, blind=False):
         self._debug = debug
@@ -306,7 +306,7 @@ class AIDFairy:
 
         # ── 8. 角色窗口（Tkinter） ──
         self.ball = tk.Tk()
-        self.ball.title("FAIRY")
+        self.ball.title("NURO")
         self.ball.overrideredirect(True)
         self.ball.attributes("-topmost", True)
         self.ball.configure(bg=Palette.BG_DARK)
@@ -350,7 +350,7 @@ class AIDFairy:
     # ═══════════════════════════════════════════════════════
 
     def _init_identity(self):
-        """身份派生：FOUNDER → FAIRY"""
+        """身份派生：FOUNDER → NURO"""
         if not _HAS_IDENTITY:
             return
         try:
@@ -436,7 +436,7 @@ class AIDFairy:
     # ═══════════════════════════════════════════════════════
 
     def _build_system_prompt(self) -> str:
-        """构建 FAIRY 的系统提示"""
+        """构建 NURO 的系统提示"""
         identity_block = ""
         if self._identity:
             identity_block = (
@@ -447,7 +447,7 @@ class AIDFairy:
             )
 
         return (
-            "你是 FAIRY — 用户的本地 AI 桌面精灵，运行在用户的 Windows 电脑上。\n"
+            "你是 NURO — 用户的本地 AI 桌面精灵，运行在用户的 Windows 电脑上。\n"
             "你由用户的 Alpha-ID（FOUNDER）派生而来，是他的数字分身助手。\n"
             + identity_block +
             "\n## 能力\n"
@@ -569,7 +569,7 @@ class AIDFairy:
 
         self._menu.add_command(label="📋 今日总结", command=self._show_daily_summary)
         self._menu.add_separator()
-        self._menu.add_command(label="ℹ️ 关于 FAIRY", command=self._show_about)
+        self._menu.add_command(label="ℹ️ 关于 NURO", command=self._show_about)
         self._menu.add_command(label="退出", command=self._quit)
 
     def _show_menu(self, event):
@@ -615,7 +615,7 @@ class AIDFairy:
     def _create_chat_panel(self):
         """创建持续对话面板"""
         win = tk.Toplevel(self.ball)
-        win.title("FAIRY 对话")
+        win.title("NURO 对话")
         win.configure(bg=Palette.BG_DARK)
         win.overrideredirect(True)
         win.attributes("-topmost", True)
@@ -644,7 +644,7 @@ class AIDFairy:
         title_bar.pack_propagate(False)
 
         tk.Label(
-            title_bar, text="  FAIRY", bg=Palette.BG_DARK, fg=Palette.ACCENT_GLOW,
+            title_bar, text="  NURO", bg=Palette.BG_DARK, fg=Palette.ACCENT_GLOW,
             font=("Segoe UI", 11, "bold"),
         ).pack(side="left")
 
@@ -758,9 +758,9 @@ class AIDFairy:
 
         # 系统问候
         if not self._messages:
-            fairy_name = "FAIRY"
+            fairy_name = "NURO"
             if self._identity and self._identity.did:
-                fairy_name = f"FAIRY ({self._identity.did[-8:]})"
+                fairy_name = f"NURO ({self._identity.did[-8:]})"
             self._add_chat_message(
                 "ai",
                 f"你好，我是 **{fairy_name}** — 你的本地桌面精灵 🧚\n\n"
@@ -780,7 +780,7 @@ class AIDFairy:
             self._chat_text.insert("end", "你\n", "user")
             self._chat_text.insert("end", f"{content}\n", "sep")
         elif role == "ai":
-            self._chat_text.insert("end", "FAIRY\n", "ai_name")
+            self._chat_text.insert("end", "NURO\n", "ai_name")
             clean = re.sub(r"\*\*(.+?)\*\*", r"\1", content)
             self._chat_text.insert("end", f"{clean}\n", "ai")
         elif role == "thinking":
@@ -895,7 +895,7 @@ class AIDFairy:
             if self._memory:
                 try:
                     self._memory.remember_public(
-                        content=f"用户: {cmd}\nFAIRY: {reply[:200]}",
+                        content=f"用户: {cmd}\nNURO: {reply[:200]}",
                         category="conversation",
                         tags=["chat"],
                     )
@@ -1104,7 +1104,7 @@ class AIDFairy:
         if self._observer:
             self._observer.set_blind_mode(True)
         if self._popup:
-            self._popup.toast("FAIRY", "检测到敏感内容，已进入眼瞎耳聋模式 🔒")
+            self._popup.toast("NURO", "检测到敏感内容，已进入眼瞎耳聋模式 🔒")
 
     # ═══════════════════════════════════════════════════════
     #  隐私模式
@@ -1118,11 +1118,11 @@ class AIDFairy:
         if self._blind:
             self._set_character_state(FairyState.BLIND)
             if self._popup:
-                self._popup.toast("FAIRY", "已进入眼瞎耳聋模式 🔒")
+                self._popup.toast("NURO", "已进入眼瞎耳聋模式 🔒")
         else:
             self._set_character_state(FairyState.IDLE)
             if self._popup:
-                self._popup.toast("FAIRY", "已退出眼瞎耳聋模式 👁️")
+                self._popup.toast("NURO", "已退出眼瞎耳聋模式 👁️")
 
         # 重建菜单
         self._menu.delete(0, "end")
@@ -1150,7 +1150,7 @@ class AIDFairy:
         if self._daily:
             def on_done(summary):
                 if self._popup:
-                    self._popup.toast("FAIRY 每日总结", "今天的锐评已生成，打开对话面板查看～")
+                    self._popup.toast("NURO 每日总结", "今天的锐评已生成，打开对话面板查看～")
                 if self._chat_win and self._chat_win.winfo_exists():
                     self._add_chat_message("ai", f"📋 **今日锐评**\n{summary}")
 
@@ -1193,7 +1193,7 @@ class AIDFairy:
     def _show_about(self):
         self._ensure_chat_open()
         info = (
-            f"**FAIRY 桌面精灵 v{FAIRY_VERSION}**\n\n"
+            f"**NURO 桌面精灵 v{NURO_VERSION}**\n\n"
             f"纯本地 AI 贾维斯 · MiniCPM-o-4.5 + Ollama\n\n"
             f"🧠 大脑：{'✅ MiniCPM' if self._brain and self._brain.available else '❌ 未连接'}\n"
             f"🎤 语音：{'✅ Whisper' if self._voice and self._voice.has_stt else '❌'}\n"
@@ -1308,13 +1308,13 @@ def _check_ollama() -> tuple:
 def _env_check():
     """环境检测模式：打印所有能力状态和修复指南"""
     _safe_print("=" * 55)
-    _safe_print(f"  FAIRY 桌面精灵 v{FAIRY_VERSION} — 环境检测")
+    _safe_print(f"  NURO 桌面精灵 v{NURO_VERSION} — 环境检测")
     _safe_print("=" * 55)
     _safe_print()
     _safe_print(f"  Python:     {sys.version.split()[0]}")
     _safe_print(f"  AID 版本:   {AID_VERSION}")
     _safe_print()
-    _safe_print("  ── FAIRY 核心能力 ──")
+    _safe_print("  ── NURO 核心能力 ──")
     _safe_print(f"  2D 角色:    {'✅' if _HAS_CHARACTER else '❌'}")
     _safe_print(f"  AI 大脑:    {'✅' if _HAS_BRAIN else '❌'}")
     _safe_print(f"  语音输入:   {'✅' if _HAS_VOICE else '❌'}")
@@ -1345,8 +1345,8 @@ def _env_check():
 
 
 def main():
-    parser = argparse.ArgumentParser(description=f"FAIRY 桌面精灵 v{FAIRY_VERSION} — 纯本地 AI 贾维斯")
-    parser.add_argument("--version", "-V", action="version", version=f"FAIRY Desktop Pet v{FAIRY_VERSION}")
+    parser = argparse.ArgumentParser(description=f"NURO 桌面精灵 v{NURO_VERSION} — 纯本地 AI 贾维斯")
+    parser.add_argument("--version", "-V", action="version", version=f"NURO Desktop Pet v{NURO_VERSION}")
     parser.add_argument("--check", action="store_true", help="检测环境并打印安装指南（不启动 GUI）")
     parser.add_argument("--no-mcp", action="store_true", help="不启动 MCP 后台服务器")
     parser.add_argument("--no-brain", action="store_true", help="不加载 LLM 大脑")
@@ -1367,7 +1367,7 @@ def main():
 
     # ── 正常启动 ──
     _safe_print("=" * 50)
-    _safe_print(f"  FAIRY Desktop Pet v{FAIRY_VERSION}")
+    _safe_print(f"  NURO Desktop Pet v{NURO_VERSION}")
     _safe_print(f"  纯本地 AI 贾维斯 · MiniCPM-o-4.5 + Ollama")
     _safe_print("=" * 50)
     _safe_print()
@@ -1393,17 +1393,17 @@ def main():
 
     _safe_print("  点击角色 → 打开对话面板")
     _safe_print("  右键 → 快捷菜单（含隐私模式）")
-    _safe_print("  语音唤醒 → 「你好 FAIRY」")
+    _safe_print("  语音唤醒 → 「你好 NURO」")
     _safe_print("  拖拽 → 移动位置")
     _safe_print()
 
-    fairy = AIDFairy(
+    nuro = AidNuro(
         no_mcp=args.no_mcp,
         no_brain=args.no_brain,
         debug=args.debug,
         blind=args.blind,
     )
-    fairy.run()
+    nuro.run()
 
 
 if __name__ == "__main__":

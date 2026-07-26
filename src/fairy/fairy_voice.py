@@ -1,5 +1,5 @@
 """
-FAIRY 语音 — Whisper STT + Coqui TTS
+NURO 语音 — Whisper STT + Coqui TTS
 
 语音识别：faster-whisper（CPU 模式，~0.5GB）
 语音合成：Coqui TTS（~1.5GB VRAM）
@@ -154,7 +154,7 @@ class FairyVoice:
 class WakeupListener:
     """唤醒词监听器（后台线程）"""
 
-    def __init__(self, callback: Callable, wakeup_phrase: str = "你好 FAIRY"):
+    def __init__(self, callback: Callable, wakeup_phrase: str = "你好 NURO"):
         self.callback = callback
         self.wakeup_phrase = wakeup_phrase
         self._running = False

@@ -6,7 +6,7 @@
 import hashlib
 import json
 import os
-import random
+import secrets
 import time
 from typing import Dict, Optional
 
@@ -76,13 +76,15 @@ async def send_sms(request: Request):
     if not phone or not phone.startswith("1") or len(phone) != 11:
         raise HTTPException(status_code=400, detail="手机号格式错误")
 
-    code = f"{random.randint(100000, 999999)}"
+    # 使用加密安全随机数生成 6 位验证码
+    code = f"{secrets.randbelow(900000) + 100000}"
     data = _clean_expired()
     data[phone] = {"code": code, "expires_at": time.time() + 300}
     _sms_save(data)
 
     # 尝试发真实短信（有阿里云 Key 且未强制演示模式时）
-    demo_mode = os.environ.get("SMS_DEMO_MODE", "true").lower() != "false"
+    # 安全修复：默认关闭演示模式，必须显式开启
+    demo_mode = os.environ.get("SMS_DEMO_MODE", "false").lower() == "true"
     if not demo_mode:
         alibab_key = os.environ.get("ALIBABA_ACCESS_KEY_ID", "")
         alibab_secret = os.environ.get("ALIBABA_ACCESS_KEY_SECRET", "")
@@ -116,21 +118,34 @@ async def send_sms(request: Request):
                     "message": "验证码已发送",
                     "channel": "alibaba-pnvs",
                 }
+            # 发送失败但不泄露验证码 — 返回通用错误
             return {
-                "success": True,
-                "message": "验证码已发送（演示模式）",
-                "channel": "demo-fallback",
-                "demo": code,
-                "smsError": str(body.code),
+                "success": False,
+                "message": "短信发送失败，请稍后重试",
+                "channel": "alibaba-pnvs",
             }
-        except Exception as e:
-            pass  # 降级演示模式
+        except Exception:
+            # 发送异常时不泄露验证码
+            return {
+                "success": False,
+                "message": "短信服务暂不可用，请稍后重试",
+                "channel": "error",
+            }
 
+    # 演示模式：仅在显式开启时返回验证码（开发/测试用）
+    if demo_mode:
+        return {
+            "success": True,
+            "message": "验证码已发送（演示模式）",
+            "channel": "demo",
+            "demo": code,
+        }
+
+    # 无配置且非演示模式 — 返回错误而非静默泄露
     return {
-        "success": True,
-        "message": "验证码已发送",
-        "channel": "demo",
-        "demo": code,
+        "success": False,
+        "message": "短信服务未配置，请联系管理员",
+        "channel": "unconfigured",
     }
 
 
@@ -189,16 +204,26 @@ async def face_verify(request: Request):
 
 @router.post("/face-query")
 async def face_query(request: Request):
-    """查询人脸认证结果"""
+    """查询人脸认证结果（仅查询本地状态，不代替支付宝服务端回调）"""
     body = await request.json()
     certify_id = body.get("certifyId", "")
+    if not certify_id:
+        raise HTTPException(status_code=400, detail="缺少 certifyId")
+
     face_data = _face_store()
     record = face_data.get(certify_id)
 
     if not record:
         raise HTTPException(status_code=400, detail="认证记录不存在")
 
-    return {"success": True, "passed": True, "phone": record["phone"]}
+    # 安全修复：不盲目返回 passed=True，返回实际状态
+    status = record.get("status", "pending")
+    return {
+        "success": True,
+        "status": status,
+        "passed": status == "verified",
+        "phone": record.get("phone", ""),
+    }
 
 
 @router.post("/generate-did")
@@ -231,12 +256,12 @@ async def generate_did(request: Request):
         },
     }
 
+    # 安全修复：私钥由客户端本地生成并保管，服务端不返回私钥
     return {
         "success": True,
         "data": {
             "did": did,
             "publicKey": pub_key.hex(),
-            "privateKey": signer.export_private_key().hex(),
             "document": doc,
             "method": "did:aid",
             "createdAt": __import__("datetime").datetime.now().isoformat(),

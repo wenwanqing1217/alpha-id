@@ -1,12 +1,12 @@
 """
-FAIRY 主动观察 — 主动感知用户行为（无需唤醒词）
+NURO 主动观察 — 主动感知用户行为（无需唤醒词）
 
 循环检测：
 - 当前窗口标题（知道用户在做什么）
 - 屏幕截图（可选，眼瞎模式下禁用）
 - 时间上下文（工作时间/休息时间）
 
-输出：场景类型 + 观察摘要 → 触发相应的 FAIRY 行为
+输出：场景类型 + 观察摘要 → 触发相应的 NURO 行为
 """
 
 import logging
@@ -18,7 +18,7 @@ from typing import Optional, Callable, Dict, Any
 
 logger = logging.getLogger(__name__)
 
-OBSERVE_INTERVAL = int(os.getenv("FAIRY_OBSERVE_INTERVAL", "30"))  # 秒
+OBSERVE_INTERVAL = int(os.getenv("NURO_OBSERVE_INTERVAL", "30"))  # 秒
 
 
 class SceneType(Enum):
@@ -50,19 +50,32 @@ class FairyObserver:
     }
 
     def __init__(self, callback: Optional[Callable[[SceneType, Dict[str, Any]], None]] = None,
-                 interval: int = OBSERVE_INTERVAL, blind: bool = False):
+                 interval: int = OBSERVE_INTERVAL, blind: bool = False,
+                 brain=None, memory=None):
         """
         Args:
             callback: 观察回调 (scene_type, info_dict) -> None
             interval: 观察间隔（秒）
             blind: 眼瞎模式（不截图，仅窗口标题）
+            brain: FairyBrain 实例（用于场景分析）
+            memory: FairyMemory 实例（用于记录活动）
         """
         self.callback = callback
-        self.interval = interval
         self.blind = blind
+        self.brain = brain
+        self.memory = memory
         self._running = False
         self._thread: Optional[threading.Thread] = None
         self._last_scene = SceneType.UNKNOWN
+
+        # 回调别名（兼容 daemon 调用）
+        self.on_scene_change = None      # Callable[[SceneType, Dict], None]
+        self.on_notification = None      # Callable[[str], None]
+        self.on_sensitive_detected = None  # Callable[[str], None]
+
+        # 配置对象（兼容 daemon .config.interval 访问）
+        self.config = type('Config', (), {'interval': interval})()
+        self.interval = interval
 
     def start(self):
         """启动观察循环"""

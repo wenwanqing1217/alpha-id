@@ -1,5 +1,5 @@
 """
-FAIRY 大脑 — MiniCPM-o-4.5 多模态推理引擎
+NURO 大脑 — MiniCPM-o-4.5 多模态推理引擎
 
 通过 Ollama 本地推理，支持文本 + 图像输入。
 VRAM 预算：~5.5GB（Q4_K_M 量化）
@@ -16,7 +16,7 @@ import httpx
 logger = logging.getLogger(__name__)
 
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
-DEFAULT_MODEL = os.getenv("FAIRY_MODEL", "openbmb/minicpm-o4.5:latest")
+DEFAULT_MODEL = os.getenv("NURO_MODEL", "openbmb/minicpm-o4.5:latest")
 
 
 class FairyBrain:
@@ -34,7 +34,7 @@ class FairyBrain:
 
     @staticmethod
     def _default_system_prompt() -> str:
-        return """你是 FAIRY，一个纯本地 AI 桌面宠物。
+        return """你是 NURO，一个纯本地 AI 桌面宠物。
 - 中文为主，偶尔夹英文
 - 幽默但不刻薄，像一个毒舌但关心人的朋友
 - 回答简洁，不要长篇大论

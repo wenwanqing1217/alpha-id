@@ -1,7 +1,7 @@
 """
-FAIRY 双链记忆 — 私有链 + 知识链
+NURO 双链记忆 — 私有链 + 知识链
 
-私有链：sensitivity >= 70，加密存储，仅 FAIRY 可访问
+私有链：sensitivity >= 70，加密存储，仅 NURO 可访问
 知识链：sensitivity < 70，可搜索，可共享给其他工具
 
 复用现有的 ChromaDB 向量存储（通过 core 模块），
@@ -16,7 +16,7 @@ from typing import Optional, List, Dict, Any
 logger = logging.getLogger(__name__)
 
 PRIVATE_THRESHOLD = 70  # sensitivity >= 70 为私有
-DB_PATH = os.getenv("FAIRY_MEMORY_PATH", os.path.expanduser("~/.fairy/memory"))
+DB_PATH = os.getenv("NURO_MEMORY_PATH", os.path.expanduser("~/.fairy/memory"))
 
 
 class FairyMemory:
@@ -41,7 +41,7 @@ class FairyMemory:
             self._client = chromadb.PersistentClient(path=self.db_path)
             self._collection = self._client.get_or_create_collection(
                 name="fairy_knowledge",
-                metadata={"description": "FAIRY 知识链"}
+                metadata={"description": "NURO 知识链"}
             )
             logger.info(f"记忆数据库就绪: {self.db_path}")
         except ImportError:

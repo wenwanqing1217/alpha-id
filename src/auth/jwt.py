@@ -1,6 +1,13 @@
-"""JWT 令牌生成与验证 — 基于 PyJWT"""
+"""JWT 令牌生成与验证 — 基于 PyJWT
+
+安全增强：
+  - 使用 HKDF-SHA256 派生签名密钥（而非简单 SHA-256）
+  - 强制要求 AUTH_MASTER_KEY 至少 32 字节熵
+  - 支持密钥轮换时的 salt 隔离
+"""
 
 import hashlib
+import hmac
 import time
 import uuid
 from typing import Optional
@@ -12,12 +19,24 @@ from core.settings import settings
 ALGORITHM: str = "HS256"
 VALID_TYPES = ("access", "refresh")
 
+# HKDF 固定 info 字符串，确保密钥用途隔离
+_HKDF_INFO = b"alpha-id-jwt-signing-key-v1"
+# HKDF salt（全零，仅用于提取阶段）
+_HKDF_SALT = b"\x00" * 32
+
 
 def _require_master_key() -> None:
     if settings.auth_master_key is None:
         raise RuntimeError(
             "AUTH_MASTER_KEY 未配置，无法启动。"
             "请设置环境变量 AUTH_MASTER_KEY 为随机 256-bit 密钥。"
+        )
+    # 强制要求主密钥至少 32 字节（256-bit 熵）
+    if len(settings.auth_master_key.encode("utf-8")) < 32:
+        raise RuntimeError(
+            "AUTH_MASTER_KEY 太短（< 32 字节）。"
+            "请使用至少 32 字节的随机字符串，例如："
+            "python -c \"import secrets; print(secrets.token_hex(32))\""
         )
 
 
@@ -26,8 +45,22 @@ def validate_master_key() -> None:
 
 
 def _get_signing_key() -> bytes:
+    """使用 HKDF-SHA256 从主密钥派生签名密钥。
+
+    相比简单 SHA-256，HKDF 提供：
+    - 密钥分离（不同用途派生不同密钥）
+    - 熵提取（即使主密钥分布不均也能输出均匀密钥）
+    - 符合 RFC 5869 标准
+    """
     raw = settings.auth_master_key.encode("utf-8")
-    return hashlib.sha256(raw).digest()
+
+    # HKDF-Extract: PRK = HMAC-Hash(salt, IKM)
+    prk = hmac.new(_HKDF_SALT, raw, hashlib.sha256).digest()
+
+    # HKDF-Expand: OKM = T(1) = HMAC-Hash(PRK, info || 0x01)
+    okm = hmac.new(prk, _HKDF_INFO + b"\x01", hashlib.sha256).digest()
+
+    return okm  # 32 字节，正好适合 HS256
 
 
 def create_access_token(alpha_id: str, extra_claims: Optional[dict] = None) -> str:
