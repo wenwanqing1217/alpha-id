@@ -8,6 +8,7 @@ Alpha-ID 用户身份核心逻辑（无外部依赖）
 import hashlib
 import logging
 import os
+import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Dict, List, Optional
@@ -48,7 +49,7 @@ class UserIdentityManager:
 
     def __init__(self, storage: Optional[StorageBackend] = None):
         # 运行时读取环境变量（避免类变量在 import 时固化，导致测试无法注入）
-        self._founder_alpha_id = os.getenv("FOUNDER_ALPHA_ID", "Alpha-1")
+        self._founder_alpha_id = os.getenv("FOUNDER_ALPHA_ID", "Alpha-000")
         self._founder_code_hash = os.getenv("FOUNDER_CODE_HASH", "")
 
         # 默认使用 JSON 存储
@@ -139,7 +140,7 @@ class UserIdentityManager:
             founder_registered = True
         else:
             counter += 1
-            alpha_id = f"Alpha-{counter:03d}"
+            alpha_id = f"Alpha-{uuid.uuid4().hex[:7].upper()}"
 
         user_id = f"user_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{alpha_id.replace('-', '')}"
         user_profile = UserProfile(
