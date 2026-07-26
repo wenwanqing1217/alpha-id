@@ -2874,20 +2874,20 @@
             <!-- Quick stats -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div class="router-node text-center">
-          <div class="text-2xl font-black text-gradient">1,284</div>
-          <div class="text-[10px] text-slate-500 font-mono">Causal Nodes</div>
+          <div class="text-2xl font-black text-gradient" id="stats-total-users">-</div>
+          <div class="text-[10px] text-slate-500 font-mono">Total Users</div>
         </div>
         <div class="router-node text-center">
-          <div class="text-2xl font-black text-gradient">7</div>
-          <div class="text-[10px] text-slate-500 font-mono">Active Skills</div>
+          <div class="text-2xl font-black text-gradient" id="stats-active-users">-</div>
+          <div class="text-[10px] text-slate-500 font-mono">Active Users</div>
         </div>
         <div class="router-node text-center">
-          <div class="text-2xl font-black text-gradient">94%</div>
-          <div class="text-[10px] text-slate-500 font-mono">Route Hit</div>
+          <div class="text-2xl font-black text-gradient" id="stats-memories">-</div>
+          <div class="text-[10px] text-slate-500 font-mono">Memories</div>
         </div>
         <div class="router-node text-center">
-          <div class="text-2xl font-black text-gradient">1.3s</div>
-          <div class="text-[10px] text-slate-500 font-mono">Avg Response</div>
+          <div class="text-2xl font-black text-gradient" id="stats-health">-</div>
+          <div class="text-[10px] text-slate-500 font-mono">System</div>
         </div>
       </div>
 
@@ -3002,16 +3002,16 @@
       <p class="text-slate-400 text-sm mb-6">你的因果节点和三层记忆。</p>
       <div class="grid md:grid-cols-3 gap-4">
         <div class="router-node text-center">
-          <div class="text-3xl font-black text-gradient mb-1">1,284</div>
-          <div class="text-xs text-slate-500">因果节点</div>
+          <div class="text-3xl font-black text-gradient mb-1" id="mem-total">-</div>
+          <div class="text-xs text-slate-500">记忆条目</div>
         </div>
         <div class="router-node text-center">
-          <div class="text-3xl font-black text-gradient mb-1">312</div>
-          <div class="text-xs text-slate-500">原始记忆</div>
+          <div class="text-3xl font-black text-gradient mb-1" id="mem-private">-</div>
+          <div class="text-xs text-slate-500">私有链</div>
         </div>
         <div class="router-node text-center">
-          <div class="text-3xl font-black text-gradient mb-1">47</div>
-          <div class="text-xs text-slate-500">活跃关系</div>
+          <div class="text-3xl font-black text-gradient mb-1" id="mem-knowledge">-</div>
+          <div class="text-xs text-slate-500">知识链</div>
         </div>
       </div>
     </div>
@@ -4085,6 +4085,45 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     var target = document.getElementById('mf-' + tab + '-panel');
     if (target) target.classList.remove('hidden');
+  };
+
+  // ============ 工作台统计数据 ============
+  window.loadWorkbenchStats = function() {
+    // Identity stats
+    fetch(GATEWAY_URL + '/v1/identity').then(function(r){return r.json()}).then(function(d){
+      if (d.success && d.data) {
+        var el = document.getElementById('stats-total-users');
+        if (el) el.textContent = d.data.total_users || '-';
+        var el2 = document.getElementById('stats-active-users');
+        if (el2) el2.textContent = d.data.active_users !== undefined ? d.data.active_users : '-';
+      }
+    }).catch(function(){});
+    // Memory stats
+    fetch('http://localhost:8000/api/v1/dual-chain/stats').then(function(r){return r.json()}).then(function(d){
+      var el = document.getElementById('stats-memories');
+      if (el) el.textContent = (d.private_count || 0) + (d.knowledge_count || 0);
+      // Also update memory panel
+      var mt = document.getElementById('mem-total');
+      if (mt) mt.textContent = (d.private_count || 0) + (d.knowledge_count || 0);
+      var mp = document.getElementById('mem-private');
+      if (mp) mp.textContent = d.private_count || 0;
+      var mk = document.getElementById('mem-knowledge');
+      if (mk) mk.textContent = d.knowledge_count || 0;
+    }).catch(function(){});
+    // System health
+    fetch(GATEWAY_URL + '/health').then(function(r){return r.json()}).then(function(d){
+      var el = document.getElementById('stats-health');
+      if (el) el.textContent = d.data && d.data.alphaid === 'ok' ? '🟢' : '🔴';
+    }).catch(function(){});
+  };
+
+  // 切换到工作台时加载统计数据
+  window.showWorkbench = function() {
+    document.getElementById('homepageView').classList.remove('active');
+    document.getElementById('mindflowView').classList.remove('active');
+    document.getElementById('workbenchView').classList.add('active');
+    window.scrollTo(0, 0);
+    setTimeout(loadWorkbenchStats, 100);
   };
 
   // ============ 💬 豆包记忆桥 ============

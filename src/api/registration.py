@@ -99,6 +99,46 @@ async def send_sms(request: Request):
     data[phone] = {"code": code, "expires_at": time.time() + 300}
     _sms_save(data)
 
+    # 尝试发真实短信（有阿里云 Key 时）
+    alibab_key = os.environ.get("ALIBABA_ACCESS_KEY_ID", "")
+    alibab_secret = os.environ.get("ALIBABA_ACCESS_KEY_SECRET", "")
+    sign_name = os.environ.get("ALIBABA_SMS_SIGN_NAME", "")
+    if alibab_key and alibab_secret and sign_name:
+        try:
+            from alibabacloud_dypnsapi20170525.client import Client as DysmsapiClient
+            from alibabacloud_dypnsapi20170525 import models as dysmsapi_models
+            from alibabacloud_tea_openapi import models as open_api_models
+
+            config = open_api_models.Config(
+                access_key_id=alibab_key,
+                access_key_secret=alibab_secret,
+                endpoint="dypnsapi.aliyuncs.com",
+            )
+            client = DysmsapiClient(config)
+            req = dysmsapi_models.SendSmsVerifyCodeRequest(
+                phone_number=phone,
+                template_code="100001",
+                template_param=json.dumps({"code": code, "min": "5"}),
+                sign_name=sign_name,
+            )
+            resp = client.send_sms_verify_code(req)
+            body = resp.body
+            if body.code in ("OK", "10000", "GatewayVerifySuccess"):
+                return {
+                    "success": True,
+                    "message": "验证码已发送",
+                    "channel": "alibaba-pnvs",
+                }
+            return {
+                "success": True,
+                "message": "验证码已发送（演示模式）",
+                "channel": "demo-fallback",
+                "demo": code,
+                "smsError": str(body.code),
+            }
+        except Exception as e:
+            pass  # 降级演示模式
+
     return {
         "success": True,
         "message": "验证码已发送",
