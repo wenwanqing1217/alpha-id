@@ -1,5 +1,5 @@
 [project]
-name = "alpha-id"
+name = "alpha-id-zix"
 version = "0.3.2"
 description = "你的数字灵魂 — 用 ChatGPT 导出认识自己，让所有 AI 工具认识同一个你"
 readme = "README.md"
@@ -40,7 +40,7 @@ web = ["fastapi>=0.115", "uvicorn[standard]>=0.30"]
 mcp = ["mcp>=1.0"]
 fairy = ["openai>=1.0", "pyautogui>=0.9", "Pillow>=10.0"]
 test = ["pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.5", "pyright>=1.1"]
-dev = ["alpha-id-zix[test,web,mcp]"]
+dev = ["pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.5", "fastapi>=0.115", "uvicorn[standard]>=0.30", "mcp>=1.0"]
 
 [project.urls]
 Homepage = "https://github.com/wenwanqing1217/alpha-id"
