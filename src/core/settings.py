@@ -139,6 +139,10 @@ class Settings(BaseSettings):
     alipay_demo_mode: str = Field(default="false", validation_alias=AliasChoices("ALIPAY_DEMO_MODE"))
     baidu_map_auth_token: str = Field(default="", validation_alias=AliasChoices("BAIDU_MAP_AUTH_TOKEN"))
 
+    # ── 限流 ──
+    rate_limit_enabled: bool = Field(default=True, validation_alias=AliasChoices("RATE_LIMIT_ENABLED"))
+    rate_limit_requests_per_minute: int = Field(default=60, validation_alias=AliasChoices("RATE_LIMIT_RPM"))
+
     # ── 网关/代理 ──
     gateway_url: str = Field(default="http://localhost:18080", validation_alias=AliasChoices("GATEWAY_URL"))
     default_alpha_id: str = Field(default="Alpha-001", validation_alias=AliasChoices("DEFAULT_ALPHA_ID"))

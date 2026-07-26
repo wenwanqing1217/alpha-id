@@ -23,6 +23,7 @@ from fastapi.staticfiles import StaticFiles  # noqa: E402
 from alpha_id.container import Container  # noqa: E402
 from auth.jwt import validate_master_key  # noqa: E402
 from core.middleware import CorrelationIDMiddleware  # noqa: E402
+from core.rate_limit import RateLimitMiddleware  # noqa: E402
 from core.settings import settings  # noqa: E402
 
 # Support both package-style imports (`src.main`) and direct module imports (`main`).
@@ -75,6 +76,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 限流（CORS 内层，CorrelationID 外层）
+# 执行顺序：CorrelationId → RateLimit → CORS → Route
+app.add_middleware(RateLimitMiddleware)
 
 app.add_middleware(CorrelationIDMiddleware)
 
