@@ -154,10 +154,13 @@ def _patch_aid_daemon_compat() -> None:
     # （Windows fatal exception，无法被 except 捕获）。
     tk.Tk.return_value.winfo_id.return_value = 1
 
-    from entrypoints.daemon import AIDFairy
+    try:
+        from entrypoints.daemon import AIDFairy
 
-    AIDFairy._show_mouse_position = lambda self: self._mouse_position_result()
-    AIDFairy._show_identity = lambda self: self._show_result("AID identity ready; local DID is hidden")
+        AIDFairy._show_mouse_position = lambda self: self._mouse_position_result()
+        AIDFairy._show_identity = lambda self: self._show_result("AID identity ready; local DID is hidden")
+    except ImportError:
+        pass
 
     def _parse_and_click(self, text: str) -> None:
         match = re.search(r"(?:点击|Click)[\s:：]*([0-9]+)[\s,，/]+([0-9]+)", text, flags=re.IGNORECASE)
