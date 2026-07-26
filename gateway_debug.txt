@@ -1,0 +1,14 @@
+{
+  "success": true,
+  "data": {
+    "reply": "目前你的账户一切平静，没有未读消息。有什么需要我帮你做的吗？比如查看好友列表、风控评分，或者安排什么任务？",
+    "agent": {
+      "alpha_id": "verify_test2",
+      "brain_state": "awake",
+      "msg_count": 1,
+      "friends": []
+    }
+  },
+  "ts": 1784967995,
+  "request_id": "58741027-709"
+}

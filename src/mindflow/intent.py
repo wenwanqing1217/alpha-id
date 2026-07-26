@@ -13,6 +13,8 @@ MindFlow 意图识别器
 """
 
 import logging
+import json
+import os
 import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
@@ -29,6 +31,26 @@ class IntentResult:
     tools_needed: List[str] = field(default_factory=list)
 
 
+# ── LLM 意图识别配置 ──
+_LLM_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+_LLM_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.deepseek.com").rstrip("/")
+_LLM_MODEL = os.environ.get("LLM_MODEL", "deepseek-v4-flash")
+_LLM_ENABLED = bool(_LLM_API_KEY)
+
+_INTENT_DEFINITIONS = {
+    "route_plan": "路线/导航/出行规划",
+    "navigate_to": "去某个具体地点",
+    "interview_prep": "面试/简历/求职准备",
+    "calendar_query": "日程/日历查询",
+    "weather_query": "天气查询",
+    "resume": "简历/CV相关",
+    "search": "信息搜索/查询",
+    "code_runner": "编程/写代码/脚本/开发",
+    "codex_agent": "调 Codex 终端执行复杂任务",
+    "ghost_identity": "身份注册/绑定",
+    "chat": "日常对话/闲聊/其他",
+}
+
 # ── 关键词规则表 ──
 
 _KEYWORD_RULES = [
@@ -42,6 +64,8 @@ _KEYWORD_RULES = [
     ("weather_query", ["天气", "气温", "下雨", "刮风", "温度", "穿什么"], ["weather_api"], 0.9),
     ("resume", ["简历", "CV", "求职信", "作品集"], ["resume_engine"], 0.8),
     ("search", ["搜索", "查一下", "搜一下", "帮我查", "查询", "百度"], ["web_search"], 0.75),
+    ("code_runner", ["编程", "写代码", "改代码", "debug", "重构", "写个", "帮我写", "代码", "脚本", "程序"], ["code_runner"], 0.85),
+    ("code_runner", ["Python", "JavaScript", "Go", "Rust", "Java", "C++", "前端", "后端", "API", "爬虫"], ["code_runner"], 0.75),
 ]
 
 # 工具自动推断映射
@@ -52,7 +76,22 @@ _INTENT_TOOLS = {
     "weather_query": ["weather_api"],
     "resume": ["resume_engine"],
     "search": ["web_search"],
+    "code_runner": ["code_runner"],
+    "codex_agent": ["codex_agent"],
 }
+
+# LLM 意图识别提示词
+_LLM_SYSTEM_PROMPT = """你是一个意图分类器。根据用户消息，从以下意图中选择最匹配的一个：
+{intent_list}
+
+规则：
+- 编程相关需求（写代码、改bug、写脚本、开发功能等）→ code_runner
+- 日常对话、打招呼、闲聊 → chat
+- 不确定时选 chat
+
+只返回一个 JSON：{"intent": "意图名", "confidence": 0.0~1.0}
+不要多余文字。"""
+
 
 
 class IntentClassifier:
@@ -62,15 +101,24 @@ class IntentClassifier:
         pass
 
     def classify(self, text: str) -> IntentResult:
-        """识别用户消息的意图"""
-        # 1. 关键词匹配
+        """识别用户消息的意图：关键词优先 + LLM 回退"""
+        # 1. 关键词快速匹配
         result = self._keyword_match(text)
-        if result:
+        if result and result.confidence >= 0.85:
             return result
 
-        # 2. 默认走通用对话 — 不再额外调 LLM 分类，避免多一次 API 往返
-        #    LLM 只用于最终的回复生成，intent 靠关键词就够了
-        return IntentResult(intent="chat", confidence=0.5, tools_needed=[])
+        # 2. LLM 识别（更准）
+        if _LLM_ENABLED:
+            try:
+                llm_result = self._llm_classify(text)
+                if llm_result and llm_result.confidence >= 0.6:
+                    logger.info("LLM 意图: %s (%.2f) <- %s", llm_result.intent, llm_result.confidence, text[:30])
+                    return llm_result
+            except Exception as e:
+                logger.warning("LLM 意图分类失败: %s", e)
+
+        # 3. 降级：关键词结果或默认
+        return result or IntentResult(intent="chat", confidence=0.5, tools_needed=[])
 
     def _keyword_match(self, text: str) -> Optional[IntentResult]:
         """关键词规则匹配"""

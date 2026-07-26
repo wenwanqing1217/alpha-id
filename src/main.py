@@ -24,13 +24,11 @@ from auth.jwt import validate_master_key  # noqa: E402
 if __package__:
     from .api.identity import router as identity_router
     from .api.risk import router as risk_router
-    from .api.shortdrama import router as shortdrama_router
     from .api.social import router as social_router
     from .api.dual_chain import router as dual_chain_router
 else:
     from api.identity import router as identity_router
     from api.risk import router as risk_router
-    from api.shortdrama import router as shortdrama_router
     from api.social import router as social_router
     from api.dual_chain import router as dual_chain_router
 
@@ -77,7 +75,6 @@ app.add_middleware(
 app.include_router(identity_router)
 app.include_router(social_router)
 app.include_router(risk_router)
-app.include_router(shortdrama_router)
 app.include_router(dual_chain_router)
 
 

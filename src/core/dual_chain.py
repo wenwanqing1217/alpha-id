@@ -32,13 +32,13 @@ from core.storage import JsonStorage, StorageBackend
 def _sanitize_alpha_id(alpha_id: str) -> str:
     """安全清洗 alpha_id，防止路径遍历攻击
 
-    - 只允许字母、数字、连字符、下划线、冒号
+    - 只允许字母、数字、连字符、下划线（移除冒号，Windows 文件名不允许）
     - 移除路径分隔符和 ../ 序列
     - 限制长度防止缓冲区溢出
     """
     import re
-    # 只允许安全字符
-    sanitized = re.sub(r'[^a-zA-Z0-9\-_:]', '_', alpha_id)
+    # 只允许安全字符（注意：冒号 : 在 Windows 文件名中非法，必须替换）
+    sanitized = re.sub(r'[^a-zA-Z0-9\-_]', '_', alpha_id)
     # 移除任何剩余的路径遍历尝试
     sanitized = sanitized.replace('..', '_')
     # 限制长度
@@ -279,8 +279,15 @@ class DualChainManager:
                 # 关键词搜索
                 if keyword:
                     kw = keyword.lower()
-                    content_match = kw in record.get("content", "").lower()
-                    tag_match = kw in " ".join(record.get("tags", [])).lower()
+                    content = record.get("content", "")
+                    if isinstance(content, str):
+                        content_match = kw in content.lower()
+                    else:
+                        content_match = kw in str(content).lower()
+                    tag_match = kw in " ".join(
+                        t if isinstance(t, str) else str(t)
+                        for t in record.get("tags", [])
+                    ).lower()
                     if not content_match and not tag_match:
                         continue
 

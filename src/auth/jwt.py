@@ -194,7 +194,7 @@ def rotate_token(old_refresh_token: str) -> tuple:
     """
     payload = decode_token(old_refresh_token)
     if payload.get("type") != "refresh":
-        raise ValueError("需要 refresh 令牌")
+        raise ValueError("令牌类型不匹配: 需要 refresh 令牌")
 
     alpha_id = payload["sub"]
     old_jti = payload.get("jti")

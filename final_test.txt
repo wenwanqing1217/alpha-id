@@ -1,0 +1,14 @@
+{
+  "success": true,
+  "data": {
+    "reply": "我在思考时遇到了一点小问题，请稍后再问我一次 🙏",
+    "agent": {
+      "alpha_id": "test_user_001",
+      "brain_state": "awake",
+      "msg_count": 1,
+      "friends": []
+    }
+  },
+  "ts": 1784967264,
+  "request_id": "0ff4d1cd-14f"
+}

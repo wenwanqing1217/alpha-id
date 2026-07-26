@@ -1,13 +1,16 @@
 """Alpha-ID 用户身份管理单元测试"""
 
+import hashlib
 import json
 import os
 import sys
 
 import pytest
 
-# 导入被测试类（需要先设置 COZE_WORKSPACE_PATH）
-os.environ["COZE_WORKSPACE_PATH"] = str(os.path.join(os.path.dirname(__file__), ".."))
+# 导入被测试类（需要先设置 GHOST_WORKSPACE_PATH）
+os.environ["GHOST_WORKSPACE_PATH"] = str(os.path.join(os.path.dirname(__file__), ".."))
+# FOUNDER_CODE_HASH 是类变量，必须在 import 前设置
+os.environ["FOUNDER_CODE_HASH"] = hashlib.sha256(b"Alpha-1-zx").hexdigest()
 
 from core.user_identity import UserIdentityManager, UserProfile
 
@@ -17,17 +20,24 @@ class TestUserIdentityManager:
 
     @pytest.fixture
     def manager(self, tmp_path):
-        """用临时目录创建 UserIdentityManager"""
-        # 设置临时工作路径
-        old_path = os.environ.get("COZE_WORKSPACE_PATH")
-        os.environ["COZE_WORKSPACE_PATH"] = str(tmp_path)
+        """用临时目录创建 UserIdentityManager（每个测试隔离）"""
+        # 设置临时工作路径（代码读取 GHOST_WORKSPACE_PATH）
+        old_path = os.environ.get("GHOST_WORKSPACE_PATH")
+        old_code_hash = os.environ.get("FOUNDER_CODE_HASH")
+        os.environ["GHOST_WORKSPACE_PATH"] = str(tmp_path)
+        # 配置创始人验证码哈希，使测试可以用 "Alpha-1-zx" 注册创始人
+        os.environ["FOUNDER_CODE_HASH"] = hashlib.sha256(b"Alpha-1-zx").hexdigest()
         m = UserIdentityManager()
         yield m
         # 恢复
         if old_path:
-            os.environ["COZE_WORKSPACE_PATH"] = old_path
+            os.environ["GHOST_WORKSPACE_PATH"] = old_path
         else:
-            del os.environ["COZE_WORKSPACE_PATH"]
+            del os.environ["GHOST_WORKSPACE_PATH"]
+        if old_code_hash:
+            os.environ["FOUNDER_CODE_HASH"] = old_code_hash
+        else:
+            os.environ.pop("FOUNDER_CODE_HASH", None)
 
     def test_init_creates_empty_db(self, manager):
         """初始化应创建空的 JSON 数据库"""

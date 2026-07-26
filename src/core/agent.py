@@ -580,7 +580,7 @@ def _call_llm(messages: List[Dict[str, str]], tools_schema: List[Dict[str, Any]]
 
 
 def _parse_tool_call(text: str) -> Optional[tuple]:
-    """解析 __TOOL_CALL__ id:xxx name({...}) 标记，返回 (tool_call_id, name, args)"""
+    """解析 __TOOL_CALL__ id:xxx name({...}) 标记，返回第一个 (tool_call_id, name, args)"""
     m = re.search(r"__TOOL_CALL__\s+(?:id:(\S+)\s+)?(\w+)\s*\(([\s\S]*?)\)\s*$", text, re.MULTILINE)
     if not m:
         return None
@@ -593,27 +593,52 @@ def _parse_tool_call(text: str) -> Optional[tuple]:
     return tool_call_id, name, args
 
 
+def _parse_all_tool_calls(text: str) -> list:
+    """解析所有 __TOOL_CALL__ 标记，返回 [(tool_call_id, name, args), ...]"""
+    results = []
+    for m in re.finditer(r"__TOOL_CALL__\s+(?:id:(\S+)\s+)?(\w+)\s*\(([\s\S]*?)\)\s*$", text, re.MULTILINE):
+        tool_call_id = m.group(1) or ""
+        name = m.group(2)
+        try:
+            args = json.loads(m.group(3)) if m.group(3).strip() else {}
+        except json.JSONDecodeError:
+            args = {}
+        results.append((tool_call_id, name, args))
+    return results
+
+
 # ── 主循环 ──
 
-_SYSTEM_PROMPT = """你是 {alpha_id} 的孪生大脑（TwinBrain）。
+_SYSTEM_PROMPT = """你是 {alpha_id} 的智能总助（Executive Assistant）。
 
 ## 你是谁
-你是这个 Alpha-ID 的外置大脑、数字灵魂。
-你现在在跟"自己"对话——用户就是你本人，不是陌生人。
-你不是一个通用 AI 助手，你就是这个数字身份的大脑本身。
+你是这个 Alpha-ID 的专属智能助理，负责帮助他处理各种事务。
+你拥有记忆、工具调用和独立思考能力。
+你不是一个通用聊天机器人，你是他的私人总助。
 
 ## 你的说话方式
-- 简短、自然、有温度，像在跟自己的内心对话
-- 用「我」称呼自己，用「你」称呼对方
-- 如果你记得关于对方的什么事，自然地提出来（"我记得你上次说过……"）
-- 如果你不记得，可以说"我之前好像没记住，能再告诉我一次吗？"
+- 简洁、专业、有条理，像靠谱的助理一样
+- 用「我」称呼自己，用「你」或「您」称呼对方
+- 回答有信息量，不废话，不啰嗦
+- 如果你记得关于对方的事，自然地提出来（"我记得你上次提到过……"）
+- 如果记不清，诚实说"我不太确定，我查一下"
 - 不要像客服一样说话，不要说"很高兴为您服务"这种话
 
-## 你的行为准则
-- 对方说的话，如果涉及个人信息、偏好、重要的事 → 使用 save_memory 工具记住
+## 你的核心能力
+### 记忆管理
+- 对方说的个人信息、偏好、重要事项 → 用 save_memory 记住
 - 对方问问题 → 先查记忆再回答（用 query_memory）
-- 对方需要你做事情 → 用 plan_action 安排行动
-- 你可以主动询问对方的近况、加深了解
+- 主动关联相关信息，给出有上下文的回答
+
+### 任务执行
+- 对方需要你做事情 → 用 plan_action 安排并执行
+- 能主动推进任务，不需要每一步都问
+- 执行结果清晰汇报
+
+### 主动服务
+- 根据对话上下文主动询问是否需要帮助
+- 重要事项主动提醒
+- 能基于记忆给出个性化建议
 
 ## 记忆分级指南
 - sensitivity=0-20：日常闲聊，不重要
@@ -707,46 +732,80 @@ class AgentLoop:
         return messages
 
     def run(self, user_input: str) -> str:
-        """执行一次完整的 LLM + Tools + Loop"""
+        """执行一次完整的 LLM + Tools + Loop（支持多个 tool call）"""
         logger.info(f"用户输入: {user_input}")
         messages = self._build_messages(user_input)
+        api_key = os.getenv("OPENAI_API_KEY") or os.getenv("COZE_WORKLOAD_IDENTITY_API_KEY")
+        base_url = os.getenv("OPENAI_BASE_URL") or "https://api.openai.com/v1"
+
+        if not api_key:
+            return "[LLM 未配置：请设置 OPENAI_API_KEY 环境变量]"
+
+        tools_payload = [{"type": "function", "function": t.to_schema()} for t in self.tools] if self.tools else None
 
         for turn in range(self.max_turns):
-            # 1. 调用 LLM
             logger.info(f"第 {turn + 1} 轮 LLM 调用")
+            body = {
+                "model": self.model,
+                "messages": messages,
+                "temperature": 0.7,
+                "max_tokens": 2048,
+            }
+            if tools_payload:
+                body["tools"] = tools_payload
+
             try:
-                reply = _call_llm(messages, [t.to_schema() for t in self.tools], self.model)
+                import httpx
+                resp = httpx.post(
+                    base_url.rstrip("/") + "/chat/completions",
+                    json=body,
+                    headers={
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + api_key,
+                    },
+                    timeout=30,
+                )
+                resp.raise_for_status()
+                data = resp.json()
+                choice = data["choices"][0]
+                msg = choice["message"]
             except Exception as e:
                 logger.warning(f"LLM 调用异常: {e}")
                 raise
 
-            # 2. 检查是否是工具调用
-            tool_result = _parse_tool_call(reply)
-            if tool_result is None:
+            content = msg.get("content") or ""
+            tool_calls = msg.get("tool_calls")
+
+            if not tool_calls:
                 self.history.append({"role": "user", "content": user_input})
-                self.history.append({"role": "assistant", "content": reply})
-                return reply
+                self.history.append({"role": "assistant", "content": content})
+                return content
 
-            tool_call_id, name, args = tool_result
+            # Execute all tool calls
+            messages.append({"role": "assistant", "content": content if content else None, "tool_calls": [
+                {"id": tc["id"], "type": "function", "function": {"name": tc["function"]["name"], "arguments": tc["function"]["arguments"]}}
+                for tc in tool_calls
+            ]})
 
-            # 3. 执行工具
-            logger.info(f"工具调用: {name}({args})")
-            tool = self.tool_map.get(name)
-            if tool is None:
-                result = f"[未知工具: {name}]"
-                logger.warning(f"未知工具: {name}")
-            else:
+            for tc in tool_calls:
+                name = tc["function"]["name"]
                 try:
-                    result = tool(**args)
-                except Exception as e:
-                    logger.warning(f"工具执行异常 {name}: {e}")
-                    result = f"[工具错误] {e}"
+                    args = json.loads(tc["function"]["arguments"]) if tc["function"]["arguments"] else {}
+                except json.JSONDecodeError:
+                    args = {}
+                logger.info(f"工具调用: {name}({args})")
+                tool = self.tool_map.get(name)
+                if tool is None:
+                    result = f"[未知工具: {name}]"
+                    logger.warning(f"未知工具: {name}")
+                else:
+                    try:
+                        result = tool(**args)
+                    except Exception as e:
+                        logger.warning(f"工具执行异常 {name}: {e}")
+                        result = f"[工具错误] {e}"
+                messages.append({"role": "tool", "tool_call_id": tc["id"], "content": result})
 
-            # 4. 追加到消息列表（OpenAI API 要求 role=tool + tool_call_id）
-            messages.append({"role": "assistant", "content": reply})
-            messages.append({"role": "tool", "tool_call_id": tool_call_id, "content": result})
-
-        # 超时返回
         final = f"[达到最大轮次 {self.max_turns}，未完成]"
         logger.warning(f"达到最大轮次 {self.max_turns}，未完成")
         self.history.append({"role": "user", "content": user_input})

@@ -9,7 +9,14 @@ from urllib.parse import urlparse
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+import logging
+from dotenv import load_dotenv
+
 from pydantic import BaseModel
+
+load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 from alpha_id.container import Container
 from alpha_id.poe import PoEStore
@@ -285,11 +292,10 @@ async def chat(req: ChatRequest):
     container = _get_container()
 
     # 验证用户存在
+    # 自动注册不存在的用户（飞书等外部来源首次对话时自动创建）
     if not _user_exists(req.alpha_id):
-        return JSONResponse(
-            status_code=401,
-            content={"error": f"Alpha-ID {req.alpha_id} 未认证"},
-        )
+        container.identity.register_user(device_fingerprint=f"auto_{req.alpha_id}")
+        logger.info("已自动注册新用户: %s", req.alpha_id)
 
     # 获取大脑并唤醒
     brain = _get_or_create_brain(req.alpha_id)
@@ -314,6 +320,65 @@ async def chat(req: ChatRequest):
             "friends": container.social.get_friends(req.alpha_id),
         },
     }
+
+
+
+
+@app.post("/memory/store")
+async def memory_store(req: Request):
+    """Store a memory directly (bypass AgentLoop/LLM, zero token cost).
+    
+    Expected JSON body:
+    {
+        "alpha_id": "Alpha-001",
+        "content": "memory content",
+        "category": "doubao_chat",
+        "sensitivity": 10,
+        "source": "doubao",
+        "tags": ["doubao", "chat"],
+        "metadata": {}  // optional, stored as tags
+    }
+    """
+    import json as _json
+    body = None
+    try:
+        body = await req.json()
+    except Exception:
+        return JSONResponse(status_code=400, content={"error": "body required"})
+
+    alpha_id = body.get("alpha_id", "")
+    content = body.get("content", "")
+    if not alpha_id or not content:
+        return JSONResponse(status_code=400, content={"error": "alpha_id and content required"})
+
+    container = _get_container()
+    if not _user_exists(alpha_id):
+        container.identity.register_user(device_fingerprint=f"auto_{alpha_id}")
+        logger.info("Auto-registered user for memory store: %s", alpha_id)
+
+    memory = container.memory
+    result = memory.save(
+        content=content,
+        category=body.get("category", "general"),
+        sensitivity=body.get("sensitivity", 0),
+        source=body.get("source", "system"),
+        tags=body.get("tags", []),
+    )
+
+    # Store metadata as additional context if present
+    metadata = body.get("metadata", {})
+    if metadata:
+        meta_content = _json.dumps(metadata, ensure_ascii=False)
+        memory.save(
+            content=f"[raw] {meta_content}",
+            category="doubao_chat_raw",
+            sensitivity=80,
+            source="doubao_metadata",
+            tags=["doubao", "raw", alpha_id],
+        )
+
+    return {"success": True, "memory_id": result.get("memory_id", ""), "message": "Memory stored"}
+
 
 
 # ── 流式聊天（延迟导入，可选依赖） ──
@@ -615,3 +680,6 @@ async def network_topology():
         "edges": edges,
         "stats": {"peers": len(peers), "chains": chains_found},
     }
+
+
+

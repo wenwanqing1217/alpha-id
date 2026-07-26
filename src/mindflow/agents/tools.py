@@ -50,10 +50,54 @@ def web_search(params: dict) -> dict:
     }
 
 
+import subprocess
+import json
+import os
+
+
+def code_runner(params: dict) -> dict:
+    """
+    编程技能：用本地 AI 引擎执行编程任务
+    接收参数: {"prompt": "用户的需求描述"}
+    返回: {"content": "生成的代码/解答"}
+    """
+    prompt = params.get("prompt") or params.get("params", {}).get("prompt", "")
+    original = params.get("params", {}).get("original_text", "")
+    text = prompt or original or ""
+
+    runner_script = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
+        "..", "ghost-main", "feishu-bot", "code_runner.py"
+    )
+    runner_script = os.path.abspath(runner_script)
+
+    if not os.path.exists(runner_script):
+        return {"content": f"编程模块未找到: {runner_script}", "status": "error"}
+
+    try:
+        result = subprocess.run(
+            ["python", runner_script, text],
+            capture_output=True, text=True, timeout=180,
+            cwd=os.environ.get("CODE_RUNNER_DIR", "D:\\MW"),
+        )
+        output = result.stdout.strip()
+        if result.returncode != 0:
+            error = result.stderr.strip()[:300]
+            return {"content": f"执行出错: {error}", "status": "error"}
+        return {"content": output, "status": "success"}
+    except subprocess.TimeoutExpired:
+        return {"content": "编程任务超时（180秒）", "status": "timeout"}
+    except Exception as e:
+        return {"content": f"调用失败: {str(e)}", "status": "error"}
+
+
 def register_tools(engine):
     """注册通用工具到 Mindflow 引擎"""
     engine.register_tool("calendar", calendar_query)
     engine.register_tool("web_search", web_search)
     engine.register_tool("search", web_search)
+    engine.register_tool("code_runner", code_runner)
+    engine.register_tool("codex_agent", codex_agent)
+    engine.register_tool("chat", llm_chat)
     logger.info("  📋 通用工具已注册")
     return engine

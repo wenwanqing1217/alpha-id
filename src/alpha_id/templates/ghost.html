@@ -679,98 +679,86 @@
   .view-panel { display: none; }
   .view-panel.active { display: block; }
 
-  /* ============ 人脸认证模态框 ============ */
-  .face-auth-overlay {
-    position: fixed; inset: 0;
-    background: rgba(10,4,24,0.85);
-    backdrop-filter: blur(12px);
-    z-index: 9999;
-    display: none;
-    align-items: center;
-    justify-content: center;
+  /* ============ 注册/登录流程模态框 ============ */
+  .reg-overlay {
+    position: fixed; inset: 0; background: rgba(10,4,24,0.88);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    z-index: 99999; display: none; align-items: center; justify-content: center; padding: 20px;
   }
-  .face-auth-overlay.active { display: flex; }
-  .face-auth-modal {
-    background: linear-gradient(135deg, rgba(30,20,60,0.95) 0%, rgba(15,10,35,0.98) 100%);
-    border: 1px solid rgba(139,92,246,0.3);
-    border-radius: 24px;
-    padding: 48px 40px;
-    max-width: 420px;
-    width: 90%;
-    text-align: center;
-    box-shadow: 0 24px 80px rgba(139,92,246,0.3), 0 0 0 1px rgba(139,92,246,0.15) inset;
-    position: relative;
-    overflow: hidden;
+  .reg-overlay.active { display: flex; }
+  .reg-modal {
+    background: linear-gradient(135deg, rgba(30,20,60,0.98) 0%, rgba(15,10,35,0.99) 100%);
+    border: 1px solid rgba(139,92,246,0.25); border-radius: 24px;
+    padding: 40px 36px; max-width: 440px; width: 100%;
+    box-shadow: 0 24px 80px rgba(139,92,246,0.25), 0 0 0 1px rgba(139,92,246,0.1) inset;
+    position: relative; overflow: hidden; animation: modalIn 0.3s ease-out;
   }
-  .face-auth-modal::before {
-    content: '';
-    position: absolute; inset: -50%;
-    background: radial-gradient(circle at 50% 50%, rgba(139,92,246,0.08) 0%, transparent 60%);
+  @keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  .reg-modal::before {
+    content: ''; position: absolute; inset: -50%;
+    background: radial-gradient(circle at 50% 50%, rgba(139,92,246,0.06) 0%, transparent 60%);
     animation: bg-pulse 4s ease-in-out infinite;
   }
-  .face-scan-frame {
-    width: 180px; height: 180px;
-    margin: 0 auto 24px;
-    position: relative;
-    border-radius: 50%;
+  .reg-steps { display: flex; gap: 8px; justify-content: center; margin-bottom: 28px; position: relative; z-index: 1; }
+  .reg-step-dot { width: 32px; height: 4px; border-radius: 2px; background: rgba(139,92,246,0.15); transition: all 0.3s ease; }
+  .reg-step-dot.active { background: #7c3aed; width: 40px; }
+  .reg-step-dot.done { background: #10b981; }
+  .reg-step { display: none; position: relative; z-index: 1; }
+  .reg-step.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .reg-title { font-size: 1.25rem; font-weight: 700; color: #fff; text-align: center; margin-bottom: 6px; }
+  .reg-subtitle { font-size: 0.85rem; color: rgba(148,163,184,0.8); text-align: center; margin-bottom: 24px; }
+  .reg-input {
+    width: 100%; padding: 14px 16px; background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(139,92,246,0.2); border-radius: 12px;
+    color: #fff; font-size: 1rem; outline: none; transition: all 0.2s; box-sizing: border-box;
   }
-  .face-scan-frame::before {
-    content: '';
-    position: absolute; inset: 0;
-    border-radius: 50%;
-    border: 2px solid rgba(139,92,246,0.4);
-    box-shadow: 0 0 30px rgba(139,92,246,0.3), inset 0 0 30px rgba(139,92,246,0.1);
+  .reg-input:focus { border-color: rgba(139,92,246,0.6); box-shadow: 0 0 0 3px rgba(139,92,246,0.1); }
+  .reg-input::placeholder { color: rgba(148,163,184,0.4); }
+  .reg-btn {
+    width: 100%; padding: 14px; border-radius: 12px; font-size: 0.95rem; font-weight: 600;
+    border: none; cursor: pointer; transition: all 0.2s;
+    background: linear-gradient(135deg, #7c3aed, #6d28d9); color: #fff; margin-top: 16px;
   }
-  .face-scan-frame.scanning::before {
-    border-color: rgba(56,189,248,0.6);
-    box-shadow: 0 0 40px rgba(56,189,248,0.4), inset 0 0 30px rgba(56,189,248,0.15);
-    animation: ring-pulse 1.5s ease-in-out infinite;
+  .reg-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(124,58,237,0.3); }
+  .reg-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+  .reg-btn-secondary { background: rgba(255,255,255,0.06); border: 1px solid rgba(139,92,246,0.2); color: rgba(255,255,255,0.8); }
+  .reg-btn-secondary:hover { background: rgba(255,255,255,0.1); transform: translateY(-1px); }
+  .reg-sms-row { display: flex; gap: 12px; align-items: center; }
+  .reg-sms-row .reg-input { flex: 1; }
+  .reg-sms-btn {
+    flex-shrink: 0; padding: 14px 16px; border-radius: 12px; font-size: 0.85rem; font-weight: 500;
+    border: 1px solid rgba(139,92,246,0.3); cursor: pointer; transition: all 0.2s;
+    background: rgba(124,58,237,0.15); color: #a78bfa; white-space: nowrap;
   }
-  .face-scan-inner {
-    position: absolute; inset: 20px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, rgba(139,92,246,0.15) 0%, rgba(15,10,35,0.6) 70%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .reg-sms-btn:hover { background: rgba(124,58,237,0.25); }
+  .reg-sms-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .reg-error { color: #ef4444; font-size: 0.8rem; text-align: center; margin-top: 8px; display: none; }
+  .reg-error.show { display: block; }
+  .reg-loading {
+    display: inline-block; width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.2); border-top-color: #fff;
+    border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 8px; vertical-align: middle;
   }
-  .face-scan-icon {
-    font-size: 56px;
-    filter: grayscale(0.3);
-    opacity: 0.8;
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .reg-success-icon {
+    width: 64px; height: 64px; margin: 0 auto 16px;
+    background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 28px;
   }
-  .face-scan-line {
-    position: absolute;
-    top: 0; left: 15%; right: 15%;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, rgba(56,189,248,0.7), transparent);
-    opacity: 0;
+  .reg-face-btn {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    width: 100%; padding: 20px; border-radius: 16px; font-size: 1rem; font-weight: 600;
+    border: 1px solid rgba(22,163,74,0.3); cursor: pointer; transition: all 0.2s;
+    background: linear-gradient(135deg, rgba(22,163,74,0.12), rgba(22,163,74,0.06));
+    color: #34d399; margin-top: 16px;
   }
-  .face-scan-frame.scanning .face-scan-line {
-    opacity: 1;
-    animation: scan-sweep 1.8s ease-in-out infinite;
+  .reg-face-btn:hover {
+    background: linear-gradient(135deg, rgba(22,163,74,0.2), rgba(22,163,74,0.1));
+    transform: translateY(-1px); box-shadow: 0 8px 24px rgba(22,163,74,0.15);
   }
-  @keyframes scan-sweep {
-    0% { top: 10%; }
-    50% { top: 80%; }
-    100% { top: 10%; }
-  }
-  .face-scan-progress {
-    width: 100%;
-    height: 3px;
-    background: rgba(139,92,246,0.1);
-    border-radius: 3px;
-    margin-top: 20px;
-    overflow: hidden;
-  }
-  .face-scan-progress-fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #7c3aed, #38bdf8);
-    border-radius: 3px;
-    transition: width 0.3s ease;
-  }
-
+  .reg-face-btn svg { width: 28px; height: 28px; }
+  .reg-api-status { font-size: 0.75rem; color: rgba(148,163,184,0.5); text-align: center; margin-top: 12px; position: relative; z-index: 1; }
   /* ============ Web 4.0 工作台 ============ */
   .wb-header {
     display: flex;
@@ -912,7 +900,7 @@
 
     <div class="flex items-center gap-2">
       <span class="hidden md:inline-flex items-center gap-1.5 tag"><span class="w-1.5 h-1.5 rounded-full bg-nebula-400 animate-pulse"></span> v1.0 · 已发布</span>
-      <button id="header-login-btn" class="btn-primary px-5 py-2 rounded-xl text-white text-sm font-semibold whitespace-nowrap" onclick="openFaceAuth()">登录</button>
+      <button id="header-login-btn" class="btn-primary px-5 py-2 rounded-xl text-white text-sm font-semibold whitespace-nowrap" onclick="showRegistration()">登录</button>
       <button id="profile-btn" class="hidden px-4 py-2 rounded-xl text-white text-sm font-semibold whitespace-nowrap bg-nebula-600/30 border border-nebula-500/40 hover:bg-nebula-600/50 transition" onclick="showMindflow()">
         <span class="inline-flex items-center gap-2">
           <span class="w-6 h-6 rounded-full bg-gradient-to-br from-nebula-400 to-cosmic-400 flex items-center justify-center text-[10px] font-bold">α</span>
@@ -2846,6 +2834,12 @@
       <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="agents">
         <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-emerald-500/20 flex items-center justify-center text-xs">🤖</span>Agent 广场</span>
       </button>
+      <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="doubao">
+        <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-sky-500/20 flex items-center justify-center text-xs">💬</span>豆包记忆桥</span>
+      </button>
+            <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="graph">
+        <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-purple-500/20 flex items-center justify-center text-xs">🌌</span>记忆星云</span>
+      </button>
       <div class="mt-6 text-[10px] text-slate-500 font-mono tracking-wider mb-3 px-3">系统</div>
       <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="logs">
         <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-slate-500/20 flex items-center justify-center text-xs">📋</span>执行日志</span>
@@ -3027,6 +3021,90 @@
       <p class="text-slate-400 text-sm mb-6">与其他 Agent 协作，无需平台中介。</p>
       <div class="router-node">
         <div class="text-sm text-slate-300">A2A 协议已启用。你的 Agent 可以与其他 Agent 直接通信、协作、共享因果知识。</div>
+      </div>
+    </div>
+
+    <div id="route-doubao" class="wb-route-panel hidden">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-white">💬 豆包记忆桥</h2>
+          <p class="text-slate-400 text-sm">豆包对话自动同步到 Ghost 知识链 + Obsidian + Nebula 飞书机器人</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="window.open('https://www.doubao.com','_blank')" class="px-4 py-2 bg-sky-500/20 text-sky-300 rounded-lg text-sm hover:bg-sky-500/30 transition border border-sky-500/30">└─ 豆包</button>
+          <button onclick="window.open('http://localhost:2002','_blank')" class="px-4 py-2 bg-purple-500/20 text-purple-300 rounded-lg text-sm hover:bg-purple-500/30 transition border border-purple-500/30">🤖 Nebula</button>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="router-node p-4">
+          <div class="text-2xl font-bold text-sky-300" id="doubao-msg-count">-</div>
+          <div class="text-xs text-slate-500 mt-1">已同步对话</div>
+        </div>
+        <div class="router-node p-4">
+          <div class="text-2xl font-bold text-emerald-300" id="doubao-status">🟢 运行中</div>
+          <div class="text-xs text-slate-500 mt-1">桌面端监听</div>
+        </div>
+        <div class="router-node p-4">
+          <div class="text-2xl font-bold text-amber-300" id="doubao-obsidian">📄 已关联</div>
+          <div class="text-xs text-slate-500 mt-1">Obsidian</div>
+        </div>
+        <div class="router-node p-4">
+          <div class="text-2xl font-bold text-purple-300" id="doubao-nebula">🟢 在线</div>
+          <div class="text-xs text-slate-500 mt-1">Nebula 飞书</div>
+        </div>
+      </div>
+      <div class="router-node mb-4">
+        <div class="flex gap-3">
+          <input id="doubao-search-input" type="text" placeholder="🔍 搜索豆包对话记忆..." class="flex-1 px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500/50 focus:bg-white/10 transition">
+          <button onclick="searchDoubao()" class="px-4 py-2.5 bg-sky-500/20 text-sky-300 rounded-lg text-sm hover:bg-sky-500/30 transition border border-sky-500/30">🔍 搜索</button>
+        </div>
+      </div>
+      <div class="router-node">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-medium text-white">💬 最近同步对话</h3>
+          <div class="flex gap-2 items-center">
+            <span class="text-xs text-slate-500" id="doubao-refresh-time"></span>
+            <button onclick="loadDoubao()" class="text-xs text-sky-400 hover:text-sky-300 transition">🔄 刷新</button>
+          </div>
+        </div>
+        <div id="doubao-conv-list" class="space-y-2 max-h-96 overflow-y-auto">
+          <div class="text-center text-slate-600 py-8">加载中...</div>
+        </div>
+      </div>
+    </div>
+      <!-- Ghost embedded Doubao workspace -->
+      <div class="router-node mt-6">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-medium text-white flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+            Ghost 豆包工作台
+          </h3>
+          <button onclick="var f=document.getElementById('doubao-iframe');f.classList.toggle('hidden');this.textContent=f.classList.contains('hidden')?'显示工作台':'隐藏工作台'" class="px-3 py-1 text-xs bg-sky-500/20 text-sky-300 rounded hover:bg-sky-500/30 transition border border-sky-500/30">
+            显示工作台
+          </button>
+        </div>
+        <div id="doubao-iframe" class="hidden rounded-lg overflow-hidden border border-white/10 bg-white/5">
+          <iframe src="http://localhost:18080/v1/doubao" width="100%" height="500" frameborder="0" class="rounded-lg"></iframe>
+        </div>
+      </div>
+
+    </div>
+
+    <div id="route-graph"id="route-graph" class="wb-route-panel hidden">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-white">🌌 记忆星云</h2>
+          <p class="text-slate-400 text-sm">知识图谱 — 点击节点查看记忆详情，连线表示共享标签</p>
+        </div>
+        <div class="text-xs text-slate-500" id="graph-stats"></div>
+      </div>
+      <div class="router-node" style="height:500px;position:relative;overflow:hidden;">
+        <svg id="graph-svg" width="100%" height="100%"></svg>
+      </div>
+      <div id="graph-detail" class="router-node hidden mt-4">
+        <h3 class="text-sm font-medium text-white mb-2" id="graph-detail-title"></h3>
+        <p class="text-sm text-slate-300" id="graph-detail-content"></p>
+        <div class="text-xs text-slate-500 mt-2" id="graph-detail-meta"></div>
       </div>
     </div>
 
@@ -3214,33 +3292,74 @@
 
 </main>
 
-<!-- ============ 人脸认证模态框 ============ -->
-<div class="face-auth-overlay" id="face-auth-modal">
-  <div class="face-auth-modal">
-    <button class="absolute top-4 right-4 text-slate-500 hover:text-white transition z-10" onclick="closeFaceAuth()">
+<!-- ============ 注册/登录流程模态框 ============ -->
+<div class="reg-overlay" id="reg-modal">
+  <div class="reg-modal">
+    <button onclick="closeRegistration()" style="position:absolute;top:16px;right:16px;background:none;border:none;cursor:pointer;z-index:10;padding:4px;color:rgba(148,163,184,0.6);">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
-
-    <div class="relative z-10">
-      <div class="face-scan-frame" id="face-scan-frame">
-        <div class="face-scan-inner">
-          <span class="face-scan-icon">👤</span>
+    <div class="reg-steps" id="reg-steps">
+      <div class="reg-step-dot active" id="step-dot-1"></div>
+      <div class="reg-step-dot" id="step-dot-2"></div>
+      <div class="reg-step-dot" id="step-dot-3"></div>
+      <div class="reg-step-dot" id="step-dot-4"></div>
+    </div>
+    <div class="reg-step active" id="reg-step-1">
+      <div class="reg-title">开通 Alpha-ID</div>
+      <div class="reg-subtitle">输入手机号，接收短信验证码</div>
+      <input class="reg-input" id="reg-phone" type="tel" placeholder="输入手机号" maxlength="11" autocomplete="tel">
+      <div class="reg-error" id="reg-phone-error"></div>
+      <div class="reg-sms-row" style="margin-top:16px;">
+        <input class="reg-input" id="reg-sms-input" type="text" placeholder="输入验证码" maxlength="6" inputmode="numeric" style="margin-top:0;">
+        <button class="reg-sms-btn" id="reg-send-sms-btn" onclick="sendSMSCode()">获取验证码</button>
+      </div>
+      <button class="reg-btn" id="reg-step1-btn" onclick="verifySMS()">下一步</button>
+      <div class="reg-api-status" id="reg-sms-status"></div>
+    </div>
+    <div class="reg-step" id="reg-step-2">
+      <div class="reg-title">手机验证通过</div>
+      <div class="reg-subtitle" id="reg-step2-phone">手机号已验证</div>
+      <div style="text-align:center;margin:20px 0;">
+        <div class="reg-success-icon">&#x2713;</div>
+      </div>
+      <button class="reg-btn" onclick="startFaceVerify()">下一步 · 人脸核身</button>
+    </div>
+    <div class="reg-step" id="reg-step-3">
+      <div class="reg-title">支付宝人脸核身</div>
+      <div class="reg-subtitle">使用支付宝扫码完成实名认证</div>
+      <div style="text-align:center;margin:20px 0;position:relative;z-index:1;">
+        <div style="width:180px;height:180px;margin:0 auto;background:rgba(255,255,255,0.03);border:1px solid rgba(139,92,246,0.15);border-radius:16px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#1677ff" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="12" cy="12" r="4"/><path d="M12 8v8M8 12h8"/></svg>
+          <span style="color:#1677ff;font-size:0.85rem;font-weight:500;">支付宝扫码</span>
         </div>
-        <div class="face-scan-line"></div>
       </div>
-
-      <h3 class="text-xl font-bold text-white mb-2" id="face-auth-title">面部识别登录</h3>
-      <p class="text-sm text-slate-400 mb-6" id="face-auth-subtitle">请将面部对准圆圈，保持光线充足</p>
-
-      <div class="face-scan-progress">
-        <div class="face-scan-progress-fill" id="face-scan-progress-fill"></div>
+      <div style="text-align:center;font-size:0.8rem;color:rgba(148,163,184,0.5);margin-bottom:8px;position:relative;z-index:1;">
+        使用支付宝扫描二维码或跳转完成刷脸
       </div>
-
-      <div class="mt-4 text-xs text-slate-500 font-mono" id="face-auth-status">等待开始...</div>
+      <button class="reg-face-btn" id="reg-face-btn" onclick="startFaceVerify()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="12" cy="12" r="4"/><path d="M12 8v8M8 12h8"/></svg>
+        支付宝人脸核身
+      </button>
+      <button class="reg-btn reg-btn-secondary" id="reg-face-skip" onclick="skipFaceVerify()" style="margin-top:8px;">
+        跳过（演示模式）
+      </button>
+      <div class="reg-loading" id="reg-face-loading" style="display:none;margin:16px auto;"></div>
+      <div class="reg-error" id="reg-face-error"></div>
+    </div>
+    <div class="reg-step" id="reg-step-4">
+      <div style="text-align:center;position:relative;z-index:1;">
+        <div class="reg-success-icon" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);">&#x2713;</div>
+        <div class="reg-title">Alpha-ID 开通成功</div>
+        <div class="reg-subtitle" style="margin-bottom:20px;">你的数字身份已生成</div>
+        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(139,92,246,0.15);border-radius:12px;padding:16px;margin-bottom:16px;font-family:monospace;">
+          <div style="font-size:0.75rem;color:rgba(148,163,184,0.5);margin-bottom:4px;">DID</div>
+          <div style="font-size:0.85rem;color:#a78bfa;word-break:break-all;" id="reg-did-result">-</div>
+        </div>
+        <button class="reg-btn" onclick="finishRegistration()">进入个人中心</button>
+      </div>
     </div>
   </div>
 </div>
-
 <!-- 滚动显现脚本 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -3615,79 +3734,255 @@ document.addEventListener('DOMContentLoaded', function() {
     resetDemoBtn.addEventListener('click', resetDemo);
   }
 
-  // ============ 登录系统 ============
+  // ============ 注册/登录系统 ============
   var isLoggedIn = false;
   var currentUserDID = '';
+  var regPhone = '';
+  var regTimer = null;
+  var regCountdown = 0;
+  var GATEWAY_URL = 'http://localhost:18080';
 
-  window.openFaceAuth = function() {
-    var modal = document.getElementById('face-auth-modal');
-    var frame = document.getElementById('face-scan-frame');
-    var title = document.getElementById('face-auth-title');
-    var subtitle = document.getElementById('face-auth-subtitle');
-    var status = document.getElementById('face-auth-status');
-    var progressFill = document.getElementById('face-scan-progress-fill');
-
+  window.showRegistration = function() {
+    var modal = document.getElementById('reg-modal');
     if (!modal) return;
+    resetRegistration();
     modal.classList.add('active');
-    frame.classList.add('scanning');
-    title.textContent = '面部识别登录';
-    subtitle.textContent = '请将面部对准圆圈，保持光线充足';
-    status.textContent = '扫描中...';
-    progressFill.style.width = '0%';
-
-    // 模拟扫描进度
-    var progress = 0;
-    var scanInterval = setInterval(function() {
-      progress += Math.random() * 15;
-      if (progress > 100) progress = 100;
-      progressFill.style.width = progress + '%';
-
-      if (progress > 30 && progress < 60) {
-        status.textContent = '特征点提取中...';
-      } else if (progress >= 60 && progress < 90) {
-        status.textContent = 'DID 验证中...';
-      } else if (progress >= 90) {
-        status.textContent = '即将完成...';
-      }
-
-      if (progress >= 100) {
-        clearInterval(scanInterval);
-        setTimeout(function() {
-          simulateScanSuccess();
-        }, 400);
-      }
-    }, 300);
+    document.body.style.overflow = 'hidden';
+    setTimeout(function() { var inp = document.getElementById('reg-phone'); if (inp) inp.focus(); }, 350);
   };
 
-  window.closeFaceAuth = function() {
-    var modal = document.getElementById('face-auth-modal');
-    var frame = document.getElementById('face-scan-frame');
+  window.closeRegistration = function() {
+    var modal = document.getElementById('reg-modal');
     if (modal) modal.classList.remove('active');
-    if (frame) frame.classList.remove('scanning');
+    document.body.style.overflow = '';
+    if (regTimer) { clearInterval(regTimer); regTimer = null; }
   };
 
-  function simulateScanSuccess() {
-    closeFaceAuth();
-    isLoggedIn = true;
-    currentUserDID = generateDid();
+  function resetRegistration() {
+    document.querySelectorAll('.reg-step').forEach(function(s) { s.classList.remove('active'); });
+    document.getElementById('reg-step-1').classList.add('active');
+    for (var i = 1; i <= 4; i++) {
+      var dot = document.getElementById('step-dot-' + i);
+      if (dot) { dot.className = 'reg-step-dot'; if (i === 1) dot.classList.add('active'); }
+    }
+    document.querySelectorAll('.reg-error').forEach(function(e) { e.classList.remove('show'); e.textContent = ''; });
+    var p = document.getElementById('reg-phone'); if (p) p.value = '';
+    var s = document.getElementById('reg-sms-input'); if (s) s.value = '';
+    var b = document.getElementById('reg-send-sms-btn');
+    if (b) { b.disabled = false; b.textContent = '获取验证码'; }
+    if (regTimer) { clearInterval(regTimer); regTimer = null; }
+    regPhone = ''; regCountdown = 0;
+    var st = document.getElementById('reg-sms-status'); if (st) st.textContent = '';
+  }
 
-    // 更新 UI
+  function goToStep(step) {
+    document.querySelectorAll('.reg-step').forEach(function(s) { s.classList.remove('active'); });
+    document.getElementById('reg-step-' + step).classList.add('active');
+    for (var i = 1; i <= 4; i++) {
+      var dot = document.getElementById('step-dot-' + i);
+      if (dot) {
+        dot.className = 'reg-step-dot';
+        if (i < step) dot.classList.add('done');
+        else if (i === step) dot.classList.add('active');
+      }
+    }
+  }
+
+  window.sendSMSCode = function() {
+    var phone = document.getElementById('reg-phone').value.trim();
+    var errorEl = document.getElementById('reg-phone-error');
+    var sendBtn = document.getElementById('reg-send-sms-btn');
+    var statusEl = document.getElementById('reg-sms-status');
+
+    if (!/^1[3-9]\d{9}$/.test(phone)) {
+      errorEl.textContent = '请输入正确的手机号';
+      errorEl.classList.add('show');
+      return;
+    }
+    errorEl.classList.remove('show');
+
+    sendBtn.disabled = true;
+    sendBtn.textContent = '发送中...';
+
+    fetch(GATEWAY_URL + '/v1/register/send-sms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: phone })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(resp) {
+      regPhone = phone;
+      if (resp.success && resp.data && resp.data.success) {
+        if (resp.data.demo) {
+          var si = document.getElementById('reg-sms-input');
+          if (si) si.value = resp.data.demo;
+          if (statusEl) statusEl.textContent = '演示模式：验证码已自动填入';
+        }
+        regCountdown = 60;
+        sendBtn.textContent = '60s';
+        regTimer = setInterval(function() {
+          regCountdown--;
+          sendBtn.textContent = regCountdown + 's';
+          if (regCountdown <= 0) {
+            clearInterval(regTimer); regTimer = null;
+            sendBtn.disabled = false;
+            sendBtn.textContent = '重新获取';
+          }
+        }, 1000);
+      } else {
+        sendBtn.disabled = false;
+        sendBtn.textContent = '获取验证码';
+        var errMsg = '发送失败，请重试';
+        if (resp.data && resp.data.error) errMsg = resp.data.error;
+        else if (resp.error) errMsg = resp.error;
+        errorEl.textContent = errMsg;
+        errorEl.classList.add('show');
+      }
+    })
+    .catch(function(err) {
+      sendBtn.disabled = false;
+      sendBtn.textContent = '获取验证码';
+      errorEl.textContent = '网络错误，请检查网关连接';
+      errorEl.classList.add('show');
+    });
+  };
+
+  window.verifySMS = function() {
+    var code = document.getElementById('reg-sms-input').value.trim();
+    var errorEl = document.getElementById('reg-phone-error');
+
+    if (!code || code.length < 4) {
+      errorEl.textContent = '请输入验证码';
+      errorEl.classList.add('show');
+      return;
+    }
+    errorEl.classList.remove('show');
+
+    fetch(GATEWAY_URL + '/v1/register/verify-sms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: regPhone, code: code })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(resp) {
+      if (resp.success && resp.data && resp.data.success) {
+        document.getElementById('reg-step2-phone').textContent = regPhone + ' 已验证通过';
+        goToStep(2);
+      } else {
+        var errMsg = '验证码错误';
+        if (resp.data && resp.data.error) errMsg = resp.data.error;
+        else if (resp.error) errMsg = resp.error;
+        errorEl.textContent = errMsg;
+        errorEl.classList.add('show');
+      }
+    })
+    .catch(function(err) {
+      errorEl.textContent = '网络错误，请检查网关连接';
+      errorEl.classList.add('show');
+    });
+  };
+
+  window.startFaceVerify = function() {
+    var faceBtn = document.getElementById('reg-face-btn');
+    var faceSkip = document.getElementById('reg-face-skip');
+    var faceLoading = document.getElementById('reg-face-loading');
+    var faceError = document.getElementById('reg-face-error');
+
+    faceBtn.style.display = 'none';
+    faceSkip.style.display = 'none';
+    faceLoading.style.display = 'block';
+    faceError.classList.remove('show');
+
+    goToStep(3);
+
+    fetch(GATEWAY_URL + '/v1/register/face-verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: regPhone })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(resp) {
+      faceLoading.style.display = 'none';
+      if (resp.success && resp.data && resp.data.realName) {
+        generateAndCompleteDID();
+      } else if (resp.success && resp.data && resp.data.passed) {
+        generateAndCompleteDID();
+      } else if (resp.success && resp.data && resp.data.certifyUrl) {
+        faceBtn.style.display = 'flex';
+        faceSkip.style.display = 'block';
+        window.open(resp.data.certifyUrl, '_blank');
+      } else {
+        faceBtn.style.display = 'flex';
+        faceSkip.style.display = 'block';
+        var errMsg = '请求失败';
+        if (resp.data && resp.data.error) errMsg = resp.data.error;
+        else if (resp.error) errMsg = resp.error;
+        faceError.textContent = errMsg;
+        faceError.classList.add('show');
+      }
+    })
+    .catch(function(err) {
+      faceLoading.style.display = 'none';
+      faceBtn.style.display = 'flex';
+      faceSkip.style.display = 'block';
+      faceError.textContent = '网络错误，请检查网关连接';
+      faceError.classList.add('show');
+    });
+  };
+
+  window.skipFaceVerify = function() {
+    generateAndCompleteDID();
+  };
+
+  function generateAndCompleteDID() {
+    if (regTimer) { clearInterval(regTimer); regTimer = null; }
+
+    fetch(GATEWAY_URL + '/v1/register/generate-did', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: regPhone })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(resp) {
+      if (resp.success && resp.data && resp.data.did) {
+        currentUserDID = resp.data.did;
+        document.getElementById('reg-did-result').textContent = resp.data.did;
+        goToStep(4);
+        return fetch(GATEWAY_URL + '/v1/register/complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ did: resp.data.did, phone: regPhone })
+        });
+      } else {
+        currentUserDID = 'did:aid:fallback-' + Date.now().toString(36);
+        document.getElementById('reg-did-result').textContent = currentUserDID;
+        goToStep(4);
+      }
+    })
+    .catch(function(err) {
+      currentUserDID = 'did:aid:offline-' + Date.now().toString(36);
+      document.getElementById('reg-did-result').textContent = currentUserDID + ' (离线模式)';
+      goToStep(4);
+    });
+  }
+
+  window.finishRegistration = function() {
+    closeRegistration();
+    isLoggedIn = true;
+
     var loginBtn = document.getElementById('header-login-btn');
     var profileBtn = document.getElementById('profile-btn');
     if (loginBtn) loginBtn.classList.add('hidden');
     if (profileBtn) profileBtn.classList.remove('hidden');
 
-    // 显示 DID
     var didDisplay = document.getElementById('user-did-display');
     if (didDisplay) didDisplay.textContent = currentUserDID.substring(0, 20) + '…';
 
     var settingsDid = document.getElementById('settings-did');
     if (settingsDid) settingsDid.textContent = currentUserDID;
 
-    // 跳转到 Web 4.0
     showWorkbench();
-  }
-
+  };
   // ============ 视图切换 ============
   window.showWorkbench = function() {
     document.getElementById('homepageView').classList.remove('active');
@@ -3792,6 +4087,186 @@ document.addEventListener('DOMContentLoaded', function() {
     if (target) target.classList.remove('hidden');
   };
 
+  // ============ 💬 豆包记忆桥 ============
+  window.loadDoubao = function() {
+    updateStatus();
+    updateConvList();
+  };
+  
+    window.updateStatus = function() {
+    // Gateway health
+    fetch('http://localhost:18080/health').then(function(r){return r.json()}).then(function(h){
+      if (h.success) {
+        var gwOk = h.data && h.data.gateway === 'ok';
+        document.getElementById('doubao-status').innerHTML = gwOk ? '🟢 连接正常' : '🟡 部分异常';
+      }
+    }).catch(function(){
+      document.getElementById('doubao-status').innerHTML = '🔴 Gateway 未连';
+    });
+    
+    // Nebula (Feishu bot) health - check via orchestrator
+    fetch('http://localhost:19090/health').then(function(r){return r.json()}).then(function(d){
+      document.getElementById('doubao-nebula').innerHTML = '🟢 连接中';
+    }).catch(function(){
+      document.getElementById('doubao-nebula').innerHTML = '🟡 Orchestrator 未启动';
+    });
+    
+    // Obsidian vault - check directory exists with recent files
+    var obsEl = document.getElementById('doubao-obsidian');
+    // Can't check local filesystem from browser, but we can check via gateway
+    fetch('http://localhost:18080/health').then(function(r){return r.json()}).then(function(h){
+      var hasObsidian = h.data && h.data.obsidian === 'ok';
+      obsEl.innerHTML = hasObsidian ? '📄 已关联' : '📄 未连接';
+    }).catch(function(){
+      obsEl.innerHTML = '📄 等待中';
+    });
+    
+    document.getElementById('doubao-refresh-time').textContent = new Date().toLocaleTimeString();
+  };  window.updateConvList = function() {
+    var list = document.getElementById('doubao-conv-list');
+    if (!list) return;
+    list.innerHTML = '<div class="text-center text-slate-500 py-8 text-sm">加载中...</div>';
+    
+    // Direct Obsidian vault search - zero token cost
+    fetch('http://localhost:18080/v1/memory/search?limit=10')
+    .then(function(r){return r.json()})
+    .then(function(res){
+      if (res.success && res.data && res.data.results && res.data.results.length > 0) {
+        var html = '';
+        res.data.results.forEach(function(mem) {
+          var dateStr = mem.date || '未知';
+          var preview = (mem.preview || '').substring(0, 150);
+          preview = preview.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          var tags = (mem.tags || []).map(function(t){
+            return '<span class="inline-block text-xs px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400">' + t + '</span>';
+          }).join(' ');
+          html += '<div class="conv-item p-3 rounded-lg bg-white/5 border border-white/10 mb-2 hover:bg-white/10 transition">';
+          html += '<div class="text-xs text-slate-500 mb-1">' + dateStr + ' · ' + (mem.category || '') + '</div>';
+          html += '<div class="text-sm text-slate-300 line-clamp-3">' + preview + '</div>';
+          if (tags) html += '<div class="mt-1 flex gap-1 flex-wrap">' + tags + '</div>';
+          html += '</div>';
+        });
+        list.innerHTML = html;
+      } else {
+        list.innerHTML = '<div class="text-center text-slate-500 py-8 text-sm">暂无同步记忆</div>';
+      }
+    }).catch(function(err){
+      list.innerHTML = '<div class="text-center text-slate-500 py-8 text-sm">请确保 Gateway 已启动 (port 18080)</div>';
+    });
+  };
+  
+  window.searchDoubao = function() {
+    var q = document.getElementById('doubao-search-input').value.trim();
+    if (!q) { updateConvList(); return; }
+    var list = document.getElementById('doubao-conv-list');
+    if (!list) return;
+    list.innerHTML = '<div class="text-center text-slate-500 py-8 text-sm">搜索中...</div>';
+    
+    // Search via Obsidian vault (zero token cost)
+    fetch('http://localhost:18080/v1/memory/search?keyword=' + encodeURIComponent(q) + '&limit=20')
+    .then(function(r){return r.json()})
+    .then(function(res){
+      if (res.success && res.data && res.data.results && res.data.results.length > 0) {
+        var html = '<div class="text-xs text-slate-500 mb-3">找到 ' + res.data.total + ' 条结果</div>';
+        res.data.results.forEach(function(mem) {
+          var dateStr = mem.date || '未知';
+          var preview = (mem.preview || '').substring(0, 200);
+          preview = preview.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          // Highlight keyword
+          var re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+          preview = preview.replace(re, '<mark class="bg-sky-500/30 text-sky-200 px-0.5 rounded">$1</mark>');
+          html += '<div class="conv-item p-3 rounded-lg bg-white/5 border border-white/10 mb-2">';
+          html += '<div class="text-xs text-slate-500 mb-1">' + dateStr + ' · ' + mem.category + '</div>';
+          html += '<div class="text-sm text-slate-300">' + preview + '</div>';
+          html += '</div>';
+        });
+        list.innerHTML = html;
+      } else {
+        list.innerHTML = '<div class="text-center text-slate-500 py-8 text-sm">未找到相关记忆</div>';
+      }
+    }).catch(function(){
+      list.innerHTML = '<div class="text-center text-slate-500 py-8 text-sm">搜索失败，请确保 Gateway 已启动</div>';
+    });
+  };
+  
+// ============ 🌌 记忆星云 ============
+  window.loadGraph = function() {
+    var svg = document.getElementById('graph-svg');
+    if (!svg) return;
+    
+    // Load d3.js if not loaded
+    if (typeof d3 === 'undefined') {
+      var script = document.createElement('script');
+      script.src = 'https://d3js.org/d3.v7.min.js';
+      script.onload = function() { renderGraph(); };
+      document.head.appendChild(script);
+    } else {
+      renderGraph();
+    }
+  };
+  
+  function renderGraph() {
+    fetch('http://localhost:18080/v1/memory/graph').then(function(r){return r.json()}).then(function(resp){
+      if (!resp.success || !resp.data) return;
+      var data = resp.data;
+      document.getElementById('graph-stats').textContent = data.nodes.length + ' 节点·' + data.edges.length + ' 连线';
+      
+      var svg = d3.select('#graph-svg');
+      svg.selectAll('*').remove();
+      
+      var width = svg.node().parentElement.clientWidth || 800;
+      var height = 480;
+      svg.attr('viewBox', [0, 0, width, height]);
+      
+      var simulation = d3.forceSimulation(data.nodes)
+        .force('link', d3.forceLink(data.edges).id(function(d){return d.id;}).distance(80))
+        .force('charge', d3.forceManyBody().strength(-200))
+        .force('center', d3.forceCenter(width/2, height/2))
+        .force('collision', d3.forceCollide().radius(30));
+      
+      var g = svg.append('g');
+      
+      var link = g.append('g').selectAll('line').data(data.edges).join('line')
+        .attr('stroke', '#334155').attr('stroke-width', 1).attr('stroke-opacity', 0.4);
+      
+      var node = g.append('g').selectAll('circle').data(data.nodes).join('circle')
+        .attr('r', 8).attr('fill', function(d){return d.color || '#64748b';})
+        .attr('stroke', '#1e293b').attr('stroke-width', 2)
+        .style('cursor', 'pointer')
+        .on('click', function(e, d){ showNodeDetail(d); })
+        .call(d3.drag()
+          .on('start', function(e,d){if(!e.active)simulation.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y;})
+          .on('drag', function(e,d){d.fx=e.x; d.fy=e.y;})
+          .on('end', function(e,d){if(!e.active)simulation.alphaTarget(0); d.fx=null; d.fy=null;}));
+      
+      var label = g.append('g').selectAll('text').data(data.nodes).join('text')
+        .text(function(d){return d.label.substring(0,12);})
+        .attr('font-size', 8).attr('fill', '#94a3b8').attr('dx', 12).attr('dy', 3);
+      
+      simulation.on('tick', function() {
+        link.attr('x1', function(d){return d.source.x;}).attr('y1', function(d){return d.source.y;})
+            .attr('x2', function(d){return d.target.x;}).attr('y2', function(d){return d.target.y;});
+        node.attr('cx', function(d){return d.x;}).attr('cy', function(d){return d.y;});
+        label.attr('x', function(d){return d.x;}).attr('y', function(d){return d.y;});
+      });
+    });
+  }
+  
+  function showNodeDetail(d) {
+    var detail = document.getElementById('graph-detail');
+    detail.classList.remove('hidden');
+    document.getElementById('graph-detail-title').textContent = d.label;
+    document.getElementById('graph-detail-content').textContent = d.source + ' | ' + d.category;
+    document.getElementById('graph-detail-meta').textContent = '标签: ' + (d.tags || []).join(', ') + ' | 颜色: ' + d.color;
+  }
+  
+  var graphBtn = document.querySelector('[data-route="graph"]');
+  if (graphBtn) {
+    graphBtn.addEventListener('click', function() {
+      setTimeout(loadGraph, 200);
+    });
+  }
+  
 });
 </script>
 

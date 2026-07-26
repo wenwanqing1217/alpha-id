@@ -73,11 +73,7 @@ class AlphaSocialManager:
             self._storage.save("messages", {})
 
     def send_friend_request(self, from_alpha_id: str, to_alpha_id: str, message: str) -> Dict:
-        """发送好友请求"""
-        # H4: 验证目标用户存在
-        if self._user_exists_fn and not self._user_exists_fn(to_alpha_id):
-            return {"success": False, "message": "目标用户不存在"}
-
+        """发送好友请求（不验证目标用户存在，支持预注册场景）"""
         friends = self._storage.load("friends") or {}
         requests = self._storage.load("friend_requests") or {}
 

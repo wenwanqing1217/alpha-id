@@ -150,7 +150,7 @@ class PermissionGate:
 
     L1_AUTO = frozenset({
         "weather_query", "calendar_query", "route_plan",
-        "search", "web_search",
+        "search", "web_search", "code_runner", "codex_agent", "chat",
     })
     L2_CONFIRM = frozenset({
         "interview_prep", "resume_optimize", "schedule_add",
@@ -255,6 +255,9 @@ class MindflowEngine:
             "weather_query": ["weather_api"],
             "resume": ["resume_engine"],
             "search": ["web_search"],
+            "code_runner": ["code_runner"],
+            "codex_agent": ["codex_agent"],
+            "chat": ["chat"],
         }
         return intent_tool_map.get(instruction.intent, [])
 
@@ -272,6 +275,10 @@ class MindflowEngine:
                     parts.append(f"公司: {data.get('name', '已查询')}")
                 elif tool_name == "calendar":
                     parts.append(f"日程: {data.get('summary', '已读取')}")
+                elif tool_name == "code_runner":
+                    parts.append(data.get('content', '代码已生成'))
+                elif tool_name == "chat":
+                    parts.append(data.get('content', ''))
                 else:
                     parts.append(f"{tool_name}: 执行成功")
             else:

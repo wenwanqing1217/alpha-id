@@ -62,7 +62,7 @@ class BrainSettings:
     """孪生大脑自主行为设置"""
 
     auto_reply: bool = False  # 离线时自动回复
-    auto_reply_text: str = "我现在无法处理，稍后回复你。"
+    auto_reply_text: str = "我现在暂时不在，有事情可以留言，我回来第一时间处理。"
     wake_hours_start: int = 8  # 唤醒时间（小时）
     wake_hours_end: int = 22  # 休眠时间（小时）
     idle_timeout: int = 300  # 空闲超时（秒），默认 5 分钟转入 idle
@@ -439,14 +439,19 @@ class TwinBrain:
             try:
                 # AgentLoop 内部已经自动注入：用户档案 + 语义相关记忆 + 工具列表
                 agent_reply = self.agent.run(text)
-                return Response.ok(
-                    data={"reply": agent_reply},
-                    message=agent_reply,
-                )
-            except Exception:
-                pass  # 降级到默认回复
+                if agent_reply and not agent_reply.startswith("[LLM"):
+                    return Response.ok(
+                        data={"reply": agent_reply},
+                        message=agent_reply,
+                    )
+            except Exception as e:
+                logger.error("%s AgentLoop 异常: %s", self.alpha_id, e, exc_info=True)
 
-        return Response.ok(data={}, message="消息已收到")
+        # 降级：LLM 不可用时给出友好提示
+        return Response.ok(
+            data={},
+            message="我在思考时遇到了一点小问题，请稍后再问我一次 \U0001f64f"
+        )
 
     def _handle_friend_request(self, message) -> "Response":  # noqa: F821
         from core.message import Response

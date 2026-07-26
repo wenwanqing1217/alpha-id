@@ -46,13 +46,11 @@ class StatisticsResponse:
 class UserIdentityManager:
     """用户身份管理器"""
 
-    # 可通过环境变量覆盖，实现多租户配置
-    FOUNDER_ALPHA_ID = os.getenv("FOUNDER_ALPHA_ID", "Alpha-1")
-    FOUNDER_DEVICE_FINGERPRINT = os.getenv("FOUNDER_DEVICE_FINGERPRINT", "")
-    # 必须通过环境变量设置，无默认值。生成方式: python -c "import hashlib,secrets; print(hashlib.sha256(secrets.token_bytes(32)).hexdigest())"
-    FOUNDER_CODE_HASH = os.getenv("FOUNDER_CODE_HASH", "")
-
     def __init__(self, storage: Optional[StorageBackend] = None):
+        # 运行时读取环境变量（避免类变量在 import 时固化，导致测试无法注入）
+        self._founder_alpha_id = os.getenv("FOUNDER_ALPHA_ID", "Alpha-1")
+        self._founder_code_hash = os.getenv("FOUNDER_CODE_HASH", "")
+
         # 默认使用 JSON 存储
         if storage is None:
             from core.storage import JsonStorage
@@ -126,10 +124,10 @@ class UserIdentityManager:
 
         # 创始人注册逻辑
         if is_founder:
-            if not self.FOUNDER_CODE_HASH:
+            if not self._founder_code_hash:
                 logger.warning(f"注册失败: 创始人注册未配置 - {device_fingerprint}")
                 return {"success": False, "message": "创始人注册未配置，请联系管理员"}
-            if not founder_code or hashlib.sha256(founder_code.encode()).hexdigest() != self.FOUNDER_CODE_HASH:
+            if not founder_code or hashlib.sha256(founder_code.encode()).hexdigest() != self._founder_code_hash:
                 logger.warning(f"注册失败: 创始人验证码无效 - {device_fingerprint}")
                 return {"success": False, "message": "创始人验证码无效"}
 
@@ -137,7 +135,7 @@ class UserIdentityManager:
                 logger.warning(f"注册失败: 创始人已注册 - {device_fingerprint}")
                 return {"success": False, "message": "创始人已注册"}
 
-            alpha_id = self.FOUNDER_ALPHA_ID
+            alpha_id = self._founder_alpha_id
             founder_registered = True
         else:
             counter += 1
@@ -276,7 +274,7 @@ class UserIdentityManager:
             total_users=total_users,
             active_users=active_users,
             founder_registered=bool(founder_registered),
-            founder_alpha_id=self.FOUNDER_ALPHA_ID if founder_registered else None,
+            founder_alpha_id=self._founder_alpha_id if founder_registered else None,
             next_user_id=f"Alpha-{counter + 1:03d}" if not founder_registered else "Alpha为创始人保留",
         )
 

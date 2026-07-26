@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from alpha_id.container import Container
-from auth.jwt import create_access_token, decode_token, rotate_token, revoke_token, verify_token
+from auth.jwt import create_access_token, create_refresh_token, decode_token, rotate_token, revoke_token, verify_token
 from auth.middleware import require_user
 from core.user_identity import UserIdentityManager
 
@@ -83,13 +83,19 @@ def logout(_: str = Depends(require_user)):
 
 
 @router.post("/auth/verify", response_model=VerifyResponse)
-def auth_verify(body: VerifyRequest, _: str = Depends(require_user)):
-    """验证 AID 签发的 JWT 令牌（需认证，仅返回 valid 标志）"""
+def auth_verify(body: VerifyRequest):
+    """验证 AID 签发的 JWT 令牌（公开，供跨服务验证）"""
     try:
-        decode_token(body.token)
-        return VerifyResponse(valid=True)
-    except ValueError:
-        return VerifyResponse(valid=False)
+        payload = decode_token(body.token)
+        return VerifyResponse(
+            valid=True,
+            alpha_id=payload.get("sub", ""),
+            token_type=payload.get("type", ""),
+            exp=payload.get("exp", 0),
+            iat=payload.get("iat", 0),
+        )
+    except ValueError as exc:
+        return VerifyResponse(valid=False, message=str(exc))
 
 
 # ── 受保护端点（需要 Bearer 令牌） ──
@@ -147,6 +153,6 @@ def record_session(alpha_id: str, _: str = Depends(require_user)):
 
 
 @router.get("/stats/overview")
-def get_statistics(_: str = Depends(require_user)):
-    """获取系统统计信息（需认证）"""
+def get_statistics():
+    """获取系统统计信息（公开）"""
     return get_manager().get_statistics()
