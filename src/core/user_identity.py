@@ -54,14 +54,14 @@ class UserIdentityManager:
 
         # 默认使用 JSON 存储
         if storage is None:
-            from core.storage import JsonStorage
+            from core.storage_sqlite import SqliteStorage
 
             db_path = os.path.join(
                 os.getenv("GHOST_WORKSPACE_PATH", os.getcwd()),
                 "assets",
-                "alpha_id_users.json",
+                "alpha_id.db",
             )
-            storage = JsonStorage(db_path)
+            storage = SqliteStorage(db_path)
 
         self._storage = storage
 

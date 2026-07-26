@@ -111,18 +111,20 @@ class DualChainManager:
         self._salt = self._get_or_create_salt()
         self._key = _derive_key(alpha_id, self._salt)
 
-        # 存储路径（使用清洗后的 alpha_id 防止路径遍历）
+        # 统一存储后端：SQLite
         if storage is None:
-            base = os.getenv("COZE_WORKSPACE_PATH", os.getcwd())
-            safe_id = _sanitize_alpha_id(alpha_id)
-            priv_path = os.path.join(base, "assets", f"private_chain_{safe_id}.json")
-            know_path = os.path.join(base, "assets", f"knowledge_chain_{safe_id}.json")
-            self._private_storage = JsonStorage(priv_path)
-            self._knowledge_storage = JsonStorage(know_path)
+            base = os.getenv("GHOST_WORKSPACE_PATH", os.getcwd())
+            db_path = os.path.join(base, "assets", "alpha_id.db")
+            from core.storage_sqlite import SqliteStorage
+            self._private_storage = SqliteStorage(db_path)
+            self._knowledge_storage = SqliteStorage(db_path)
+            self._chain_key_private = _sanitize_alpha_id(f"private_{alpha_id}")
+            self._chain_key_knowledge = _sanitize_alpha_id(f"knowledge_{alpha_id}")
         else:
-            # 使用传入的存储后端（测试用）
             self._private_storage = storage
             self._knowledge_storage = storage
+            self._chain_key_private = _sanitize_alpha_id(f"private_{alpha_id}")
+            self._chain_key_knowledge = _sanitize_alpha_id(f"knowledge_{alpha_id}")
 
         self._init_stores()
 

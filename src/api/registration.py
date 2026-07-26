@@ -11,40 +11,30 @@ from typing import Dict, Optional
 
 from fastapi import APIRouter, HTTPException, Request
 
+from alpha_id.container import Container
 from alpha_id.signer import AIDSigner
 
 router = APIRouter(prefix="/api/v1/register", tags=["注册"])
 
-# ── SQLite 持久化存储 ──
-_db_path = os.path.join(
-    os.environ.get("COZE_WORKSPACE_PATH", os.getcwd()),
-    "assets",
-    "alpha_id.db",
-)
+
+def _get_storage():
+    """获取统一的存储后端（通过 Container DI）"""
+    return Container.instance().storage
 
 
 def _sms_store() -> Dict[str, dict]:
-    import sqlite3
     try:
-        conn = sqlite3.connect(_db_path)
-        cur = conn.execute("SELECT data FROM collections WHERE collection_name='sms_codes'")
-        row = cur.fetchone()
-        conn.close()
-        return json.loads(row[0]) if row else {}
+        store = _get_storage()
+        data = store.load("sms_codes")
+        return data if data else {}
     except Exception:
         return {}
 
 
 def _sms_save(data: Dict[str, dict]) -> None:
-    import sqlite3
     try:
-        conn = sqlite3.connect(_db_path)
-        conn.execute(
-            "INSERT OR REPLACE INTO collections (collection_name, doc_id, data) VALUES (?, '_default', ?)",
-            ("sms_codes", json.dumps(data)),
-        )
-        conn.commit()
-        conn.close()
+        store = _get_storage()
+        store.save("sms_codes", data)
     except Exception:
         pass
 
@@ -61,27 +51,18 @@ def _clean_expired() -> Dict[str, dict]:
 
 
 def _face_store() -> Dict[str, dict]:
-    import sqlite3
     try:
-        conn = sqlite3.connect(_db_path)
-        cur = conn.execute("SELECT data FROM collections WHERE collection_name='face_certify'")
-        row = cur.fetchone()
-        conn.close()
-        return json.loads(row[0]) if row else {}
+        store = _get_storage()
+        data = store.load("face_certify")
+        return data if data else {}
     except Exception:
         return {}
 
 
 def _face_save(data: Dict[str, dict]) -> None:
-    import sqlite3
     try:
-        conn = sqlite3.connect(_db_path)
-        conn.execute(
-            "INSERT OR REPLACE INTO collections (collection_name, doc_id, data) VALUES (?, '_default', ?)",
-            ("face_certify", json.dumps(data)),
-        )
-        conn.commit()
-        conn.close()
+        store = _get_storage()
+        store.save("face_certify", data)
     except Exception:
         pass
 

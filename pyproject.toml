@@ -51,9 +51,9 @@ Changelog = "https://github.com/wenwanqing1217/alpha-id/commits/main/"
 
 [project.scripts]
 aid = "alpha_id.cli:app"
+aid-api = "main:app"
 aid-mcp = "entrypoints.aid_mcp_server:main"
 aid-daemon = "entrypoints.daemon:main"
-aid-api = "entrypoints.api:main"
 
 [build-system]
 requires = ["setuptools>=75.0", "wheel"]

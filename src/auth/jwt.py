@@ -203,7 +203,11 @@ def rotate_token(old_refresh_token: str) -> tuple:
     # 撤销旧 refresh token
     if old_jti:
         from auth.token_store import get_token_store
-        get_token_store().revoke(old_jti, old_exp)
+        store = get_token_store()
+        # 检查是否已被撤销（防重放攻击）
+        if store.is_revoked(old_jti):
+            raise ValueError("刷新令牌已被撤销，可能遭遇重放攻击")
+        store.revoke(old_jti, old_exp)
 
     # 颁发新对
     new_access = create_access_token(alpha_id)

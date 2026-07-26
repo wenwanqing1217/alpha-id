@@ -12,7 +12,7 @@
   5. 生成百度地图 Deep Link（一键跳转手机App）
 
 需要环境变量：
-  BAIDU_MAP_AUTH_TOKEN = sk-ap-5h1Eit4VKkhGRV3VmKZb4Z2dmgnex6UrRrFOMFx6HRNSXIbwfahDeq8V7HzVL0cS
+  BAIDU_MAP_AUTH_TOKEN = 你的百度地图 Agent Plan Token
 """
 
 import json
