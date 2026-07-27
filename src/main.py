@@ -6,17 +6,18 @@
 """
 
 import logging
-from pathlib import Path
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import AsyncGenerator
 
 # 配置结构化日志（structlog + 敏感数据脱敏 + JSON/彩色输出）
 from core.logging_config import configure_logging
+
 configure_logging()
 
 logger = logging.getLogger(__name__)
 
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # noqa: E402
 
 # 加载 .env 文件（必须在读取环境变量之前）
 load_dotenv()
@@ -27,21 +28,22 @@ from fastapi.responses import HTMLResponse  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 
 from alpha_id.container import Container, get_container  # noqa: E402
-from auth.jwt import validate_master_key  # noqa: E402
 from auth.csrf import CSRFMiddleware  # noqa: E402
+from auth.jwt import validate_master_key  # noqa: E402
 from core.middleware import CorrelationIDMiddleware  # noqa: E402
 from core.rate_limit import RateLimitMiddleware  # noqa: E402
 from core.settings import settings  # noqa: E402
 
+from .api.agent import router as agent_router  # noqa: E402
+from .api.dual_chain import router as dual_chain_router  # noqa: E402
+from .api.gdpr import router as gdpr_router  # noqa: E402
+
 # 路由导入（项目始终以 python -m src.main 方式运行）
 from .api.identity import router as identity_router  # noqa: E402
+from .api.observability import router as observability_router  # noqa: E402
+from .api.registration import router as registration_router  # noqa: E402
 from .api.risk import router as risk_router  # noqa: E402
 from .api.social import router as social_router  # noqa: E402
-from .api.dual_chain import router as dual_chain_router  # noqa: E402
-from .api.registration import router as registration_router  # noqa: E402
-from .api.observability import router as observability_router  # noqa: E402
-from .api.agent import router as agent_router  # noqa: E402
-from .api.gdpr import router as gdpr_router  # noqa: E402
 
 
 @asynccontextmanager
@@ -60,11 +62,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     app.state.container = container
 
     # 启动：A2A 服务器（后台线程，端口 9001）
-    a2a_thread = None
     if settings.a2a_enabled:
         try:
-            from core.a2a import A2AServer, SkillRegistry, A2ASigner
             from alpha_id.did import DIDRegistry
+            from core.a2a import A2AServer, A2ASigner, SkillRegistry
 
             # 构建技能注册表
             skills = SkillRegistry()
@@ -95,7 +96,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
                 alpha_id=settings.app_name,
                 port=settings.a2a_port,
             )
-            a2a_thread = a2a_server.start(blocking=False)
+            a2a_server.start(blocking=False)
             logger.info("A2A 服务器已启动 (端口 %d)", settings.a2a_port)
         except Exception as exc:
             logger.warning("A2A 服务器启动失败（非阻塞）: %s", exc)

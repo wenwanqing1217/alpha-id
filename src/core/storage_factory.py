@@ -13,7 +13,7 @@ Storage Factory —— 存储后端工厂
 import logging
 
 from core.settings import settings
-from core.storage import StorageBackend, JsonStorage
+from core.storage import JsonStorage, StorageBackend
 from core.storage_sqlite import SqliteStorage
 
 logger = logging.getLogger(__name__)
