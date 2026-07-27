@@ -7,6 +7,7 @@ V1 支持关键词搜索，V2 使用 ChromaDB 向量嵌入语义搜索。
 记忆按 sensitivity（敏感度 0-100）分级，配合可见度模型使用。
 """
 
+import logging
 import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
@@ -15,6 +16,8 @@ from typing import Any, Dict, List, Optional
 
 from core.settings import settings
 from core.storage import JsonStorage, StorageBackend
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -40,6 +43,9 @@ class MemoryStore:
     """
 
     def __init__(self, alpha_id: str, storage: Optional[StorageBackend] = None):
+        # 防止路径遍历：alpha_id 只允许字母、数字、连字符、下划线
+        if not alpha_id or any(c in alpha_id for c in ('..', '/', '\\', ':', '*', '?', '"', '<', '>', '|')):
+            raise ValueError(f"Invalid alpha_id: {alpha_id!r} (path traversal detected)")
         self.alpha_id = alpha_id
         self._vector_index = None
 
@@ -388,16 +394,16 @@ class VectorMemoryIndex:
                 documents=[doc],
                 metadatas=[meta],
             )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("Failed to add memory to vector index: %s", e)
 
     def remove(self, memory_id: str) -> None:
         if not self.is_available:
             return
         try:
             self._collection.delete(ids=[memory_id])
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("Failed to remove memory from vector index: %s", e)
 
     def build_index(self, memories: Dict[str, Any]) -> None:
         if not self.is_available:
@@ -417,8 +423,8 @@ class VectorMemoryIndex:
         if ids:
             try:
                 self._collection.upsert(ids=ids, documents=docs, metadatas=metadatas)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("Failed to build vector index: %s", e)
 
     def search(
         self,
@@ -451,7 +457,8 @@ class VectorMemoryIndex:
                 query_kwargs["where"] = where_filter
 
             results = self._collection.query(**query_kwargs)
-        except Exception:
+        except Exception as e:
+            logger.warning("Vector search query failed: %s", e)
             return []
 
         if not results or not results["ids"] or not results["ids"][0]:
@@ -546,5 +553,5 @@ class VectorMemoryIndex:
                     documents=self._collection.get()["documents"],
                     metadatas=self._collection.get()["metadatas"],
                 )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("Failed to optimize vector index: %s", e)

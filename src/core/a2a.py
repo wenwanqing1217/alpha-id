@@ -159,59 +159,81 @@ class A2ASigner:
         self._private_key_hex = private_key_hex
         self._public_key_hex = public_key_hex
         self._signer = None
+        self._verify_key = None
 
         if private_key_hex:
             try:
                 from nacl.signing import SigningKey
                 self._signer = SigningKey(bytes.fromhex(private_key_hex))
             except ImportError:
-                logger.warning("PyNaCl not available, A2A signing limited")
+                raise ImportError(
+                    "PyNaCl is required for A2A signing. "
+                    "Install with: pip install pynacl"
+                )
+
+        if public_key_hex:
+            try:
+                from nacl.signing import VerifyKey
+                self._verify_key = VerifyKey(bytes.fromhex(public_key_hex))
+            except ImportError:
+                raise ImportError(
+                    "PyNaCl is required for A2A verification. "
+                    "Install with: pip install pynacl"
+                )
 
     def sign(self, data: bytes) -> str:
-        """Sign data, return hex"""
-        if self._signer:
-            return self._signer.sign(data).signature.hex()
-        # Fallback: HMAC-SHA256 (dev only)
-        import hmac
-        return hmac.new(
-            bytes.fromhex(self._private_key_hex), data, hashlib.sha256
-        ).hexdigest()
+        """Sign data with Ed25519, return hex signature.
+        
+        Raises:
+            RuntimeError: If no signer is available (PyNaCl not installed).
+        """
+        if not self._signer:
+            raise RuntimeError(
+                "A2A signing unavailable: PyNaCl is required. "
+                "Install with: pip install pynacl"
+            )
+        return self._signer.sign(data).signature.hex()
 
     def verify(self, data: bytes, signature_hex: str, public_key_hex: str = "") -> bool:
-        """Verify signature"""
+        """Verify Ed25519 signature.
+        
+        Args:
+            data: Original signed data
+            signature_hex: Hex-encoded Ed25519 signature
+            public_key_hex: Sender's public key (overrides instance key)
+            
+        Returns:
+            True if signature is valid
+        """
         pk = public_key_hex or self._public_key_hex
         if not pk:
             return False
-        if self._signer:
-            # PyNaCl path
-            try:
-                from nacl.signing import VerifyKey
-                verify_key = VerifyKey(bytes.fromhex(pk))
-                verify_key.verify(data, bytes.fromhex(signature_hex))
-                return True
-            except Exception:
-                return False
-        else:
-            # HMAC fallback (dev only)
-            import hmac
-            expected = hmac.new(bytes.fromhex(self._private_key_hex), data, hashlib.sha256).hexdigest()
-            return hmac.compare_digest(expected, signature_hex)
+
+        try:
+            from nacl.signing import VerifyKey
+            verify_key = VerifyKey(bytes.fromhex(pk))
+            verify_key.verify(data, bytes.fromhex(signature_hex))
+            return True
+        except Exception:
+            return False
 
     @staticmethod
     def generate_keypair() -> tuple:
-        """Generate Ed25519 keypair, return (private_key_hex, public_key_hex)"""
+        """Generate Ed25519 keypair, return (private_key_hex, public_key_hex).
+        
+        Raises:
+            ImportError: If PyNaCl is not installed.
+        """
         try:
             from nacl.signing import SigningKey
             import os
             sk = SigningKey(os.urandom(32))
             return sk.encode().hex(), sk.verify_key.encode().hex()
         except ImportError:
-            import os
-            import hashlib
-            # Fallback: derive a deterministic "public key" from private
-            priv = os.urandom(32).hex()
-            pub = hashlib.sha256(bytes.fromhex(priv)).hexdigest()
-            return priv, pub
+            raise ImportError(
+                "PyNaCl is required for A2A key generation. "
+                "Install with: pip install pynacl"
+            )
 
 
 # -- A2A Server --
@@ -233,6 +255,7 @@ class A2AServer:
         did: str = "",
         alpha_id: str = "",
         port: int = 9001,
+        host: str = "localhost",
     ):
         self._agent = agent
         self._skills = skills or SkillRegistry()
@@ -240,6 +263,7 @@ class A2AServer:
         self._did = did
         self._alpha_id = alpha_id
         self._port = port
+        self._host = host
         self._app = None
 
     def _build_app(self):
@@ -299,7 +323,7 @@ class A2AServer:
             return A2AAgentInfo(
                 did=self._did,
                 alpha_id=self._alpha_id,
-                endpoint=f"http://0.0.0.0:{self._port}",
+                endpoint=f"http://{self._host}:{self._port}",
                 skills=[s["name"] for s in self._skills.list_skills()],
                 status="online",
                 last_seen=time.time(),

@@ -7,6 +7,7 @@
 
 import asyncio
 import json
+import logging
 import os
 from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional
@@ -14,6 +15,8 @@ from typing import Any, Dict, Optional
 import aiosqlite
 
 from core.settings import settings
+
+logger = logging.getLogger(__name__)
 
 
 class AsyncSqliteStorage:
@@ -128,13 +131,47 @@ class AsyncSqliteStorage:
         )
         await conn.commit()
 
+    async def list(self, collection: str, filters: Optional[Dict[str, Any]] = None) -> list:
+        """列出集合中的所有记录（前缀匹配）"""
+        conn = await self._get_conn()
+        prefix = f"{collection}_item_"
+        async with conn.execute(
+            "SELECT data FROM collections WHERE collection_name LIKE ? || '%'",
+            (prefix,)
+        ) as cursor:
+            rows = await cursor.fetchall()
+            results = []
+            for row in rows:
+                record = json.loads(row["data"])
+                if filters:
+                    if all(record.get(k) == v for k, v in filters.items()):
+                        results.append(record)
+                else:
+                    results.append(record)
+            return results
+
+    async def count(self, collection: str, filters: Optional[Dict[str, Any]] = None) -> int:
+        """统计集合中的记录数"""
+        conn = await self._get_conn()
+        prefix = f"{collection}_item_"
+        if filters:
+            # Need to fetch and filter in Python for JSON-based filtering
+            records = await self.list(collection, filters)
+            return len(records)
+        async with conn.execute(
+            "SELECT COUNT(*) FROM collections WHERE collection_name LIKE ? || '%'",
+            (prefix,)
+        ) as cursor:
+            row = await cursor.fetchone()
+            return row[0] if row else 0
+
     async def close(self) -> None:
         """关闭连接"""
         if self._conn:
             try:
                 await self._conn.close()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("Failed to close async SQLite connection: %s", e)
             self._conn = None
 
     async def __aenter__(self):
