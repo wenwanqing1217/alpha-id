@@ -47,10 +47,12 @@ dependencies = [
     "alembic>=1.13",
     "aiosqlite>=0.20",
     "SQLAlchemy>=2.0",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "python-multipart>=0.0.9",
 ]
 
 [project.optional-dependencies]
-web = ["fastapi>=0.115", "uvicorn[standard]>=0.30"]
 mcp = ["mcp>=1.0"]
 fairy = ["openai>=1.0", "pyautogui>=0.9", "Pillow>=10.0"]
 test = [

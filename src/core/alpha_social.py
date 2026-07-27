@@ -198,6 +198,18 @@ class AlphaSocialManager:
         requests = self._storage.load("friend_requests") or {}
         return [req for req in requests.values() if req["to_alpha_id"] == alpha_id and req["status"] == "pending"]
 
+    def remove_friend(self, alpha_id: str, friend_id: str) -> Dict:
+        """删除好友（GDPR 数据清理用）"""
+        friends = self._storage.load("friends") or {}
+        if alpha_id in friends and friend_id in friends[alpha_id]:
+            friends[alpha_id].remove(friend_id)
+            self._storage.save("friends", friends)
+        # 双向删除
+        if friend_id in friends and alpha_id in friends[friend_id]:
+            friends[friend_id].remove(alpha_id)
+            self._storage.save("friends", friends)
+        return {"success": True}
+
     def get_storage_backend(self) -> StorageBackend:
         """获取当前存储后端（供迁移工具使用）"""
         return self._storage

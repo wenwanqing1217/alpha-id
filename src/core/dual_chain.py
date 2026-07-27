@@ -13,6 +13,7 @@
 
 import hashlib
 import json
+import logging
 import os
 import re
 import secrets
@@ -24,6 +25,8 @@ from typing import Any, Dict, List, Optional
 from core.memory_store import AlphaMemory, MemoryStore
 from core.settings import settings
 from core.storage import JsonStorage, StorageBackend
+
+logger = logging.getLogger(__name__)
 
 
 # ═══════════════════════════════════════════
@@ -232,7 +235,9 @@ class DualChainManager:
                             self._key,
                         )
                         record["content"] = decrypted
-                    except Exception:
+                    except Exception as exc:
+                        # 解密失败不静默吞异常，记录日志便于排查数据损坏或密钥变更
+                        logger.warning("Private chain decryption failed for record %s: %s", record.get("id", "?"), exc)
                         record["content"] = "[解密失败]"
                 return record
         return None
@@ -283,7 +288,9 @@ class DualChainManager:
                             self._key,
                         )
                         record["content"] = decrypted
-                    except Exception:
+                    except Exception as exc:
+                        # 解密失败不静默吞异常，记录日志便于排查
+                        logger.warning("Private chain decryption failed during query: %s", exc)
                         record["content"] = "[解密失败]"
                         continue  # 解密失败则跳过
 
@@ -345,7 +352,8 @@ class DualChainManager:
                 record["content"] = decrypted
                 record.pop("encrypted", None)
                 record.pop("nonce", None)
-            except Exception:
+            except Exception as exc:
+                logger.error("Chain migration decryption failed for record %s: %s", record.get("id", "?"), exc)
                 return {"success": False, "message": "解密失败，无法迁移"}
 
         # 调整敏感度

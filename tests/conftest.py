@@ -197,11 +197,11 @@ def _patch_aid_daemon_compat() -> None:
     tk.Tk.return_value.winfo_id.return_value = 1
 
     try:
-        from entrypoints.daemon import AIDFairy
+        from entrypoints.daemon import AidNuro
 
-        AIDFairy._show_mouse_position = lambda self: self._mouse_position_result()
-        AIDFairy._show_identity = lambda self: self._show_result("AID identity ready; local DID is hidden")
-    except ImportError:
+        AidNuro._show_mouse_position = lambda self: self._mouse_position_result()
+        AidNuro._show_identity = lambda self: self._show_result("AID identity ready; local DID is hidden")
+    except (ImportError, AttributeError):
         pass
 
     def _parse_and_click(self, text: str) -> None:
@@ -239,9 +239,9 @@ def _patch_aid_daemon_compat() -> None:
         else:
             self._show_result("不懂指令，请说：看屏幕 / 窗口列表 / 鼠标位置 / 点击 x y / 输入 文字")
 
-    AIDFairy._parse_and_click = _parse_and_click
-    AIDFairy._parse_and_type = _parse_and_type
-    AIDFairy._process_command = _process_command
+    AidNuro._parse_and_click = _parse_and_click
+    AidNuro._parse_and_type = _parse_and_type
+    AidNuro._process_command = _process_command
 
 
 _patch_aid_daemon_compat()

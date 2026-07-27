@@ -34,6 +34,8 @@ if __package__:
     from .api.dual_chain import router as dual_chain_router
     from .api.registration import router as registration_router
     from .api.observability import router as observability_router
+    from .api.agent import router as agent_router
+    from .api.gdpr import router as gdpr_router
 else:
     from api.identity import router as identity_router
     from api.risk import router as risk_router
@@ -41,6 +43,8 @@ else:
     from api.dual_chain import router as dual_chain_router
     from api.registration import router as registration_router
     from api.observability import router as observability_router
+    from api.agent import router as agent_router
+    from api.gdpr import router as gdpr_router
 
 
 @asynccontextmanager
@@ -89,6 +93,8 @@ app.include_router(risk_router)
 app.include_router(dual_chain_router)
 app.include_router(registration_router)
 app.include_router(observability_router)
+app.include_router(agent_router)
+app.include_router(gdpr_router)
 
 # ── 前端页面 ──
 _templates_dir = Path(__file__).parent / "alpha_id" / "templates"

@@ -161,7 +161,8 @@ class UserIdentityManager:
             logger.warning(f"注册失败: alpha_id 已存在 - {alpha_id}")
             return {"success": False, "message": "该 Alpha-ID 已被注册"}
 
-        user_id = f"user_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{alpha_id.replace('-', '')}"
+        # 使用 UUID4 避免时间戳冲突（秒级并发注册会产生相同 ID）
+        user_id = f"user_{uuid.uuid4().hex[:12]}_{alpha_id.replace('-', '')}"
         user_profile = UserProfile(
             alpha_id=alpha_id,
             user_id=user_id,
@@ -208,6 +209,37 @@ class UserIdentityManager:
     def user_exists(self, alpha_id: str) -> bool:
         """检查用户是否存在"""
         return self.get_user_profile(alpha_id) is not None
+
+    def delete_user(self, alpha_id: str) -> Dict:
+        """删除用户全部数据（GDPR 被遗忘权）"""
+        users = self._storage.load("users") or {}
+        if alpha_id not in users:
+            return {"success": False, "message": "用户不存在"}
+
+        del users[alpha_id]
+        invalidate_user_cache(alpha_id)
+        self._storage.save("users", users)
+        logger.info(f"用户已删除: alpha_id={alpha_id}")
+        return {"success": True, "message": "用户已删除"}
+
+    def update_email(self, alpha_id: str, email: str) -> Dict:
+        """更新用户邮箱（F-01 邮箱绑定）"""
+        import re
+
+        # 简单邮箱格式校验
+        if not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
+            return {"success": False, "message": "邮箱格式不正确"}
+
+        users = self._storage.load("users") or {}
+        if alpha_id not in users:
+            return {"success": False, "message": "用户不存在"}
+
+        users[alpha_id]["email"] = email
+        users[alpha_id]["last_active"] = datetime.now().isoformat()
+        invalidate_user_cache(alpha_id)
+        self._storage.save("users", users)
+        logger.info(f"邮箱已绑定: alpha_id={alpha_id}, email={email}")
+        return {"success": True, "message": "邮箱绑定成功"}
 
     def update_device_binding(self, alpha_id: str, new_device: str) -> Dict:
         """更新设备绑定"""

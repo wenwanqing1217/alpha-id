@@ -15,7 +15,7 @@ services:
     shm_size: 256mb
     environment:
       POSTGRES_USER: ${DB_USER:-ghost}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-ghost_secret}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?error: 必须设置 DB_PASSWORD 环境变量}
       POSTGRES_DB: ${DB_NAME:-alpha_id}
     ports:
       - "${DB_PORT:-5432}:5432"
@@ -38,7 +38,7 @@ services:
       - "${AID_API_PORT:-8000}:8000"
     environment:
       # --- 数据库 ---
-      DATABASE_URL: postgresql://${DB_USER:-ghost}:${DB_PASSWORD:-ghost_secret}@db:5432/${DB_NAME:-alpha_id}
+      DATABASE_URL: postgresql://${DB_USER:-ghost}:${DB_PASSWORD}@db:5432/${DB_NAME:-alpha_id}
       # --- 日志级别 ---
       LOG_LEVEL: ${LOG_LEVEL:-info}
       # --- 环境标识 ---
