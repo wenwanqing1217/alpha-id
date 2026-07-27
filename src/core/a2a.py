@@ -344,7 +344,7 @@ class A2AServer:
         """Start A2A server"""
         import uvicorn
         self._app = self._build_app()
-        logger.info(f"A2A Server started: {self._alpha_id} (port {self._port})")
+        logger.info("A2A Server started: %s (port %d)", self._alpha_id, self._port)
         if blocking:
             uvicorn.run(self._app, host="0.0.0.0", port=self._port)
         else:
@@ -415,7 +415,7 @@ class A2AClient:
             data = resp.json()
             return A2AAgentInfo(**{k: v for k, v in data.items() if k in A2AAgentInfo.__dataclass_fields__})
         except Exception as e:
-            logger.warning(f"Discovery failed: {e}")
+            logger.warning("Discovery failed: %s", e)
             return None
 
     def health_check(self, target_url: str, timeout: float = 5.0) -> bool:

@@ -153,16 +153,16 @@ def _log_request(method: str, url: str, cid: str):
     """请求日志上下文管理器"""
     import time
     start = time.perf_counter()
-    logger.debug(f"[HTTP] {method} {url} (id={cid})")
+    logger.debug("[HTTP] %s %s (id=%s)", method, url, cid)
     try:
         yield
     except Exception:
         elapsed = time.perf_counter() - start
-        logger.warning(f"[HTTP] {method} {url} FAILED after {elapsed:.2f}s (id={cid})")
+        logger.warning("[HTTP] %s %s FAILED after %.2fs (id=%s)", method, url, elapsed, cid)
         raise
     else:
         elapsed = time.perf_counter() - start
-        logger.debug(f"[HTTP] {method} {url} OK in {elapsed:.2f}s (id={cid})")
+        logger.debug("[HTTP] %s %s OK in %.2fs (id=%s)", method, url, elapsed, cid)
 
 
 def get_json(url: str, **kwargs: Any) -> Dict[str, Any]:

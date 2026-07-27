@@ -12,6 +12,7 @@ MasterOrchestrator —— Ghost 平台中央调度器
                       ↕
               Background Loops (Memory/Ops/Social)
 """
+
 import logging
 import threading
 import time
@@ -21,6 +22,11 @@ from typing import Any, Callable, Dict, List, Optional
 from core.settings import settings
 
 logger = logging.getLogger(__name__)
+
+# ── 循环间隔常量（秒） ──
+MEMORY_INTERVAL_SECONDS = 300    # 5 分钟
+OPS_INTERVAL_SECONDS = 1800      # 30 分钟
+THREAD_JOIN_TIMEOUT_SECONDS = 5  # 线程等待超时
 
 
 class LoopPhase(Enum):
@@ -69,8 +75,8 @@ class MasterOrchestrator:
         alpha_id: str,
         storage=None,
         loops_enabled: bool = True,
-        memory_interval: int = 300,    # 5分钟
-        ops_interval: int = 1800,      # 30分钟
+        memory_interval: int = MEMORY_INTERVAL_SECONDS,
+        ops_interval: int = OPS_INTERVAL_SECONDS,
     ):
         self.alpha_id = alpha_id
         self._storage = storage
@@ -119,7 +125,7 @@ class MasterOrchestrator:
             )
             self._brain._agent = agent
             self._brain.awake()
-            logger.info(f"[{self.alpha_id}] TwinBrain 已唤醒")
+            logger.info("[%s] TwinBrain 已唤醒", self.alpha_id)
         return self._brain
 
     # ── 渠道管理 ──
@@ -128,7 +134,7 @@ class MasterOrchestrator:
         """注册渠道适配器"""
         adapter.set_handler(self.receive)
         self._channels[adapter.name] = adapter
-        logger.info(f"渠道已注册: {adapter.name}")
+        logger.info("渠道已注册: %s", adapter.name)
 
     def receive(self, sender_id: str, text: str, channel: str = "unknown", **kwargs) -> Optional[str]:
         """
@@ -144,7 +150,7 @@ class MasterOrchestrator:
             回复文本（None 表示不回复）
         """
         self._stats["messages_received"] += 1
-        logger.info(f"[{channel}] {sender_id[:8]}: {text[:50]}")
+        logger.info("[%s] %s: %s", channel, sender_id[:8], text[:50])
 
         # 构造统一消息
         from core.message import Message
@@ -163,7 +169,7 @@ class MasterOrchestrator:
                 self._stats["messages_replied"] += 1
                 return reply
         else:
-            logger.warning(f"处理失败: {response.message}")
+            logger.warning("处理失败: %s", response.message)
 
         return None
 
@@ -171,15 +177,15 @@ class MasterOrchestrator:
 
     def _loop_worker(self, phase: LoopPhase, interval: int, func: Callable):
         """循环工作线程"""
-        logger.info(f"循环启动: {phase.value} (每{interval}秒)")
+        logger.info("循环启动: %s (每%d秒)", phase.value, interval)
         while not self._stop_event.is_set():
             try:
                 func()
                 self._stats["loops_executed"] += 1
             except Exception as e:
-                logger.error(f"循环异常 [{phase.value}]: {e}")
+                logger.error("循环异常 [%s]: %s", phase.value, e)
             self._stop_event.wait(interval)
-        logger.info(f"循环停止: {phase.value}")
+        logger.info("循环停止: %s", phase.value)
 
     def _memory_loop(self):
         """记忆整理循环 — 每5分钟"""
@@ -188,9 +194,9 @@ class MasterOrchestrator:
         # 触发大脑的 think() 周期（包含记忆整理）
         try:
             result = self.brain.think()
-            logger.debug(f"记忆循环: {result.get('actions_taken', [])}")
+            logger.debug("记忆循环: %s", result.get("actions_taken", []))
         except Exception as e:
-            logger.warning(f"记忆循环异常: {e}")
+            logger.warning("记忆循环异常: %s", e)
 
     def _ops_loop(self):
         """运维巡检循环 — 每30分钟"""
@@ -200,13 +206,14 @@ class MasterOrchestrator:
             try:
                 self.brain.awake()
             except Exception as e:
-                logger.error(f"恢复失败: {e}")
+                logger.error("恢复失败: %s", e)
 
         # 统计输出
         logger.info(
-            f"📊 统计: 收到={self._stats['messages_received']} "
-            f"回复={self._stats['messages_replied']} "
-            f"循环={self._stats['loops_executed']}"
+            "统计: 收到=%d 回复=%d 循环=%d",
+            self._stats["messages_received"],
+            self._stats["messages_replied"],
+            self._stats["loops_executed"],
         )
 
     def _start_loops(self):
@@ -247,14 +254,14 @@ class MasterOrchestrator:
         for name, adapter in self._channels.items():
             try:
                 adapter.start()
-                logger.info(f"渠道已启动: {name}")
+                logger.info("渠道已启动: %s", name)
             except Exception as e:
-                logger.error(f"渠道启动失败 [{name}]: {e}")
+                logger.error("渠道启动失败 [%s]: %s", name, e)
 
         # 启动后台循环
         self._start_loops()
 
-        logger.info(f"✅ MasterOrchestrator 已启动: {self.alpha_id}")
+        logger.info("MasterOrchestrator 已启动: %s", self.alpha_id)
 
     def stop(self):
         """停止调度器"""
@@ -270,13 +277,13 @@ class MasterOrchestrator:
 
         # 等待线程结束
         for t in self._threads:
-            t.join(timeout=5)
+            t.join(timeout=THREAD_JOIN_TIMEOUT_SECONDS)
 
         # 大脑休眠
         if self._brain:
             self._brain.sleep()
 
-        logger.info(f"🛑 MasterOrchestrator 已停止: {self.alpha_id}")
+        logger.info("MasterOrchestrator 已停止: %s", self.alpha_id)
 
     def get_stats(self) -> Dict[str, Any]:
         """获取运行统计"""
@@ -302,5 +309,3 @@ def get_orchestrator(alpha_id: str = None, **kwargs) -> MasterOrchestrator:
             alpha_id = settings.ghost_alpha_id
         _orchestrator = MasterOrchestrator(alpha_id=alpha_id, **kwargs)
     return _orchestrator
-
-

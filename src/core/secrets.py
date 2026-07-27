@@ -98,7 +98,7 @@ def decrypt_if_needed(value: Optional[str]) -> Optional[str]:
         try:
             return decrypt(value)
         except Exception as e:
-            logger.error(f"解密失败: {e}")
+            logger.error("解密失败: %s", e)
             return ""
     return value
 

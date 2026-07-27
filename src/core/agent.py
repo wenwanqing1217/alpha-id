@@ -36,6 +36,18 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+# ── LLM 调用常量 ──
+LLM_TEMPERATURE = 0.7
+LLM_MAX_TOKENS = 2048
+LLM_TIMEOUT_SECONDS = 60.0
+LLM_KEEPALIVE_CONNECTIONS = 5
+LLM_KEEPALIVE_EXPIRY_SECONDS = 30.0
+LLM_MAX_TURNS_DEFAULT = 3
+LLM_CONTEXT_HISTORY_LIMIT = 20
+LLM_MAX_SENSITIVITY_DEFAULT = 70
+LLM_MEMORY_QUERY_LIMIT = 5
+
+
 # ── 安全：LLM base_url SSRF 防护 ──
 
 
@@ -501,7 +513,11 @@ def _get_llm_client() -> "httpx.Client":
     global _llm_client
     if _llm_client is None:
         _llm_client = httpx.Client(
-            timeout=60.0, limits=httpx.Limits(max_keepalive_connections=5, keepalive_expiry=30.0)
+            timeout=LLM_TIMEOUT_SECONDS,
+            limits=httpx.Limits(
+                max_keepalive_connections=LLM_KEEPALIVE_CONNECTIONS,
+                keepalive_expiry=LLM_KEEPALIVE_EXPIRY_SECONDS,
+            ),
         )
     return _llm_client
 
@@ -529,8 +545,8 @@ def _call_llm(messages: List[Dict[str, str]], tools_schema: List[Dict[str, Any]]
     body = {
         "model": model,
         "messages": messages,
-        "temperature": 0.7,
-        "max_tokens": 2048,
+        "temperature": LLM_TEMPERATURE,
+        "max_tokens": LLM_MAX_TOKENS,
     }
     if tools_schema:
         body["tools"] = [{"type": "function", "function": t} for t in tools_schema]
@@ -559,7 +575,7 @@ def _call_llm(messages: List[Dict[str, str]], tools_schema: List[Dict[str, Any]]
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {api_key}",
                 },
-                timeout=60,
+                timeout=int(LLM_TIMEOUT_SECONDS),
             )
             result = resp.json()
 
@@ -670,7 +686,7 @@ class AgentLoop:
         self,
         alpha_id: str,
         model: str = "deepseek-v4-flash",
-        max_turns: int = 3,
+        max_turns: int = LLM_MAX_TURNS_DEFAULT,
         backends: Optional[AgentContainer] = None,
         signer=None,
     ):
@@ -713,8 +729,8 @@ class AgentLoop:
             if self._backends is not None:
                 recalled = self._backends.memory.query(
                     query_text=user_input,
-                    max_sensitivity=70,
-                    limit=5,
+                    max_sensitivity=LLM_MAX_SENSITIVITY_DEFAULT,
+                    limit=LLM_MEMORY_QUERY_LIMIT,
                 )
             if recalled:
                 prompt += "\n\n## 我记得的关于这件事的回忆"
@@ -737,7 +753,7 @@ class AgentLoop:
             prompt += f"\n\n## 我能用的工具\n{schemas}"
 
         messages = [{"role": "system", "content": prompt}]
-        messages.extend(self.history[-20:])  # 保留最近上下文
+        messages.extend(self.history[-LLM_CONTEXT_HISTORY_LIMIT:])  # 保留最近上下文
         messages.append({"role": "user", "content": user_input})
         return messages
 
@@ -747,7 +763,7 @@ class AgentLoop:
         使用 _call_llm() 统一调用 LLM，避免重复的 HTTP 请求代码。
         _call_llm 返回文本或 __TOOL_CALL__ 标记，本方法负责解析和执行工具。
         """
-        logger.info(f"用户输入: {user_input}")
+        logger.info("用户输入: %s", user_input)
         messages = self._build_messages(user_input)
 
         if not settings.llm_api_key:
@@ -756,7 +772,7 @@ class AgentLoop:
         tools_schema = [t.to_schema() for t in self.tools] if self.tools else []
 
         for turn in range(self.max_turns):
-            logger.info(f"第 {turn + 1} 轮 LLM 调用")
+            logger.info("第 %d 轮 LLM 调用", turn + 1)
 
             # 使用 _call_llm 统一调用（支持 mock 和错误处理）
             llm_response = _call_llm(messages, tools_schema, self.model)
@@ -782,7 +798,7 @@ class AgentLoop:
                 messages.append({"role": "tool", "tool_call_id": tool_call_id, "content": result})
 
         final = f"[达到最大轮次 {self.max_turns}，未完成]"
-        logger.warning(f"达到最大轮次 {self.max_turns}，未完成")
+        logger.warning("达到最大轮次 %d，未完成", self.max_turns)
         self.history.append({"role": "user", "content": user_input})
         self.history.append({"role": "assistant", "content": final})
         return final
@@ -808,16 +824,16 @@ class AgentLoop:
                 args = json.loads(args_str)
             except json.JSONDecodeError:
                 args = {}
-            logger.info(f"工具调用: {name}({args})")
+            logger.info("工具调用: %s(%s)", name, args)
             tool = self.tool_map.get(name)
             if tool is None:
                 result = f"[未知工具: {name}]"
-                logger.warning(f"未知工具: {name}")
+                logger.warning("未知工具: %s", name)
             else:
                 try:
                     result = tool(**args)
                 except Exception as e:
-                    logger.warning(f"工具执行异常 {name}: {e}")
+                    logger.warning("工具执行异常 %s: %s", name, e)
                     result = f"[工具错误] {e}"
             results.append((tool_call_id, name, result))
         return results
@@ -829,7 +845,7 @@ class AgentLoop:
         工具执行仍为同步（大部分工具是 CPU 密集/IO 同步），
         如果工具是异步的，可改用 async_to_sync 包装。
         """
-        logger.info(f"[async] 用户输入: {user_input}")
+        logger.info("[async] 用户输入: %s", user_input)
         messages = self._build_messages(user_input)
 
         if not settings.llm_api_key:
@@ -844,19 +860,19 @@ class AgentLoop:
         llm_client = await get_llm_client()
 
         for turn in range(self.max_turns):
-            logger.info(f"[async] 第 {turn + 1} 轮 LLM 调用")
+            logger.info("[async] 第 %d 轮 LLM 调用", turn + 1)
 
             try:
                 data = await llm_client.chat(
                     messages,
-                    temperature=0.7,
-                    max_tokens=2048,
+                    temperature=LLM_TEMPERATURE,
+                    max_tokens=LLM_MAX_TOKENS,
                     tools=tools_payload,
                 )
                 choice = data["choices"][0]
                 msg = choice["message"]
             except Exception as e:
-                logger.warning(f"[async] LLM 调用异常: {e}")
+                logger.warning("[async] LLM 调用异常: %s", e)
                 raise
 
             content = msg.get("content") or ""
@@ -896,23 +912,23 @@ class AgentLoop:
                     )
                 except json.JSONDecodeError:
                     args = {}
-                logger.info(f"[async] 工具调用: {name}({args})")
+                logger.info("[async] 工具调用: %s(%s)", name, args)
                 tool = self.tool_map.get(name)
                 if tool is None:
                     result = f"[未知工具: {name}]"
-                    logger.warning(f"[async] 未知工具: {name}")
+                    logger.warning("[async] 未知工具: %s", name)
                 else:
                     try:
                         result = tool(**args)
                     except Exception as e:
-                        logger.warning(f"[async] 工具执行异常 {name}: {e}")
+                        logger.warning("[async] 工具执行异常 %s: %s", name, e)
                         result = f"[工具错误] {e}"
                 messages.append(
                     {"role": "tool", "tool_call_id": tc["id"], "content": result}
                 )
 
         final = f"[达到最大轮次 {self.max_turns}，未完成]"
-        logger.warning(f"[async] 达到最大轮次 {self.max_turns}，未完成")
+        logger.warning("[async] 达到最大轮次 %d，未完成", self.max_turns)
         self.history.append({"role": "user", "content": user_input})
         self.history.append({"role": "assistant", "content": final})
         return final

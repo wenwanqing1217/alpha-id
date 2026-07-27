@@ -2,7 +2,7 @@
 Alpha-ID 用户身份核心逻辑（无外部依赖）
 
 独立于 langchain 框架的核心业务逻辑，可单独测试。
-支持 JSON 文件 / PostgreSQL 双存储后端。
+支持 SQLite / PostgreSQL 双存储后端。
 """
 
 import hashlib
@@ -54,7 +54,7 @@ class UserIdentityManager:
         self._founder_alpha_id = settings.founder_alpha_id
         self._founder_code_hash = settings.founder_code_hash
 
-        # 默认使用 JSON 存储
+        # 默认使用 SQLite 存储
         if storage is None:
             from core.storage_sqlite import SqliteStorage
 
@@ -128,23 +128,23 @@ class UserIdentityManager:
         # 检查设备指纹是否已注册
         for existing_user in users.values():
             if existing_user.get("device_fingerprint") == device_fingerprint:
-                logger.warning(f"注册失败: 设备已注册 - {device_fingerprint}")
+                logger.warning("注册失败: 设备已注册 - %s", device_fingerprint)
                 return {"success": False, "message": "该设备已注册"}
             if device_fingerprint in existing_user.get("devices", []):
-                logger.warning(f"注册失败: 设备已注册 - {device_fingerprint}")
+                logger.warning("注册失败: 设备已注册 - %s", device_fingerprint)
                 return {"success": False, "message": "该设备已注册"}
 
         # 创始人注册逻辑
         if is_founder:
             if not self._founder_code_hash:
-                logger.warning(f"注册失败: 创始人注册未配置 - {device_fingerprint}")
+                logger.warning("注册失败: 创始人注册未配置 - %s", device_fingerprint)
                 return {"success": False, "message": "创始人注册未配置，请联系管理员"}
             if not founder_code or hashlib.sha256(founder_code.encode()).hexdigest() != self._founder_code_hash:
-                logger.warning(f"注册失败: 创始人验证码无效 - {device_fingerprint}")
+                logger.warning("注册失败: 创始人验证码无效 - %s", device_fingerprint)
                 return {"success": False, "message": "创始人验证码无效"}
 
             if founder_registered:
-                logger.warning(f"注册失败: 创始人已注册 - {device_fingerprint}")
+                logger.warning("注册失败: 创始人已注册 - %s", device_fingerprint)
                 return {"success": False, "message": "创始人已注册"}
 
             alpha_id = self._founder_alpha_id
@@ -158,7 +158,7 @@ class UserIdentityManager:
 
         # 检查 alpha_id 是否已被占用
         if alpha_id in users:
-            logger.warning(f"注册失败: alpha_id 已存在 - {alpha_id}")
+            logger.warning("注册失败: alpha_id 已存在 - %s", alpha_id)
             return {"success": False, "message": "该 Alpha-ID 已被注册"}
 
         # 使用 UUID4 避免时间戳冲突（秒级并发注册会产生相同 ID）
@@ -190,7 +190,10 @@ class UserIdentityManager:
         self._storage.save("counter", counter)
         self._storage.save("founder_registered", founder_registered)
 
-        logger.info(f"用户注册成功: alpha_id={alpha_id}, user_id={user_id}, is_founder={is_founder}")
+        logger.info(
+            "用户注册成功: alpha_id=%s, user_id=%s, is_founder=%s",
+            alpha_id, user_id, is_founder,
+        )
 
         return {
             "success": True,
@@ -219,7 +222,7 @@ class UserIdentityManager:
         del users[alpha_id]
         invalidate_user_cache(alpha_id)
         self._storage.save("users", users)
-        logger.info(f"用户已删除: alpha_id={alpha_id}")
+        logger.info("用户已删除: alpha_id=%s", alpha_id)
         return {"success": True, "message": "用户已删除"}
 
     def update_email(self, alpha_id: str, email: str) -> Dict:
@@ -238,7 +241,7 @@ class UserIdentityManager:
         users[alpha_id]["last_active"] = datetime.now().isoformat()
         invalidate_user_cache(alpha_id)
         self._storage.save("users", users)
-        logger.info(f"邮箱已绑定: alpha_id={alpha_id}, email={email}")
+        logger.info("邮箱已绑定: alpha_id=%s, email=%s", alpha_id, email)
         return {"success": True, "message": "邮箱绑定成功"}
 
     def update_device_binding(self, alpha_id: str, new_device: str) -> Dict:
@@ -246,7 +249,7 @@ class UserIdentityManager:
         users = self._storage.load("users") or {}
 
         if alpha_id not in users:
-            logger.warning(f"设备绑定失败: 用户不存在 - alpha_id={alpha_id}")
+            logger.warning("设备绑定失败: 用户不存在 - alpha_id=%s", alpha_id)
             return {"success": False, "message": "用户不存在"}
 
         user_data = users[alpha_id]
@@ -261,7 +264,10 @@ class UserIdentityManager:
         invalidate_user_cache(alpha_id)
         self._storage.save("users", users)
 
-        logger.info(f"设备绑定已更新: alpha_id={alpha_id}, new_device={new_device}, devices={user_data['devices']}")
+        logger.info(
+            "设备绑定已更新: alpha_id=%s, new_device=%s, devices=%s",
+            alpha_id, new_device, user_data["devices"],
+        )
 
         return {"success": True, "message": "设备绑定已更新", "devices": user_data["devices"]}
 

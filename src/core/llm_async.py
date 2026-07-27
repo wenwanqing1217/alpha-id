@@ -113,7 +113,7 @@ class AsyncLLMClient:
                             continue
         finally:
             duration = time.perf_counter() - start
-            logger.debug(f"[LLM_STREAM] model={self.model} duration={duration:.2f}s")
+            logger.debug("[LLM_STREAM] model=%s duration=%.2fs", self.model, duration)
 
     async def embed(
         self,

@@ -179,7 +179,7 @@ class TenantManager:
             )
             self._tenants[tenant_id] = tenant
             self._save()
-            logger.info(f"租户创建: {tenant_id} (套餐: {plan})")
+            logger.info("租户创建: %s (套餐: %s)", tenant_id, plan)
             return tenant
 
     def get_tenant(self, tenant_id: str) -> Optional[Tenant]:
