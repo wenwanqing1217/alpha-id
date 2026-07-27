@@ -1,6 +1,10 @@
-"""Pydantic 请求/响应模型"""
+"""Pydantic 请求/响应模型 — 共享 Schema 模块
 
-from typing import List, Optional
+所有 API 路由的请求/响应模型统一定义于此，避免重复声明。
+web.py（演示应用）保留其独立 Schema，因为其字段形状与正式 API 不同。
+"""
+
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -192,3 +196,49 @@ class DualChainQueryRequest(BaseModel):
 class DualChainMigrateRequest(BaseModel):
     memory_id: str = Field(..., description="记忆 ID")
     target_chain: str = Field(..., description="目标链: private/knowledge")
+
+
+# ── Agent 模块 ──
+
+
+class AgentChatRequest(BaseModel):
+    """Agent 对话请求"""
+
+    message: str = Field(..., min_length=1, max_length=4096, description="用户消息")
+    use_react: bool = Field(default=False, description="是否使用 ReAct 思考引擎")
+
+
+class AgentChatResponse(BaseModel):
+    """Agent 对话响应"""
+
+    alpha_id: str
+    reply: str
+    brain_state: str = "idle"
+
+
+class BrainStatusResponse(BaseModel):
+    """大脑状态响应"""
+
+    alpha_id: str
+    state: str
+    settings: dict
+
+
+# ── GDPR / 数据主权模块 ──
+
+
+class GdprDeleteRequest(BaseModel):
+    """数据删除请求 — 需要确认码防止误操作"""
+
+    confirmation: str = Field(
+        ...,
+        description="确认码，必须等于 alpha_id 以确认删除",
+    )
+
+
+class GdprExportResponse(BaseModel):
+    """数据导出响应元数据"""
+
+    alpha_id: str
+    exported_at: str
+    data: Dict[str, Any]

@@ -16,31 +16,15 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
 
 from alpha_id.container import Container, get_container
 from auth.middleware import require_user
 
+from .models import GdprDeleteRequest, GdprExportResponse
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/gdpr", tags=["GDPR / 数据主权"])
-
-
-class DeleteRequest(BaseModel):
-    """数据删除请求 — 需要确认码防止误操作"""
-
-    confirmation: str = Field(
-        ...,
-        description="确认码，必须等于 alpha_id 以确认删除",
-    )
-
-
-class ExportResponse(BaseModel):
-    """数据导出响应元数据"""
-
-    alpha_id: str
-    exported_at: str
-    data: Dict[str, Any]
 
 
 # ── 辅助函数 ──
@@ -126,12 +110,12 @@ def _delete_user_data(alpha_id: str,
 # ── 端点 ──
 
 
-@router.get("/export", response_model=ExportResponse)
+@router.get("/export", response_model=GdprExportResponse)
 def export_data(alpha_id: str = Depends(require_user),
                 container: Container = Depends(get_container)):
     """导出全部个人数据（JSON 格式）"""
     data = _collect_user_data(alpha_id, container)
-    return ExportResponse(
+    return GdprExportResponse(
         alpha_id=alpha_id,
         exported_at=datetime.utcnow().isoformat() + "Z",
         data=data,
@@ -139,7 +123,7 @@ def export_data(alpha_id: str = Depends(require_user),
 
 
 @router.delete("/delete")
-def delete_data(body: DeleteRequest,
+def delete_data(body: GdprDeleteRequest,
                 alpha_id: str = Depends(require_user),
                 container: Container = Depends(get_container)):
     """删除全部个人数据（被遗忘权）— 需要确认码"""

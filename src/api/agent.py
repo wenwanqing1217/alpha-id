@@ -9,47 +9,22 @@
 """
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel, Field
 
 from alpha_id.container import Container, get_container
 from auth.middleware import require_user
 from core.agent import AgentLoop
 from core.twin_brain import TwinBrain
 
+from .models import AgentChatRequest, AgentChatResponse, BrainStatusResponse
+
 router = APIRouter(prefix="/api/v1/agent", tags=["Agent"])
-
-
-# ── 请求/响应模型 ──
-
-
-class ChatRequest(BaseModel):
-    """对话请求"""
-
-    message: str = Field(..., min_length=1, max_length=4096, description="用户消息")
-    use_react: bool = Field(default=False, description="是否使用 ReAct 思考引擎")
-
-
-class ChatResponse(BaseModel):
-    """对话响应"""
-
-    alpha_id: str
-    reply: str
-    brain_state: str = "idle"
-
-
-class BrainStatusResponse(BaseModel):
-    """大脑状态响应"""
-
-    alpha_id: str
-    state: str
-    settings: dict
 
 
 # ── 端点 ──
 
 
-@router.post("/chat", response_model=ChatResponse)
-def chat(body: ChatRequest,
+@router.post("/chat", response_model=AgentChatResponse)
+def chat(body: AgentChatRequest,
          alpha_id: str = Depends(require_user),
          container: Container = Depends(get_container)):
     """与 Agent 对话 — 自动选择 AgentLoop 或 ReActEngine"""
@@ -67,7 +42,7 @@ def chat(body: ChatRequest,
         loop = AgentLoop(alpha_id=alpha_id)
         reply = loop.run(body.message)
 
-    return ChatResponse(
+    return AgentChatResponse(
         alpha_id=alpha_id,
         reply=reply,
         brain_state=brain.state.value if brain.state else "idle",
