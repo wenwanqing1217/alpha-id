@@ -24,7 +24,8 @@ class AsyncSqliteStorage:
 
     def __init__(self, db_path: Optional[str] = None):
         if db_path is None:
-            db_path = os.path.join(str(settings.ghost_workspace), "assets", "alpha_id.db")
+            # 统一使用 alpha_id_path 作为存储根目录
+            db_path = os.path.join(str(settings.alpha_id_path), "alpha_id.db")
         self.db_path = db_path
         self._conn: Optional[aiosqlite.Connection] = None
         self._init_lock = asyncio.Lock()

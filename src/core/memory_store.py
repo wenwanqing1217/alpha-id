@@ -52,8 +52,9 @@ class MemoryStore:
         if storage is None:
             import os
 
+            # 统一使用 alpha_id_path 作为存储根目录
             db_path = os.path.join(
-                str(settings.coze_workspace), "assets", f"memory_{alpha_id.replace('-', '_')}.json"
+                str(settings.alpha_id_path), f"memory_{alpha_id.replace('-', '_')}.json"
             )
             self._storage = JsonStorage(db_path)
         else:
