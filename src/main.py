@@ -33,25 +33,15 @@ from core.middleware import CorrelationIDMiddleware  # noqa: E402
 from core.rate_limit import RateLimitMiddleware  # noqa: E402
 from core.settings import settings  # noqa: E402
 
-# Support both package-style imports (`src.main`) and direct module imports (`main`).
-if __package__:
-    from .api.identity import router as identity_router
-    from .api.risk import router as risk_router
-    from .api.social import router as social_router
-    from .api.dual_chain import router as dual_chain_router
-    from .api.registration import router as registration_router
-    from .api.observability import router as observability_router
-    from .api.agent import router as agent_router
-    from .api.gdpr import router as gdpr_router
-else:
-    from api.identity import router as identity_router
-    from api.risk import router as risk_router
-    from api.social import router as social_router
-    from api.dual_chain import router as dual_chain_router
-    from api.registration import router as registration_router
-    from api.observability import router as observability_router
-    from api.agent import router as agent_router
-    from api.gdpr import router as gdpr_router
+# 路由导入（项目始终以 python -m src.main 方式运行）
+from .api.identity import router as identity_router  # noqa: E402
+from .api.risk import router as risk_router  # noqa: E402
+from .api.social import router as social_router  # noqa: E402
+from .api.dual_chain import router as dual_chain_router  # noqa: E402
+from .api.registration import router as registration_router  # noqa: E402
+from .api.observability import router as observability_router  # noqa: E402
+from .api.agent import router as agent_router  # noqa: E402
+from .api.gdpr import router as gdpr_router  # noqa: E402
 
 
 @asynccontextmanager
@@ -146,24 +136,22 @@ app.add_middleware(RateLimitMiddleware)
 # 执行顺序：CorrelationId → CSRF → RateLimit → CORS → Route
 # 仅对状态变更方法（POST/PUT/DELETE/PATCH）生效，安全方法直接放行
 # 豁免路径：公开 API（无 session 可伪造）、webhook 回调（外部平台无法设置自定义头）
-_registration_prefix = "/api/v1/register"
-_auth_prefix = "/api/v1/identity/auth"
 app.add_middleware(
     CSRFMiddleware,
     allowed_origins=set(origins),
     exempt_paths={
-        # 注册流程（公开接口）
-        f"{_registration_prefix}/send-sms",
-        f"{_registration_prefix}/verify-sms",
-        f"{_registration_prefix}/face-verify",
-        f"{_registration_prefix}/face-query",
-        f"{_registration_prefix}/generate-did",
-        f"{_registration_prefix}/complete",
+        # 注册流程（公开接口，无 session 可伪造）
+        "/api/v1/register/send-sms",
+        "/api/v1/register/verify-sms",
+        "/api/v1/register/face-verify",
+        "/api/v1/register/face-query",
+        "/api/v1/register/generate-did",
+        "/api/v1/register/complete",
         # 身份认证接口（Bearer Token 已防伪造，CSRF 不适用）
-        f"{_auth_prefix}/verify",
-        f"{_auth_prefix}/login",
-        f"{_auth_prefix}/refresh",
-        f"{_auth_prefix}/bind-device",
+        "/api/v1/identity/auth/verify",
+        "/api/v1/identity/auth/login",
+        "/api/v1/identity/auth/refresh",
+        "/api/v1/identity/auth/bind-device",
         "/api/v1/identity/register",
     },
     enforce_custom_header=True,
