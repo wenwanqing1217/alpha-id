@@ -36,6 +36,14 @@ aid collect chatgpt ~/Downloads/chatgpt-data-export.zip
 aid profile web
 ```
 
+启动 API 服务：
+
+```bash
+cd projects
+python -m src.main          # 默认端口 8000
+# 或安装后：aid-api
+```
+
 ---
 
 ## Capabilities / 能力
@@ -52,14 +60,43 @@ aid profile web
 | Digital profiling | Import from ChatGPT, Claude, Cursor, Trae | 多平台数据采集与画像 |
 | REST API | FastAPI-based web service | FastAPI 后端服务 |
 | MCP server | Model Context Protocol interface | MCP 协议接入 |
+| TwinBrain | Digital entity runtime with state machine | 孪生大脑状态机 |
+| AgentLoop | LLM + Tools + Loop, no framework dependency | 纯循环 Agent 引擎 |
+| A2A protocol | Agent-to-Agent communication | Agent 间通信协议 |
+| Risk engine | Device / behavior / voice 3D scoring | 三维风控评估 |
+| GDPR compliance | Data export + right to be forgotten | 数据导出与被遗忘权 |
+| Observability | Prometheus metrics + readiness probe | 可观测性指标 |
+
+---
+
+## API Endpoints / API 端点
+
+服务启动后监听 `:8000`，完整端点参考 [`docs/api-reference.md`](docs/api-reference.md)。
+
+| 模块 | 路径前缀 | 端点数 | 说明 |
+|:-----|:---------|:-------|:-----|
+| 健康检查 | `/health`, `/ready`, `/metrics` | 3 | 存活/就绪/Prometheus |
+| 身份认证 | `/api/v1/identity/*` | 7 | 注册/登录/令牌/设备绑定 |
+| 社交网络 | `/api/v1/social/*` | 5 | 好友/消息/请求 |
+| 双链记忆 | `/api/v1/dual-chain/*` | 7 | 写入/查询/迁移/删除 |
+| Agent 对话 | `/api/v1/agent/*` | 2 | 聊天/状态 |
+| 风控评估 | `/api/v1/risk/*` | 2 | 全量评估/声纹验证 |
+| GDPR | `/api/v1/gdpr/*` | 2 | 数据导出/删除 |
+| 注册流程 | `/api/v1/register/*` | 6 | SMS/人脸/DID 生成 |
+
+Swagger UI: `http://localhost:8000/docs`  
+ReDoc: `http://localhost:8000/redoc`
 
 ---
 
 ## Architecture / 架构
 
+详细架构文档见 [`docs/architecture.md`](docs/architecture.md)。
+
 ```
 alpha-id / 身份层
   DID · JWT · signing · collectors · CLI
+  TwinBrain · AgentLoop · A2A · DualChain
   
 mindflow-map / 执行层
   workflow engine · intent recognition
@@ -67,6 +104,63 @@ mindflow-map / 执行层
 zcode-brain / 编排层
   role matching · safety guardrails · task scheduling
 ```
+
+### 内部模块结构（v0.3.3）
+
+```
+src/
+├── main.py                  ← FastAPI 入口 + lifespan + 中间件栈
+├── api/                     ← HTTP 路由层
+│   ├── identity.py          ← /api/v1/identity/*
+│   ├── registration.py      ← /api/v1/register/*
+│   ├── social.py            ← /api/v1/social/*
+│   ├── dual_chain.py        ← /api/v1/dual-chain/*
+│   ├── agent.py             ← /api/v1/agent/*
+│   ├── risk.py              ← /api/v1/risk/*
+│   ├── gdpr.py              ← /api/v1/gdpr/*
+│   └── observability.py     ← /ready, /metrics
+├── core/                    ← 核心业务逻辑
+│   ├── container.py         ← 依赖注入容器（单例 + FastAPI DI）
+│   ├── settings.py          ← 统一配置（pydantic-settings）
+│   ├── storage.py           ← 存储抽象（ABC + SQLite/Postgres）
+│   ├── dual_chain.py        ← 双链记忆隔离（AES-256-GCM）
+│   ├── twin_brain.py        ← 孪生大脑状态机 + BrainRegistry
+│   ├── agent.py             ← AgentLoop（LLM+Tools+Loop）
+│   ├── agent_react.py       ← ReAct 思考引擎
+│   ├── a2a.py               ← A2A 协议服务器
+│   ├── risk_engine.py       ← 风控评估引擎
+│   ├── user_identity.py     ← 用户身份管理
+│   ├── alpha_social.py      ← 社交网络管理
+│   ├── memory_store.py      ← 记忆存储
+│   └── observability.py     ← Prometheus 指标
+├── auth/                    ← 认证与安全
+│   ├── jwt.py               ← JWT 签发/验证/轮换
+│   ├── csrf.py              ← CSRF 防护中间件
+│   ├── middleware.py         ← require_user 依赖
+│   └── token_store.py       ← 令牌撤销存储
+├── entrypoints/             ← 入口点（CLI/MCP/daemon）
+└── alpha_id/                ← 子包（DID/skill/poe 等）
+```
+
+---
+
+## Configuration / 配置
+
+通过环境变量或 `.env` 文件配置。完整列表见 [`docs/architecture.md`](docs/architecture.md)。
+
+| 变量 | 默认值 | 说明 |
+|:-----|:-------|:-----|
+| `AUTH_MASTER_KEY` | *(必填)* | JWT 签名主密钥 |
+| `LLM_API_KEY` | *(可选)* | LLM API 密钥（兼容 OPENAI_API_KEY） |
+| `LLM_BASE_URL` | `https://api.deepseek.com/v1` | LLM 端点 |
+| `LLM_MODEL` | `deepseek-v4-flash` | 模型名称 |
+| `DATABASE_URL` | *(可选)* | PostgreSQL 连接（空则用 SQLite） |
+| `STORAGE_BACKEND` | *(自动)* | `sqlite` 或 `postgres` |
+| `A2A_ENABLED` | `true` | 是否启动 A2A 服务器 |
+| `A2A_PORT` | `9001` | A2A 服务端口 |
+| `RATE_LIMIT_ENABLED` | `true` | 是否启用限流 |
+| `RATE_LIMIT_RPM` | `60` | 每分钟请求数限制 |
+| `CORS_ORIGINS` | `http://localhost:3000,...` | 允许的跨域来源 |
 
 ---
 
@@ -76,8 +170,24 @@ zcode-brain / 编排层
 git clone https://github.com/wenwanqing1217/alpha-id.git
 cd alpha-id/projects
 pip install -e ".[dev]"
+pytest tests/ -v --noconftest
+```
+
+运行单个测试文件：
+
+```bash
 pytest tests/test_registration.py -v --noconftest
 ```
+
+---
+
+## Documentation / 文档
+
+| 文档 | 说明 |
+|:-----|:-----|
+| [`docs/architecture.md`](docs/architecture.md) | 内部架构深潜（DI 容器、双链记忆、TwinBrain、AgentLoop、A2A、中间件栈） |
+| [`docs/api-reference.md`](docs/api-reference.md) | 全部 API 端点参考（请求/响应/认证） |
+| [`docs/EXPERT_AUDIT_2026-07-27.md`](docs/EXPERT_AUDIT_2026-07-27.md) | 专家级项目审计报告 |
 
 ---
 
