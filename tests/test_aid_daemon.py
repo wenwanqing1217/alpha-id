@@ -39,19 +39,19 @@ def mock_all():
         canvas.create_oval.return_value = 1
         canvas.create_arc.return_value = 2
 
-        # 注意：daemon 模块使用下划线前缀的私有变量（_HAS_SCREEN 等）
-        # 仅 patch 模块中实际存在的变量，并 mock 所有初始化步骤
+        # 注意：功能标志通过 from-import 静态绑定到 app 模块
+        # patch 必须作用于 entrypoints.app（实际使用方）才能生效
         with (
-            patch("entrypoints.daemon._HAS_SCREEN", True),
-            patch("entrypoints.daemon._HAS_WINDOW", True),
-            patch("entrypoints.daemon._HAS_MEMORY", False),
-            patch("entrypoints.daemon._HAS_BRAIN", False),
-            patch("entrypoints.daemon._HAS_VOICE", False),
-            patch("entrypoints.daemon._HAS_OBSERVER", False),
-            patch("entrypoints.daemon._HAS_POPUP", False),
-            patch("entrypoints.daemon._HAS_DAILY", False),
-            patch("entrypoints.daemon._HAS_CHARACTER", False),
-            patch("entrypoints.daemon._HAS_IDENTITY", False),
+            patch("entrypoints.app._HAS_SCREEN", True),
+            patch("entrypoints.app._HAS_WINDOW", True),
+            patch("entrypoints.app._HAS_MEMORY", False),
+            patch("entrypoints.app._HAS_BRAIN", False),
+            patch("entrypoints.app._HAS_VOICE", False),
+            patch("entrypoints.app._HAS_OBSERVER", False),
+            patch("entrypoints.app._HAS_POPUP", False),
+            patch("entrypoints.app._HAS_DAILY", False),
+            patch("entrypoints.app._HAS_CHARACTER", False),
+            patch("entrypoints.app._HAS_IDENTITY", False),
             # mock 所有初始化方法，避免 GUI/硬件依赖
             patch.object(
                 __import__("entrypoints.daemon", fromlist=["AidNuro"]).AidNuro,
