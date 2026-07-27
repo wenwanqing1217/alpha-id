@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     app_version: str = "0.3.3"
     debug: bool = False
     environment: str = "development"
+    log_level: str = Field(default="INFO", validation_alias=AliasChoices("LOG_LEVEL"))
     allowed_origins: str = Field(
         default="http://localhost:3000,http://localhost:8000,http://127.0.0.1:3000,http://127.0.0.1:8000",
         validation_alias=AliasChoices("AID_ALLOWED_ORIGINS", "ALLOWED_ORIGINS"),
@@ -183,6 +184,10 @@ class Settings(BaseSettings):
     @property
     def cors_origins(self) -> list[str]:
         return [o.strip() for o in self.allowed_origins.split(",") if o.strip()]
+
+    @property
+    def is_production(self) -> bool:
+        return self.environment.lower() == "production"
 
 
 settings = Settings()

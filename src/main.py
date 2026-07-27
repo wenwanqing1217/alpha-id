@@ -10,9 +10,9 @@ from pathlib import Path
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-# 安装敏感数据日志过滤器（在所有日志输出前脱敏）
-from core.logging_filter import install_sensitive_data_filter
-install_sensitive_data_filter()
+# 配置结构化日志（structlog + 敏感数据脱敏 + JSON/彩色输出）
+from core.logging_config import configure_logging
+configure_logging()
 
 logger = logging.getLogger(__name__)
 
