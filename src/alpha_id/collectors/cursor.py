@@ -7,6 +7,7 @@ Cursor 是 AI 编程 IDE，数据存储在本地 SQLite 数据库中。
 
 import json
 import logging
+import os
 import re
 import sqlite3
 import zipfile
@@ -118,8 +119,13 @@ def collect(zip_path: Path) -> Optional[AlphaIDProfile]:
                     elif isinstance(data, dict):
                         conversations.append(data)
                 elif name.endswith(".db") or "sqlite" in name:
-                    # 解压到临时目录再读取
-                    tmp = Path.home() / ".alpha-id" / "tmp" / name
+                    # 安全：防止 Zip Slip 路径遍历攻击
+                    # 验证解压路径在目标目录内
+                    target_dir = (Path.home() / ".alpha-id" / "tmp").resolve()
+                    tmp = (target_dir / name).resolve()
+                    if not str(tmp).startswith(str(target_dir) + os.sep) and tmp != target_dir:
+                        logger.warning("Zip Slip 攻击拦截: %s", name)
+                        continue
                     tmp.parent.mkdir(parents=True, exist_ok=True)
                     tmp.write_bytes(zf.read(name))
                     rows = _extract_from_sqlite(tmp)
