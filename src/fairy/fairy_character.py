@@ -9,7 +9,6 @@ import logging
 import math
 import tkinter as tk
 from enum import Enum
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 

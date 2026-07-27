@@ -20,7 +20,6 @@ Claude Desktop 配置（claude_desktop_config.json）：
 """
 
 import json
-import os
 import sys
 from typing import Optional
 

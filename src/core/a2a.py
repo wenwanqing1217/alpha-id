@@ -15,7 +15,6 @@ Security:
   - Proof of Execution (PoE) for every execution
   - Optional TLS encryption
 """
-import hashlib
 import json
 import logging
 import time

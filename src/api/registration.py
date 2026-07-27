@@ -7,7 +7,7 @@ import hashlib
 import json
 import secrets
 import time
-from typing import Dict, Optional
+from typing import Dict
 
 from fastapi import APIRouter, HTTPException, Request
 

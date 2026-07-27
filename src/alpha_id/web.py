@@ -1,7 +1,6 @@
 """Alpha-ID 演示 Web 应用"""
 
 import ipaddress
-import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
@@ -383,7 +382,6 @@ async def memory_store(req: Request):
 # ── 流式聊天（延迟导入，可选依赖） ──
 
 import json  # noqa: E402
-import os  # noqa: E402
 
 import httpx  # noqa: E402
 from starlette.responses import StreamingResponse  # noqa: E402

@@ -17,10 +17,9 @@ MindFlow 自然语言日程解析器
 
 import json
 import logging
-import re
 import urllib.request
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from core.settings import settings
 

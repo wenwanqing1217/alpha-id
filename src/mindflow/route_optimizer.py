@@ -25,7 +25,7 @@ import json
 import logging
 import urllib.parse
 import urllib.request
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 from core.settings import settings
 

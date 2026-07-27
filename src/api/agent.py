@@ -4,7 +4,7 @@
 支持标准 AgentLoop 对话和 ReAct 思考引擎两种模式。
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
 from alpha_id.container import Container

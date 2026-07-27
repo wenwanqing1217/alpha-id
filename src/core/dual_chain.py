@@ -12,19 +12,17 @@
 """
 
 import hashlib
-import json
 import logging
 import os
 import re
 import secrets
-import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from core.memory_store import AlphaMemory, MemoryStore
+from core.memory_store import AlphaMemory
 from core.settings import settings
-from core.storage import JsonStorage, StorageBackend
+from core.storage import StorageBackend
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +38,6 @@ def _sanitize_alpha_id(alpha_id: str) -> str:
     - 移除路径分隔符和 ../ 序列
     - 限制长度防止缓冲区溢出
     """
-    import re
     # 只允许安全字符（注意：冒号 : 在 Windows 文件名中非法，必须替换）
     sanitized = re.sub(r'[^a-zA-Z0-9\-_]', '_', alpha_id)
     # 移除任何剩余的路径遍历尝试

@@ -13,7 +13,6 @@ import logging
 import time
 import uuid
 from contextvars import ContextVar
-from typing import Optional
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint

@@ -14,7 +14,6 @@ Agent 纯循环 —— LLM + Tools + Loop，不依赖任何框架
 import ipaddress
 import json
 import logging
-import os
 import re
 import time
 from pathlib import Path
@@ -24,7 +23,7 @@ from urllib.parse import urlparse
 from core.interfaces import AgentContainer
 from core.settings import settings
 from core.http_client import request
-from core.observability import record_llm_call, observe_llm_call
+from core.observability import record_llm_call
 
 try:
     import httpx

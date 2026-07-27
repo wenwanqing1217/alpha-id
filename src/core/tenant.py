@@ -14,7 +14,6 @@ Multi-Tenant Engine —— 多租户隔离引擎
       ctx.emit("message.received", {...})  # 自动注入 tenant_id
 """
 import logging
-import os
 import threading
 import time
 import uuid

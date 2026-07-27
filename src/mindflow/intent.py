@@ -12,9 +12,7 @@ MindFlow 意图识别器
     print(result.intent)  # "chat" / "route_plan" / ...
 """
 
-import json
 import logging
-import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 

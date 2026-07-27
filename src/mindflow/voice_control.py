@@ -32,11 +32,8 @@ Android 端（小流助手 App）职责：
   { "type": "screenshot" }                           → 截屏
 """
 
-import json
 import logging
-import os
-import time
-from typing import Any, Dict, Optional
+from typing import Dict
 
 logger = logging.getLogger("mindflow.voice_control")
 

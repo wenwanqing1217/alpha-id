@@ -8,8 +8,6 @@ NURO 通知系统 — 气泡/弹幕/Toast
 """
 
 import logging
-import os
-import threading
 import tkinter as tk
 from typing import Optional
 from enum import Enum

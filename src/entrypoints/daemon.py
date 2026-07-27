@@ -1290,7 +1290,6 @@ def _safe_print(*args, **kwargs):
 def _check_ollama() -> tuple:
     """检测本地 Ollama 是否运行 + 有哪些模型"""
     try:
-        import json
 
         resp = request("GET", "http://localhost:11434/api/tags", timeout=2)
         data = resp.json()

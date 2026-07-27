@@ -7,7 +7,6 @@ PostgreSQL 存储后端
 
 import json
 import logging
-import os
 from contextlib import contextmanager
 from typing import Any, Dict, List, Optional
 

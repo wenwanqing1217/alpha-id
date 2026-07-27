@@ -18,7 +18,7 @@ MindFlow 用户身份注册引导流程
 
 import logging
 import re
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional
 
 from mindflow.user_profile import get_user_profile
 

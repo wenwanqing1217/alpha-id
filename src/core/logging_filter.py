@@ -23,7 +23,6 @@
 
 import logging
 import re
-from typing import Optional
 
 # ── 脱敏规则 ──
 

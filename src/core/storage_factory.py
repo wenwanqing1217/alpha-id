@@ -10,7 +10,6 @@ Storage Factory —— 存储后端工厂
   storage = get_storage()  # 自动选择
 """
 import logging
-from typing import Optional
 
 from core.settings import settings
 from core.storage import StorageBackend, JsonStorage

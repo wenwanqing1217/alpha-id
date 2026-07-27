@@ -7,10 +7,8 @@ NURO 每日总结 — 事后总结 + 锐评
 - 锐评（sharp commentary）：幽默/讽刺的评论
 """
 
-import json
 import logging
 import os
-import time
 from datetime import datetime, date
 from pathlib import Path
 from typing import Optional, List, Dict, Any

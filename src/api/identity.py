@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from alpha_id.container import Container
-from auth.jwt import create_access_token, create_refresh_token, decode_token, rotate_token, revoke_token, verify_token
+from auth.jwt import create_access_token, create_refresh_token, decode_token, rotate_token
 from auth.middleware import require_user
 from core.user_identity import UserIdentityManager
 
@@ -71,7 +71,6 @@ def refresh_token(body: RefreshRequest):
 @router.post("/logout")
 def logout(_: str = Depends(require_user)):
     """登出：撤销当前 access token"""
-    from fastapi import Request
     # 从依赖注入链中获取当前 token 并撤销
     # 注意：access token 仍有效期内可被撤销
     # 实际撤销在 require_user 中通过 request.state 获取 jti
