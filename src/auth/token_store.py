@@ -14,17 +14,17 @@ import threading
 import time
 from typing import Optional
 
-# 默认存储路径
-_DEFAULT_PATH = os.path.join(tempfile.gettempdir(), "alpha_id_revoked_tokens.json")
+from core.settings import settings
+
+# 默认存储路径（可通过 settings.token_store_path 覆盖）
+_DEFAULT_PATH = settings.token_store_path or os.path.join(tempfile.gettempdir(), "alpha_id_revoked_tokens.json")
 
 
 class TokenStore:
     """令牌撤销存储（文件后端）"""
 
     def __init__(self, store_path: Optional[str] = None):
-        self._path = store_path or os.environ.get(
-            "TOKEN_STORE_PATH", _DEFAULT_PATH
-        )
+        self._path = store_path or _DEFAULT_PATH
         self._lock = threading.Lock()
         # 确保目录存在
         os.makedirs(os.path.dirname(self._path) or ".", exist_ok=True)

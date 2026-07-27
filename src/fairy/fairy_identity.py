@@ -9,9 +9,10 @@ import hashlib
 import hmac
 import json
 import logging
-import os
 import time
 from typing import Optional, Dict, Any
+
+from core.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +29,8 @@ class FairyIdentity:
     """
 
     def __init__(self, founder_did: Optional[str] = None, salt: Optional[str] = None):
-        self.founder_did = founder_did or os.getenv("FOUNDER_DID", "")
-        self.salt = salt or os.getenv("NURO_SALT", "fairy_desktop_pet_v3")
+        self.founder_did = founder_did or settings.founder_alpha_id
+        self.salt = salt or "fairy_desktop_pet_v3"
         self._fairy_did: Optional[str] = None
         self._created_at = time.time()
 

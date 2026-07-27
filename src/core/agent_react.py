@@ -13,7 +13,6 @@ ReAct 思考引擎 — 结构化思考 + 工具调用循环
 """
 
 import json
-import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -293,12 +292,7 @@ class ReActEngine:
         observations = []
 
         for turn in range(self.max_turns):
-            # 2. 调用 LLM
-            # Set env vars for _call_llm to pick up
-            if self.api_key:
-                os.environ["OPENAI_API_KEY"] = self.api_key
-            if self.base_url:
-                os.environ["OPENAI_BASE_URL"] = self.base_url
+            # 2. 调用 LLM — 通过 settings 传递配置（不再写 os.environ）
             reply = _call_llm(
                 messages,
                 [t.to_schema() for t in self.tools],

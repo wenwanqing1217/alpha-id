@@ -5,7 +5,6 @@
 
 import hashlib
 import json
-import os
 import secrets
 import time
 from typing import Dict, Optional
@@ -14,6 +13,7 @@ from fastapi import APIRouter, HTTPException, Request
 
 from alpha_id.container import Container
 from alpha_id.signer import AIDSigner
+from core.settings import settings
 
 router = APIRouter(prefix="/api/v1/register", tags=["注册"])
 
@@ -84,11 +84,11 @@ async def send_sms(request: Request):
 
     # 尝试发真实短信（有阿里云 Key 且未强制演示模式时）
     # 安全修复：默认关闭演示模式，必须显式开启
-    demo_mode = os.environ.get("SMS_DEMO_MODE", "false").lower() == "true"
+    demo_mode = settings.sms_demo_mode == "true"
     if not demo_mode:
-        alibab_key = os.environ.get("ALIBABA_ACCESS_KEY_ID", "")
-        alibab_secret = os.environ.get("ALIBABA_ACCESS_KEY_SECRET", "")
-        sign_name = os.environ.get("ALIBABA_SMS_SIGN_NAME", "")
+        alibab_key = settings.alibaba_access_key_id
+        alibab_secret = settings.alibaba_access_key_secret
+        sign_name = settings.alibaba_sms_sign_name
     else:
         alibab_key = alibab_secret = sign_name = ""
 
@@ -172,9 +172,9 @@ async def face_verify(request: Request):
     body = await request.json()
     phone = body.get("phone", "")
 
-    alipay_app_id = os.environ.get("ALIPAY_APP_ID", "")
-    alipay_private_key = os.environ.get("ALIPAY_PRIVATE_KEY", "")
-    demo_mode = os.environ.get("ALIPAY_DEMO_MODE", "false").lower() != "false"
+    alipay_app_id = settings.alipay_app_id
+    alipay_private_key = settings.alipay_private_key
+    demo_mode = settings.alipay_demo_mode != "false"
 
     if demo_mode or not alipay_app_id:
         return {

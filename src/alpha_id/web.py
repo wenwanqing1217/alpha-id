@@ -172,11 +172,8 @@ app = FastAPI(title="Alpha-ID Web Demo")
 
 # CORS：显式允许列表（禁止 wildcard + credentials 组合）
 from fastapi.middleware.cors import CORSMiddleware
-_allowed = os.environ.get("AID_ALLOWED_ORIGINS", "").strip()
-if _allowed:
-    _origins = [o.strip() for o in _allowed.split(",") if o.strip()]
-else:
-    _origins = ["http://localhost:3000", "http://localhost:8000", "http://localhost:5173"]
+from core.settings import settings as _settings
+_origins = _settings.cors_origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins,

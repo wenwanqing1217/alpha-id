@@ -12,12 +12,13 @@ MindFlow 意图识别器
     print(result.intent)  # "chat" / "route_plan" / ...
 """
 
-import logging
 import json
-import os
+import logging
 import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
+
+from core.settings import settings
 
 logger = logging.getLogger("mindflow.intent")
 
@@ -31,10 +32,10 @@ class IntentResult:
     tools_needed: List[str] = field(default_factory=list)
 
 
-# ── LLM 意图识别配置 ──
-_LLM_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-_LLM_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.deepseek.com").rstrip("/")
-_LLM_MODEL = os.environ.get("LLM_MODEL", "deepseek-v4-flash")
+# ── LLM 意图识别配置（通过 settings 统一读取） ──
+_LLM_API_KEY = settings.llm_api_key
+_LLM_BASE_URL = settings.llm_base_url
+_LLM_MODEL = settings.llm_model
 _LLM_ENABLED = bool(_LLM_API_KEY)
 
 _INTENT_DEFINITIONS = {

@@ -1384,7 +1384,8 @@ def main():
     _safe_print(f"  Daily:    {'✅' if _HAS_DAILY else '❌'}")
     _safe_print()
 
-    if _HAS_LLM := (os.getenv("DEEPSEEK_API_KEY", "") or os.getenv("OPENAI_API_KEY", "")):
+    from core.settings import settings as _settings
+    if _HAS_LLM := (_settings.deepseek_api_key or _settings.llm_api_key):
         _safe_print("  LLM Key:  ✅ 已配置（备用）")
     if not _HAS_BRAIN and not _has_ollama and not _HAS_LLM:
         _safe_print("  TIP: 安装 Ollama + MiniCPM-o → https://ollama.com")

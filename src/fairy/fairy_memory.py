@@ -11,12 +11,13 @@ NURO 双链记忆 — 私有链 + 知识链
 import logging
 import os
 import time
+from pathlib import Path
 from typing import Optional, List, Dict, Any
 
 logger = logging.getLogger(__name__)
 
 PRIVATE_THRESHOLD = 70  # sensitivity >= 70 为私有
-DB_PATH = os.getenv("NURO_MEMORY_PATH", os.path.expanduser("~/.fairy/memory"))
+DB_PATH = str(Path.home() / ".fairy" / "memory")
 
 
 class FairyMemory:

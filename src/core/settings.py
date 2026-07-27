@@ -139,6 +139,10 @@ class Settings(BaseSettings):
     alipay_demo_mode: str = Field(default="false", validation_alias=AliasChoices("ALIPAY_DEMO_MODE"))
     baidu_map_auth_token: str = Field(default="", validation_alias=AliasChoices("BAIDU_MAP_AUTH_TOKEN"))
 
+    # ── A2A 协议 ──
+    a2a_enabled: bool = Field(default=True, validation_alias=AliasChoices("A2A_ENABLED"))
+    a2a_port: int = Field(default=9001, validation_alias=AliasChoices("A2A_PORT"))
+
     # ── 限流 ──
     rate_limit_enabled: bool = Field(default=True, validation_alias=AliasChoices("RATE_LIMIT_ENABLED"))
     rate_limit_requests_per_minute: int = Field(default=60, validation_alias=AliasChoices("RATE_LIMIT_RPM"))

@@ -13,6 +13,8 @@ OCR 工具 —— TwinBrain 的"眼睛之瞳"
 
 import os
 import sys
+
+from core.settings import settings
 from typing import Any, Dict
 
 # 兼容本地运行
@@ -79,10 +81,10 @@ def _get_llm_client(client=None):
     try:
         from openai import OpenAI
 
-        api_key = os.environ.get("OPENAI_API_KEY")
-        base_url = os.environ.get("OPENAI_BASE_URL")
+        api_key = settings.llm_api_key
+        base_url = settings.llm_base_url
         if api_key:
-            return OpenAI(api_key=api_key, base_url=base_url)
+            return OpenAI(api_key=api_key, base_url=base_url if base_url else None)
     except ImportError:
         pass
     return None

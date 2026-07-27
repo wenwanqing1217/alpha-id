@@ -7,16 +7,17 @@ NURO 每日总结 — 事后总结 + 锐评
 - 锐评（sharp commentary）：幽默/讽刺的评论
 """
 
+import json
 import logging
 import os
-import json
 import time
 from datetime import datetime, date
+from pathlib import Path
 from typing import Optional, List, Dict, Any
 
 logger = logging.getLogger(__name__)
 
-DAILY_PATH = os.getenv("NURO_DAILY_PATH", os.path.expanduser("~/.fairy/daily"))
+DAILY_PATH = str(Path.home() / ".fairy" / "daily")
 
 
 class FairyDaily:

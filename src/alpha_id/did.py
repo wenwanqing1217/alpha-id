@@ -168,19 +168,37 @@ def sign(secret: bytes, msg: bytes) -> bytes:
 
 
 def verify(public: bytes, msg: bytes, signature: bytes) -> bool:
-    """Ed25519 验签"""
-    if len(signature) != 64:
+    """Ed25519 验签（含小阶子群攻击防护）"""
+    # 长度校验：公钥 32 字节，签名 64 字节
+    if len(public) != 32 or len(signature) != 64:
         return False
+
+    # 拒绝全零公钥 — 解码后为 2 阶点（小阶子群），可导致伪造签名绕过
+    if public == b"\x00" * 32:
+        return False
+
     R_bytes = signature[:32]  # noqa: N806
     S_bytes = signature[32:]  # noqa: N806
     S = int.from_bytes(S_bytes, "little")  # noqa: N806
     if S >= l:
         return False
+
     try:
         R = _decodepoint(R_bytes)  # noqa: N806
         A = _decodepoint(public)  # noqa: N806
     except Exception:
         return False
+
+    # 椭圆曲线成员检查：确保 R 和 A 确实在曲线上
+    # _decodepoint 不验证曲线方程，无效编码会返回垃圾点，此处拦截
+    if not _isoncurve_ext(R) or not _isoncurve_ext(A):
+        return False
+
+    # 小阶子群攻击防护：验证公钥不在 8 阶子群中
+    # Curve25519 cofactor = 8；若 [8]A == 单位元，则 A 为小阶点
+    if _scalarmult(A, 8) == (0, 1, 1, 0):
+        return False
+
     h = _hash_to_scalar(R_bytes + public + msg)
     lhs = _scalarmult(_B, S)
     rhs = _edwards_add(R, _scalarmult(A, h))

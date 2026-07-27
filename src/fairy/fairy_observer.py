@@ -10,7 +10,6 @@ NURO 主动观察 — 主动感知用户行为（无需唤醒词）
 """
 
 import logging
-import os
 import threading
 import time
 from enum import Enum
@@ -18,7 +17,7 @@ from typing import Optional, Callable, Dict, Any
 
 logger = logging.getLogger(__name__)
 
-OBSERVE_INTERVAL = int(os.getenv("NURO_OBSERVE_INTERVAL", "30"))  # 秒
+OBSERVE_INTERVAL = 30  # 秒（可通过 settings 扩展）
 
 
 class SceneType(Enum):

@@ -7,10 +7,11 @@ P0 原则：只留"缺了会崩的东西"。
   - 其他全部 x_ 前缀预留
 """
 
-import os
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+from core.settings import settings
 
 SCHEMA_VERSION = "0.1.0"
 PROFILE_DIR = "v0.1"
@@ -18,11 +19,8 @@ PROFILE_FILE = "identity.yaml"
 
 
 def _alpha_id_dir() -> Path:
-    """动态获取 Alpha-ID 数据目录，支持环境变量 ALPHA_ID_DIR 覆盖"""
-    env_dir = os.environ.get("ALPHA_ID_DIR")
-    if env_dir:
-        return Path(env_dir)
-    return Path.home() / ".alpha-id"
+    """动态获取 Alpha-ID 数据目录（通过 settings 统一配置）"""
+    return settings.alpha_id_path
 
 
 @dataclass

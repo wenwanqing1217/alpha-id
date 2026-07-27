@@ -5,10 +5,13 @@
     或安装后：aid-api
 """
 
+import logging
 import os
 from pathlib import Path
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
+
+logger = logging.getLogger(__name__)
 
 from dotenv import load_dotenv
 
@@ -22,6 +25,7 @@ from fastapi.staticfiles import StaticFiles  # noqa: E402
 
 from alpha_id.container import Container  # noqa: E402
 from auth.jwt import validate_master_key  # noqa: E402
+from auth.csrf import CSRFMiddleware  # noqa: E402
 from core.middleware import CorrelationIDMiddleware  # noqa: E402
 from core.rate_limit import RateLimitMiddleware  # noqa: E402
 from core.settings import settings  # noqa: E402
@@ -54,7 +58,50 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     validate_master_key()
     # 启动：容器自动 lazy init
     container = Container.instance()
+
+    # 启动：A2A 服务器（后台线程，端口 9001）
+    a2a_thread = None
+    if settings.a2a_enabled:
+        try:
+            from core.a2a import A2AServer, SkillRegistry, A2ASigner
+            from alpha_id.did import DIDRegistry
+
+            # 构建技能注册表
+            skills = SkillRegistry()
+
+            # 注册示例技能
+            @skills.skill("ping", description="健康检查")
+            def _ping(params):
+                return {"status": "ok", "agent": settings.app_name}
+
+            @skills.skill("echo", description="回显参数")
+            def _echo(params):
+                return params
+
+            # 签名器（从 DID 派生）
+            did_reg = DIDRegistry()
+            signer = None
+            did = None
+            if container.identity and hasattr(container.identity, "_did_registry"):
+                did_reg = container.identity._did_registry
+                if did_reg and did_reg.public_key:
+                    did = did_reg.did
+                    signer = A2ASigner(public_key_hex=did_reg.public_key.hex())
+
+            a2a_server = A2AServer(
+                skills=skills,
+                signer=signer,
+                did=did or "",
+                alpha_id=settings.app_name,
+                port=settings.a2a_port,
+            )
+            a2a_thread = a2a_server.start(blocking=False)
+            logger.info("A2A 服务器已启动 (端口 %d)", settings.a2a_port)
+        except Exception as exc:
+            logger.warning("A2A 服务器启动失败（非阻塞）: %s", exc)
+
     yield
+
     # 关闭：释放资源（HTTP 客户端、LLM 客户端、容器）
     from core.http_client import close_clients
     from core.llm_async import close_llm_client
@@ -84,6 +131,16 @@ app.add_middleware(
 # 限流（CORS 内层，CorrelationID 外层）
 # 执行顺序：CorrelationId → RateLimit → CORS → Route
 app.add_middleware(RateLimitMiddleware)
+
+# CSRF 防护（RateLimit 内层，CorrelationID 外层）
+# 执行顺序：CorrelationId → CSRF → RateLimit → CORS → Route
+# 仅对状态变更方法（POST/PUT/DELETE/PATCH）生效，安全方法直接放行
+app.add_middleware(
+    CSRFMiddleware,
+    allowed_origins=set(origins),
+    exempt_paths={"/api/v1/registration/register"},  # 注册入口允许外部来源
+    enforce_custom_header=True,
+)
 
 app.add_middleware(CorrelationIDMiddleware)
 

@@ -9,15 +9,16 @@ NURO 语音 — Whisper STT + Coqui TTS
 """
 
 import logging
-import os
 import threading
 import time
 from typing import Optional, Callable
 
+from core.settings import settings
+
 logger = logging.getLogger(__name__)
 
-WHISPER_MODEL = os.getenv("WHISPER_MODEL", "tiny")
-TTS_MODEL = os.getenv("TTS_MODEL", "tts_models/zh-CN/baker/tacotron2-DDC-GST")
+WHISPER_MODEL = settings.fairy_whisper_model
+TTS_MODEL = settings.fairy_tts_model_name
 
 
 class FairyVoice:

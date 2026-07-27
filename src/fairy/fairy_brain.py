@@ -7,16 +7,17 @@ VRAM 预算：~5.5GB（Q4_K_M 量化）
 
 import base64
 import logging
-import os
 import time
 from typing import Optional, List
 
 import httpx
 
+from core.settings import settings
+
 logger = logging.getLogger(__name__)
 
-OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
-DEFAULT_MODEL = os.getenv("NURO_MODEL", "openbmb/minicpm-o4.5:latest")
+OLLAMA_HOST = settings.ollama_url
+DEFAULT_MODEL = settings.fairy_model
 
 
 class FairyBrain:
