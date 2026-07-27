@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from alpha_id.container import Container
+from alpha_id.container import Container, get_container
 from auth.jwt import create_access_token, create_refresh_token, decode_token, rotate_token
 from auth.middleware import require_user
 from core.user_identity import UserIdentityManager
@@ -12,17 +12,18 @@ from .models import DeviceBindRequest, LoginRequest, RefreshRequest, RegisterReq
 router = APIRouter(prefix="/api/v1/identity", tags=["身份"])
 
 
-def get_manager() -> UserIdentityManager:
-    return Container.instance().identity
+def get_manager(container: Container = Depends(get_container)) -> UserIdentityManager:
+    """依赖注入：从 Container 获取 UserIdentityManager"""
+    return container.identity
 
 
 # ── 认证端点（无需令牌） ──
 
 
 @router.post("/register")
-def register(body: RegisterRequest):
+def register(body: RegisterRequest, manager: UserIdentityManager = Depends(get_manager)):
     """注册新用户"""
-    result = get_manager().register_user(
+    result = manager.register_user(
         device_fingerprint=body.device_fingerprint,
         is_founder=body.is_founder,
         founder_code=body.founder_code,
@@ -33,9 +34,9 @@ def register(body: RegisterRequest):
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(body: LoginRequest):
+def login(body: LoginRequest, manager: UserIdentityManager = Depends(get_manager)):
     """用 alpha_id + 设备指纹获取令牌对"""
-    profile = get_manager().get_user_profile(body.alpha_id)
+    profile = manager.get_user_profile(body.alpha_id)
     if not profile:
         raise HTTPException(status_code=404, detail="用户不存在")
 
@@ -101,9 +102,10 @@ def auth_verify(body: VerifyRequest):
 
 
 @router.get("/me")
-def get_current_user(alpha_id: str = Depends(require_user)):
+def get_current_user(alpha_id: str = Depends(require_user),
+                     manager: UserIdentityManager = Depends(get_manager)):
     """获取当前用户信息（需认证）"""
-    profile = get_manager().get_user_profile(alpha_id)
+    profile = manager.get_user_profile(alpha_id)
     if not profile:
         raise HTTPException(status_code=404, detail="用户不存在")
     # 脱敏：不暴露 device_fingerprint
@@ -112,27 +114,35 @@ def get_current_user(alpha_id: str = Depends(require_user)):
 
 
 @router.get("/{alpha_id}")
-def get_user_profile(alpha_id: str, _: str = Depends(require_user)):
+def get_user_profile(alpha_id: str,
+                     _: str = Depends(require_user),
+                     manager: UserIdentityManager = Depends(get_manager)):
     """获取指定用户档案（需认证）"""
-    profile = get_manager().get_user_profile(alpha_id)
+    profile = manager.get_user_profile(alpha_id)
     if not profile:
         raise HTTPException(status_code=404, detail="用户不存在")
     return profile
 
 
 @router.post("/{alpha_id}/devices")
-def bind_device(alpha_id: str, body: DeviceBindRequest, _: str = Depends(require_user)):
+def bind_device(alpha_id: str,
+                body: DeviceBindRequest,
+                _: str = Depends(require_user),
+                manager: UserIdentityManager = Depends(get_manager)):
     """绑定新设备（需认证）"""
-    result = get_manager().update_device_binding(alpha_id=alpha_id, new_device=body.new_device)
+    result = manager.update_device_binding(alpha_id=alpha_id, new_device=body.new_device)
     if not result["success"]:
         raise HTTPException(status_code=400, detail=result["message"])
     return result
 
 
 @router.post("/{alpha_id}/sync")
-def sync_device(alpha_id: str, body: SyncRequest, _: str = Depends(require_user)):
+def sync_device(alpha_id: str,
+                body: SyncRequest,
+                _: str = Depends(require_user),
+                manager: UserIdentityManager = Depends(get_manager)):
     """跨设备同步（需认证）"""
-    result = get_manager().sync_cross_device(
+    result = manager.sync_cross_device(
         alpha_id=alpha_id,
         from_device=body.from_device,
         to_device=body.to_device,
@@ -143,15 +153,17 @@ def sync_device(alpha_id: str, body: SyncRequest, _: str = Depends(require_user)
 
 
 @router.post("/{alpha_id}/session")
-def record_session(alpha_id: str, _: str = Depends(require_user)):
+def record_session(alpha_id: str,
+                   _: str = Depends(require_user),
+                   manager: UserIdentityManager = Depends(get_manager)):
     """记录会话（需认证）"""
-    result = get_manager().record_session(alpha_id)
+    result = manager.record_session(alpha_id)
     if not result["success"]:
         raise HTTPException(status_code=400, detail=result["message"])
     return result
 
 
 @router.get("/stats/overview")
-def get_statistics():
+def get_statistics(manager: UserIdentityManager = Depends(get_manager)):
     """获取系统统计信息（公开）"""
-    return get_manager().get_statistics()
+    return manager.get_statistics()

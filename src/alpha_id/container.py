@@ -5,11 +5,17 @@
 - 单例管理（在 FastAPI lifespan 中初始化）
 - lazy init + 线程安全
 - 统一的存储后端切换点（SQLite / PostgreSQL）
+- FastAPI 依赖注入支持（get_container）
 
 存储后端选择：
 - 默认：DATABASE_URL 环境变量决定（存在则用 Postgres，否则 SQLite）
 - 测试：通过 storage setter 注入 mock
 - 显式配置：os.environ["STORAGE_BACKEND"] = "sqlite" | "postgres"
+
+依赖注入迁移（Phase 2）：
+- 旧代码：Container.instance().xxx
+- 新代码：在 FastAPI 路由中使用 Depends(get_container)
+- 本文件保留 instance() 单例以兼容非 FastAPI 上下文（CLI、web.py）
 """
 
 import logging
@@ -65,11 +71,32 @@ class Container:
 
     @classmethod
     def instance(cls) -> "Container":
+        """获取全局单例（线程安全）
+
+        兼容旧代码。新代码应在 FastAPI 上下文中使用 Depends(get_container)。
+        """
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
                     cls._instance = cls()
         return cls._instance
+
+    @classmethod
+    def set_instance(cls, container: "Container") -> None:
+        """显式设置单例（用于测试注入或自定义初始化）"""
+        with cls._lock:
+            cls._instance = container
+
+    @classmethod
+    def reset_instance(cls) -> None:
+        """清除单例（测试用）"""
+        with cls._lock:
+            if cls._instance is not None:
+                try:
+                    cls._instance.close()
+                except Exception:
+                    pass
+                cls._instance = None
 
     # ── 存储 ──
 
@@ -138,3 +165,40 @@ class Container:
         """释放资源"""
         if hasattr(self._storage, "close"):
             self._storage.close()
+
+
+# ── FastAPI 依赖注入 ──
+
+try:
+    from fastapi import Depends, Request
+
+    def get_container(request: Request) -> Container:
+        """FastAPI 依赖：从 app.state 获取 Container
+
+        使用方式：
+            @router.get("/xxx")
+            def handler(container: Container = Depends(get_container)):
+                ...
+
+        优势：
+        - 测试时可注入 mock container
+        - 支持请求级别的容器隔离（多租户）
+        - 消除对全局单例的直接依赖
+
+        兼容回退：如果 app.state.container 未设置（例如 TestClient 未运行 lifespan），
+        回退到全局单例 Container.instance()，保证非生产环境可用。
+        """
+        try:
+            return request.app.state.container
+        except AttributeError:
+            return Container.instance()
+
+    def _get_container_from_app(app) -> Optional[Container]:
+        """从 FastAPI app 实例获取容器（非请求上下文使用）"""
+        return getattr(app.state, "container", None)
+
+except ImportError:
+    # FastAPI 不可用时提供占位
+    def get_container(request=None) -> Container:  # type: ignore[misc]
+        """FastAPI 不可用，回退到单例"""
+        return Container.instance()

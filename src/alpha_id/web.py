@@ -19,7 +19,7 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-from alpha_id.container import Container
+from alpha_id.container import Container, get_container
 from alpha_id.poe import PoEStore
 from alpha_id.signer import AIDSigner
 from alpha_id.skill_signer import SkillRegistry
@@ -188,10 +188,11 @@ app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
 _brain_registry = BrainRegistry()
 
 
-# ── 辅助函数 ──
+# ── 容器访问（回退到单例以兼容非 FastAPI 上下文） ──
 
 
 def _get_container() -> Container:
+    """获取容器（回退到单例）"""
     return Container.instance()
 
 

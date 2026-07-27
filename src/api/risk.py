@@ -1,8 +1,8 @@
 """风控引擎 API 路由"""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-from alpha_id.container import Container
+from alpha_id.container import Container, get_container
 from core.risk_engine import (
     BehaviorFingerprint,
     DeviceFingerprint,
@@ -14,16 +14,15 @@ from .models import RiskEvaluateRequest, VoiceVerifyRequest, VoiceVerifyResponse
 router = APIRouter(prefix="/api/v1/risk", tags=["风控"])
 
 
-def get_engine() -> RiskAssessmentEngine:
-    """风控引擎不需要存储，直接返回单例"""
-    return Container.instance().risk
+def get_engine(container: Container = Depends(get_container)) -> RiskAssessmentEngine:
+    """依赖注入：从 Container 获取 RiskAssessmentEngine"""
+    return container.risk
 
 
 @router.post("/evaluate")
-def evaluate(body: RiskEvaluateRequest):
+def evaluate(body: RiskEvaluateRequest,
+             engine: RiskAssessmentEngine = Depends(get_engine)):
     """全量风控评估（公开）"""
-    engine = get_engine()
-
     device_current = None
     behavior_current = None
     voice_data = None
@@ -75,7 +74,8 @@ def evaluate(body: RiskEvaluateRequest):
 
 
 @router.post("/voice-verify")
-def voice_verify(body: VoiceVerifyRequest):
+def voice_verify(body: VoiceVerifyRequest,
+                 engine: RiskAssessmentEngine = Depends(get_engine)):
     """声纹验证专用接口（公开）"""
 
     voice_data = {
@@ -85,7 +85,6 @@ def voice_verify(body: VoiceVerifyRequest):
         "audio_quality": body.audio_quality,
     }
 
-    engine = get_engine()
     voice_score = engine.calculate_voice_score(voice_data)
     risk_score = 100.0 - voice_score
     risk_level = engine.determine_risk_level(risk_score)

@@ -21,12 +21,12 @@ from dotenv import load_dotenv
 # 加载 .env 文件（必须在读取环境变量之前）
 load_dotenv()
 
-from fastapi import FastAPI  # noqa: E402
+from fastapi import Depends, FastAPI  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from fastapi.responses import HTMLResponse  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 
-from alpha_id.container import Container  # noqa: E402
+from alpha_id.container import Container, get_container  # noqa: E402
 from auth.jwt import validate_master_key  # noqa: E402
 from auth.csrf import CSRFMiddleware  # noqa: E402
 from core.middleware import CorrelationIDMiddleware  # noqa: E402
@@ -56,11 +56,18 @@ else:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator:
-    """服务生命周期管理"""
+    """服务生命周期管理
+
+    依赖注入迁移（Phase 2）：
+    - Container 实例存储在 app.state.container
+    - API 路由通过 Depends(get_container) 获取
+    - 保留 Container.instance() 单例以兼容非 FastAPI 上下文
+    """
     # 启动：校验 JWT 主密钥
     validate_master_key()
-    # 启动：容器自动 lazy init
+    # 启动：容器初始化 + 注入 app.state（FastAPI DI）
     container = Container.instance()
+    app.state.container = container
 
     # 启动：A2A 服务器（后台线程，端口 9001）
     a2a_thread = None
@@ -188,12 +195,9 @@ def index():
 
 
 @app.get("/health")
-def health():
+def health(container: Container = Depends(get_container)):
     """真实健康检查：验证关键组件可达性（通过 Container 获取存储后端）"""
-    from alpha_id.container import Container
-
     checks = {"status": "ok", "version": settings.app_version, "service": "alpha-id"}
-    container = Container.instance()
 
     # 1. 存储后端连通性
     try:

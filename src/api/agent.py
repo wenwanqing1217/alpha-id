@@ -2,12 +2,16 @@
 
 提供 /api/v1/agent/chat 端点，将核心 AI 能力暴露为 HTTP API。
 支持标准 AgentLoop 对话和 ReAct 思考引擎两种模式。
+
+依赖注入迁移（Phase 2）：
+- 所有路由通过 Depends(get_container) 获取 Container
+- _get_brain 改为依赖注入友好的形式
 """
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
-from alpha_id.container import Container
+from alpha_id.container import Container, get_container
 from auth.middleware import require_user
 from core.agent import AgentLoop
 from core.twin_brain import TwinBrain
@@ -41,23 +45,15 @@ class BrainStatusResponse(BaseModel):
     settings: dict
 
 
-# ── 依赖注入 ──
-
-
-def _get_brain(alpha_id: str) -> TwinBrain:
-    """获取或创建用户的 TwinBrain 实例"""
-    container = Container.instance()
-    brain = TwinBrain(alpha_id=alpha_id, storage=container.storage)
-    return brain
-
-
 # ── 端点 ──
 
 
 @router.post("/chat", response_model=ChatResponse)
-def chat(body: ChatRequest, alpha_id: str = Depends(require_user)):
+def chat(body: ChatRequest,
+         alpha_id: str = Depends(require_user),
+         container: Container = Depends(get_container)):
     """与 Agent 对话 — 自动选择 AgentLoop 或 ReActEngine"""
-    brain = _get_brain(alpha_id)
+    brain = TwinBrain(alpha_id=alpha_id, storage=container.storage)
 
     if body.use_react:
         # 使用 ReAct 思考引擎
@@ -79,9 +75,10 @@ def chat(body: ChatRequest, alpha_id: str = Depends(require_user)):
 
 
 @router.get("/status", response_model=BrainStatusResponse)
-def status(alpha_id: str = Depends(require_user)):
+def status(alpha_id: str = Depends(require_user),
+           container: Container = Depends(get_container)):
     """查询大脑状态"""
-    brain = _get_brain(alpha_id)
+    brain = TwinBrain(alpha_id=alpha_id, storage=container.storage)
     return BrainStatusResponse(
         alpha_id=alpha_id,
         state=brain.state.value if brain.state else "sleep",

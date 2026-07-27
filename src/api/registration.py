@@ -1,75 +1,85 @@
 """注册流程 API 路由 — 替代原 Flow/API 功能
 
 覆盖：短信验证码发送/校验、支付宝人脸认证、DID 生成、注册完成。
+
+依赖注入迁移（Phase 2）：
+- 所有路由通过 Depends(get_container) 获取 Container
+- 内部辅助函数接受可选的 container 参数，保持向后兼容
 """
 
 import hashlib
 import json
 import secrets
 import time
-from typing import Dict
+from typing import Dict, Optional
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 
-from alpha_id.container import Container
+from alpha_id.container import Container, get_container
 from alpha_id.signer import AIDSigner
 from core.settings import settings
 
 router = APIRouter(prefix="/api/v1/register", tags=["注册"])
 
 
-def _get_storage():
-    """获取统一的存储后端（通过 Container DI）"""
+def _get_storage(container: Optional[Container] = None):
+    """获取统一的存储后端（通过 Container DI）
+
+    优先使用注入的 container，否则回退到单例（向后兼容）。
+    """
+    if container is not None:
+        return container.storage
     return Container.instance().storage
 
 
-def _sms_store() -> Dict[str, dict]:
+def _sms_store(container: Optional[Container] = None) -> Dict[str, dict]:
     try:
-        store = _get_storage()
+        store = _get_storage(container)
         data = store.load("sms_codes")
         return data if data else {}
     except Exception:
         return {}
 
 
-def _sms_save(data: Dict[str, dict]) -> None:
+def _sms_save(data: Dict[str, dict], container: Optional[Container] = None) -> None:
     try:
-        store = _get_storage()
+        store = _get_storage(container)
         store.save("sms_codes", data)
     except Exception:
         pass
 
 
-def _clean_expired() -> Dict[str, dict]:
-    data = _sms_store()
+def _clean_expired(container: Optional[Container] = None) -> Dict[str, dict]:
+    data = _sms_store(container)
     now = time.time()
     expired = [k for k, v in data.items() if v.get("expires_at", 0) < now]
     for k in expired:
         del data[k]
     if expired:
-        _sms_save(data)
+        _sms_save(data, container)
     return data
 
 
-def _face_store() -> Dict[str, dict]:
+def _face_store(container: Optional[Container] = None) -> Dict[str, dict]:
     try:
-        store = _get_storage()
+        store = _get_storage(container)
         data = store.load("face_certify")
         return data if data else {}
     except Exception:
         return {}
 
 
-def _face_save(data: Dict[str, dict]) -> None:
+def _face_save(data: Dict[str, dict], container: Optional[Container] = None) -> None:
     try:
-        store = _get_storage()
+        store = _get_storage(container)
         store.save("face_certify", data)
     except Exception:
         pass
 
 
 @router.post("/send-sms")
-async def send_sms(request: Request):
+async def send_sms(request: Request,
+                   container: Container = Depends(get_container)):
     """发送短信验证码（无阿里云 Key 时降级演示模式）"""
     body = await request.json()
     phone = body.get("phone", "")
@@ -78,9 +88,9 @@ async def send_sms(request: Request):
 
     # 使用加密安全随机数生成 6 位验证码
     code = f"{secrets.randbelow(900000) + 100000}"
-    data = _clean_expired()
+    data = _clean_expired(container)
     data[phone] = {"code": code, "expires_at": time.time() + 300}
-    _sms_save(data)
+    _sms_save(data, container)
 
     # 尝试发真实短信（有阿里云 Key 且未强制演示模式时）
     # 安全修复：默认关闭演示模式，必须显式开启
@@ -150,24 +160,26 @@ async def send_sms(request: Request):
 
 
 @router.post("/verify-sms")
-async def verify_sms(request: Request):
+async def verify_sms(request: Request,
+                     container: Container = Depends(get_container)):
     """校验短信验证码"""
     body = await request.json()
     phone = body.get("phone", "")
     code = body.get("code", "")
 
-    data = _clean_expired()
+    data = _clean_expired(container)
     record = data.get(phone)
     if not record or record["code"] != code:
         raise HTTPException(status_code=400, detail="验证码错误或已过期")
 
     del data[phone]
-    _sms_save(data)
+    _sms_save(data, container)
     return {"success": True, "message": "验证通过", "phone": phone}
 
 
 @router.post("/face-verify")
-async def face_verify(request: Request):
+async def face_verify(request: Request,
+                      container: Container = Depends(get_container)):
     """支付宝人脸认证（无密钥时降级演示模式）"""
     body = await request.json()
     phone = body.get("phone", "")
@@ -188,9 +200,9 @@ async def face_verify(request: Request):
         }
 
     certify_id = f"cert_{int(time.time())}"
-    face_data = _face_store()
+    face_data = _face_store(container)
     face_data[certify_id] = {"phone": phone, "status": "pending"}
-    _face_save(face_data)
+    _face_save(face_data, container)
     certify_url = f"https://certify.alipay.com/certifyPage.htm?certifyId={certify_id}"
 
     return {
@@ -203,14 +215,15 @@ async def face_verify(request: Request):
 
 
 @router.post("/face-query")
-async def face_query(request: Request):
+async def face_query(request: Request,
+                     container: Container = Depends(get_container)):
     """查询人脸认证结果（仅查询本地状态，不代替支付宝服务端回调）"""
     body = await request.json()
     certify_id = body.get("certifyId", "")
     if not certify_id:
         raise HTTPException(status_code=400, detail="缺少 certifyId")
 
-    face_data = _face_store()
+    face_data = _face_store(container)
     record = face_data.get(certify_id)
 
     if not record:
@@ -271,7 +284,8 @@ async def generate_did(request: Request):
 
 
 @router.post("/complete")
-async def complete_registration(request: Request):
+async def complete_registration(request: Request,
+                                container: Container = Depends(get_container)):
     """完成注册 — 将用户写入数据库"""
     body = await request.json()
     did = body.get("did", "")
@@ -280,9 +294,6 @@ async def complete_registration(request: Request):
 
     if not did:
         raise HTTPException(status_code=400, detail="缺少 DID")
-
-    # 使用 Container 获取身份管理器
-    container = Container.instance()
 
     # 以手机号哈希作为设备指纹（Web 端无真实设备指纹）
     if phone:
