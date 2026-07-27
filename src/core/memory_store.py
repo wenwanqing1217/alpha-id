@@ -14,8 +14,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from core.settings import settings
-from core.storage import JsonStorage, StorageBackend
+from core.storage import StorageBackend
+from core.storage_sqlite import SqliteStorage
 
 logger = logging.getLogger(__name__)
 
@@ -50,13 +50,8 @@ class MemoryStore:
         self._vector_index = None
 
         if storage is None:
-            import os
-
-            # 统一使用 alpha_id_path 作为存储根目录
-            db_path = os.path.join(
-                str(settings.alpha_id_path), f"memory_{alpha_id.replace('-', '_')}.json"
-            )
-            self._storage = JsonStorage(db_path)
+            # 默认使用 SQLite（WAL 模式，线程安全，零外部依赖）
+            self._storage = SqliteStorage()
         else:
             self._storage = storage
 

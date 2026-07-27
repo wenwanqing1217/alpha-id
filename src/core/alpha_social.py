@@ -5,7 +5,6 @@ Alpha-ID 社交网络核心逻辑（零外部依赖）
 支持 JSON 文件 / PostgreSQL 双存储后端。
 """
 
-import os
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Dict, List, Optional
@@ -44,12 +43,9 @@ class AlphaSocialManager:
 
     def __init__(self, storage: Optional[StorageBackend] = None, user_exists_fn=None):
         if storage is None:
-            import tempfile
+            from core.storage_sqlite import SqliteStorage
 
-            from core.storage import JsonStorage
-
-            db_path = os.path.join(tempfile.gettempdir(), "alpha_id_social.json")
-            self._storage = JsonStorage(db_path)
+            self._storage = SqliteStorage()
         else:
             self._storage = storage
 
