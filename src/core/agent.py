@@ -743,85 +743,85 @@ class AgentLoop:
         return messages
 
     def run(self, user_input: str) -> str:
-        """执行一次完整的 LLM + Tools + Loop（支持多个 tool call）"""
+        """执行一次完整的 LLM + Tools + Loop（支持多个 tool call）
+
+        使用 _call_llm() 统一调用 LLM，避免重复的 HTTP 请求代码。
+        _call_llm 返回文本或 __TOOL_CALL__ 标记，本方法负责解析和执行工具。
+        """
         logger.info(f"用户输入: {user_input}")
         messages = self._build_messages(user_input)
-        api_key = settings.llm_api_key
-        base_url = settings.llm_base_url
 
-        if not api_key:
+        if not settings.llm_api_key:
             return "[LLM 未配置：请设置 OPENAI_API_KEY 环境变量]"
 
-        tools_payload = [{"type": "function", "function": t.to_schema()} for t in self.tools] if self.tools else None
+        tools_schema = [t.to_schema() for t in self.tools] if self.tools else []
 
         for turn in range(self.max_turns):
             logger.info(f"第 {turn + 1} 轮 LLM 调用")
-            body = {
-                "model": self.model,
-                "messages": messages,
-                "temperature": 0.7,
-                "max_tokens": 2048,
-            }
-            if tools_payload:
-                body["tools"] = tools_payload
 
-            try:
-                import httpx
-                resp = httpx.post(
-                    base_url.rstrip("/") + "/chat/completions",
-                    json=body,
-                    headers={
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer " + api_key,
-                    },
-                    timeout=30,
-                )
-                resp.raise_for_status()
-                data = resp.json()
-                choice = data["choices"][0]
-                msg = choice["message"]
-            except Exception as e:
-                logger.warning(f"LLM 调用异常: {e}")
-                raise
+            # 使用 _call_llm 统一调用（支持 mock 和错误处理）
+            llm_response = _call_llm(messages, tools_schema, self.model)
 
-            content = msg.get("content") or ""
-            tool_calls = msg.get("tool_calls")
+            # _call_llm 返回错误消息时直接返回
+            if llm_response.startswith("[LLM") or llm_response.startswith("["):
+                # 检查是否是 __TOOL_CALL__ 标记（不以 [ 开头）
+                if not llm_response.startswith("__TOOL_CALL__"):
+                    return llm_response
 
-            if not tool_calls:
+            # 解析工具调用
+            tool_results = self._execute_tool_calls(llm_response)
+
+            # 没有工具调用 → 直接返回最终回答
+            if tool_results is None:
                 self.history.append({"role": "user", "content": user_input})
-                self.history.append({"role": "assistant", "content": content})
-                return content
+                self.history.append({"role": "assistant", "content": llm_response})
+                return llm_response
 
-            # Execute all tool calls
-            messages.append({"role": "assistant", "content": content if content else None, "tool_calls": [
-                {"id": tc["id"], "type": "function", "function": {"name": tc["function"]["name"], "arguments": tc["function"]["arguments"]}}
-                for tc in tool_calls
-            ]})
-
-            for tc in tool_calls:
-                name = tc["function"]["name"]
-                try:
-                    args = json.loads(tc["function"]["arguments"]) if tc["function"]["arguments"] else {}
-                except json.JSONDecodeError:
-                    args = {}
-                logger.info(f"工具调用: {name}({args})")
-                tool = self.tool_map.get(name)
-                if tool is None:
-                    result = f"[未知工具: {name}]"
-                    logger.warning(f"未知工具: {name}")
-                else:
-                    try:
-                        result = tool(**args)
-                    except Exception as e:
-                        logger.warning(f"工具执行异常 {name}: {e}")
-                        result = f"[工具错误] {e}"
-                messages.append({"role": "tool", "tool_call_id": tc["id"], "content": result})
+            # 有工具调用 → 将结果注入消息历史，继续下一轮
+            messages.append({"role": "assistant", "content": llm_response})
+            for tool_call_id, name, result in tool_results:
+                messages.append({"role": "tool", "tool_call_id": tool_call_id, "content": result})
 
         final = f"[达到最大轮次 {self.max_turns}，未完成]"
         logger.warning(f"达到最大轮次 {self.max_turns}，未完成")
         self.history.append({"role": "user", "content": user_input})
         self.history.append({"role": "assistant", "content": final})
         return final
+
+    def _execute_tool_calls(self, llm_response: str) -> Optional[List[tuple]]:
+        """解析并执行 LLM 响应中的工具调用
+
+        Returns:
+            None 表示没有工具调用（直接回答）
+            List[(tool_call_id, name, result)] 表示工具调用结果
+        """
+        import re
+        tool_calls = list(re.finditer(r"__TOOL_CALL__\s+(?:id:(\S+)\s+)?(\w+)\(([^)]*)\)", llm_response))
+        if not tool_calls:
+            return None
+
+        results = []
+        for match in tool_calls:
+            tool_call_id = match.group(1) or f"call_{len(results)}"
+            name = match.group(2)
+            args_str = match.group(3) or "{}"
+            try:
+                args = json.loads(args_str)
+            except json.JSONDecodeError:
+                args = {}
+            logger.info(f"工具调用: {name}({args})")
+            tool = self.tool_map.get(name)
+            if tool is None:
+                result = f"[未知工具: {name}]"
+                logger.warning(f"未知工具: {name}")
+            else:
+                try:
+                    result = tool(**args)
+                except Exception as e:
+                    logger.warning(f"工具执行异常 {name}: {e}")
+                    result = f"[工具错误] {e}"
+            results.append((tool_call_id, name, result))
+        return results
 
     async def arun(self, user_input: str) -> str:
         """异步版本：执行一次完整的 LLM + Tools + Loop

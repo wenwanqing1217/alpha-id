@@ -127,16 +127,19 @@ class TestFriendRequestFlow:
 class TestProfileVisibility:
     """档案可见度"""
 
+    # 创始人 alpha_id 由 settings.founder_alpha_id 决定（默认 Alpha-000）
+    FOUNDER_ALPHA_ID = "Alpha-000"
+
     @pytest.fixture
     def founder_storage(self, tmp_path):
-        """创始人专用存储（alpha_id = Alpha-1 与 register_user 匹配）"""
+        """创始人专用存储"""
         from core.storage import JsonStorage
 
         return JsonStorage(str(tmp_path / "founder.json"))
 
     @pytest.fixture
     def founder(self, founder_storage):
-        brain = TwinBrain(alpha_id="Alpha-1", storage=founder_storage, settings=BrainSettings(auto_reply=False))
+        brain = TwinBrain(alpha_id=self.FOUNDER_ALPHA_ID, storage=founder_storage, settings=BrainSettings(auto_reply=False))
         brain.awake()
         brain.identity.register_user(device_fingerprint="FOUNDER_DEVICE", is_founder=True, founder_code="Alpha-1-zx")
         return brain
@@ -149,40 +152,40 @@ class TestProfileVisibility:
 
     def test_self_visibility_shows_full(self, founder, stranger):
         """自己看自己看到完整档案"""
-        query = Message.create_profile_query(sender="Alpha-1", target="Alpha-1", layer="self")
+        query = Message.create_profile_query(sender=self.FOUNDER_ALPHA_ID, target=self.FOUNDER_ALPHA_ID, layer="self")
         resp = founder.receive(query)
         assert resp.success is True
-        assert resp.data.get("alpha_id") == "Alpha-1"
+        assert resp.data.get("alpha_id") == self.FOUNDER_ALPHA_ID
         # 自已看应该能看到所有字段
         assert "device_fingerprint" in resp.data
 
     def test_public_visibility_restricted(self, founder, stranger):
         """陌生人只能看到公开信息"""
-        query = Message.create_profile_query(sender="Alpha-Stranger", target="Alpha-1", layer="public")
+        query = Message.create_profile_query(sender="Alpha-Stranger", target=self.FOUNDER_ALPHA_ID, layer="public")
         resp = founder.receive(query)
         assert resp.success is True
-        assert resp.data.get("alpha_id") == "Alpha-1"
+        assert resp.data.get("alpha_id") == self.FOUNDER_ALPHA_ID
         # 陌生人看不到敏感字段
         assert "device_fingerprint" not in resp.data
 
     def test_friends_visibility(self, founder, stranger):
         """好友能看到比公开更多的信息"""
         # 先加好友
-        req = Message.create_friend_request(sender="Alpha-Stranger", recipient="Alpha-1", note="Hi")
+        req = Message.create_friend_request(sender="Alpha-Stranger", recipient=self.FOUNDER_ALPHA_ID, note="Hi")
         founder.receive(req)
-        pending = founder.social.get_pending_friend_requests("Alpha-1")
+        pending = founder.social.get_pending_friend_requests(self.FOUNDER_ALPHA_ID)
         accept_msg = Message(
-            sender="Alpha-1",
+            sender=self.FOUNDER_ALPHA_ID,
             recipient="Alpha-Stranger",
             msg_type=MessageType.FRIEND_RESPONSE,
             payload={"request_id": pending[0]["request_id"], "action": "accept"},
         )
         founder.receive(accept_msg)
 
-        query = Message.create_profile_query(sender="Alpha-Stranger", target="Alpha-1", layer="friends")
+        query = Message.create_profile_query(sender="Alpha-Stranger", target=self.FOUNDER_ALPHA_ID, layer="friends")
         resp = founder.receive(query)
         assert resp.success is True
-        assert resp.data.get("alpha_id") == "Alpha-1"
+        assert resp.data.get("alpha_id") == self.FOUNDER_ALPHA_ID
 
 
 class TestBrainInteraction:

@@ -11,6 +11,10 @@ from pathlib import Path
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
+# 安装敏感数据日志过滤器（在所有日志输出前脱敏）
+from core.logging_filter import install_sensitive_data_filter
+install_sensitive_data_filter()
+
 logger = logging.getLogger(__name__)
 
 from dotenv import load_dotenv
@@ -135,10 +139,27 @@ app.add_middleware(RateLimitMiddleware)
 # CSRF 防护（RateLimit 内层，CorrelationID 外层）
 # 执行顺序：CorrelationId → CSRF → RateLimit → CORS → Route
 # 仅对状态变更方法（POST/PUT/DELETE/PATCH）生效，安全方法直接放行
+# 豁免路径：公开 API（无 session 可伪造）、webhook 回调（外部平台无法设置自定义头）
+_registration_prefix = "/api/v1/register"
+_auth_prefix = "/api/v1/identity/auth"
 app.add_middleware(
     CSRFMiddleware,
     allowed_origins=set(origins),
-    exempt_paths={"/api/v1/registration/register"},  # 注册入口允许外部来源
+    exempt_paths={
+        # 注册流程（公开接口）
+        f"{_registration_prefix}/send-sms",
+        f"{_registration_prefix}/verify-sms",
+        f"{_registration_prefix}/face-verify",
+        f"{_registration_prefix}/face-query",
+        f"{_registration_prefix}/generate-did",
+        f"{_registration_prefix}/complete",
+        # 身份认证接口（Bearer Token 已防伪造，CSRF 不适用）
+        f"{_auth_prefix}/verify",
+        f"{_auth_prefix}/login",
+        f"{_auth_prefix}/refresh",
+        f"{_auth_prefix}/bind-device",
+        "/api/v1/identity/register",
+    },
     enforce_custom_header=True,
 )
 

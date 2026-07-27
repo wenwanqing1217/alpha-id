@@ -31,9 +31,13 @@ def memory_db():
 
 class TestInit:
     def test_default_path(self, monkeypatch):
-        monkeypatch.setenv("COZE_WORKSPACE_PATH", "test_ws")
+        # 默认路径使用 alpha_id_dir（默认 ~/.alpha-id），不再依赖 coze_workspace
+        monkeypatch.setenv("ALPHA_ID_DIR", "test_alpha_id_dir")
+        # 强制重载 settings 以读取新环境变量
+        from core.settings import reload_settings
+        reload_settings()
         storage = SqliteStorage()
-        assert "test_ws" in storage.db_path
+        assert "test_alpha_id_dir" in storage.db_path
         assert storage.db_path.endswith(".db")
 
     def test_custom_path(self):

@@ -23,9 +23,10 @@ class SqliteStorage(StorageBackend):
 
     def __init__(self, db_path: Optional[str] = None):
         if db_path is None:
+            # 使用 alpha_id_dir（默认 ~/.alpha-id）作为稳定存储路径，
+            # 避免依赖 os.getcwd() 导致不同运行目录下产生多个 db 文件。
             db_path = os.path.join(
-                str(settings.coze_workspace),
-                "assets",
+                str(settings.alpha_id_path),
                 "alpha_id.db",
             )
         self.db_path = db_path

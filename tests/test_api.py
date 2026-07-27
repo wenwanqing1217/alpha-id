@@ -8,6 +8,7 @@ Alpha-ID API 集成测试
 需安装 Visual C++ Redistributable）。环境不支持时测试自动跳过。
 """
 
+import hashlib
 import json
 
 import pytest
@@ -39,6 +40,11 @@ pytestmark = pytest.mark.skipif(
 @pytest.fixture(autouse=True)
 def _reset_all(tmp_path):
     """每个测试前：重置容器 + 注入临时 SQLite 数据库"""
+    # 确保创始人验证码哈希已设置（强制覆盖，避免被外部环境变量污染）
+    os.environ["FOUNDER_CODE_HASH"] = hashlib.sha256(b"Alpha-1-zx").hexdigest()
+    from core.settings import reload_settings
+    reload_settings()
+
     from alpha_id.container import Container
     from core.storage_sqlite import SqliteStorage
 

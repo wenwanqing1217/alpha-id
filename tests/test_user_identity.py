@@ -51,15 +51,17 @@ class TestUserIdentityManager:
         assert db["founder_registered"] is False
 
     def test_register_normal_user(self, manager):
-        """普通用户注册，从 Alpha-001 开始"""
+        """普通用户注册 — 随机 Alpha-ID（防枚举）"""
         result = manager.register_user(device_fingerprint="DEVICE-TEST-001", is_founder=False)
         assert result["success"] is True
-        assert result["alpha_id"] == "Alpha-001"
+        assert result["alpha_id"].startswith("Alpha-")
+        assert len(result["alpha_id"]) == len("Alpha-") + 7  # Alpha-XXXXXXX
 
-        # 第二次注册应为 Alpha-002
+        # 第二次注册应生成不同的随机 ID
         result2 = manager.register_user(device_fingerprint="DEVICE-TEST-002", is_founder=False)
         assert result2["success"] is True
-        assert result2["alpha_id"] == "Alpha-002"
+        assert result2["alpha_id"].startswith("Alpha-")
+        assert result["alpha_id"] != result2["alpha_id"]
 
     def test_register_founder_with_wrong_code(self, manager):
         """创始人验证码错误应拒绝"""
@@ -71,16 +73,17 @@ class TestUserIdentityManager:
         """创始人只能注册一次"""
         result1 = manager.register_user(device_fingerprint="FOUNDER-DEVICE", is_founder=True, founder_code="Alpha-1-zx")
         assert result1["success"] is True
-        assert result1["alpha_id"] == "Alpha-1"
+        # 创始人 alpha_id 来自配置（默认 Alpha-000）
+        assert result1["alpha_id"] == "Alpha-000"
 
         result2 = manager.register_user(device_fingerprint="ANOTHER-DEVICE", is_founder=True, founder_code="Alpha-1-zx")
         assert result2["success"] is False
 
-    def test_new_user_status_is_locked(self, manager):
-        """新注册用户默认锁定"""
+    def test_new_user_status_is_active(self, manager):
+        """新注册用户默认激活（DID 流程完成即激活）"""
         result = manager.register_user(device_fingerprint="DEVICE-TEST", is_founder=False)
         profile = manager.get_user_profile(result["alpha_id"])
-        assert profile["status"] == "locked"
+        assert profile["status"] == "active"
 
     def test_get_user_profile_nonexistent(self, manager):
         """查询不存在的用户应返回 None"""
@@ -126,4 +129,5 @@ class TestUserIdentityManager:
         stats = manager.get_statistics()
         assert stats.total_users == 3
         assert stats.founder_registered is True
-        assert stats.founder_alpha_id == "Alpha-1"
+        # 创始人 alpha_id 来自配置（默认 Alpha-000）
+        assert stats.founder_alpha_id == "Alpha-000"

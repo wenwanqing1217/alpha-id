@@ -7,8 +7,30 @@ import tempfile
 # 禁止写 .pyc 文件，避免沙箱在导入第三方包时报错
 os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
 
+# 测试环境禁用限流（测试请求密集，容易触发 60/min 限制）
+os.environ["RATE_LIMIT_ENABLED"] = "false"
+
 # 将 src 目录加入 Python 路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+
+# ── CSRF 测试辅助 ──
+# 为所有 TestClient 请求自动添加 CSRF 相关头，绕过 CSRF 中间件检查
+# （浏览器跨域 fetch 无法设置自定义头，但测试客户端可以）
+try:
+    from fastapi.testclient import TestClient as _FastAPITestClient
+
+    _original_init = _FastAPITestClient.__init__
+
+    def _patched_init(self, *args, **kwargs):
+        _original_init(self, *args, **kwargs)
+        # 默认添加 CSRF 自定义头 + Origin，避免测试被 CSRF 中间件拦截
+        self.headers.setdefault("X-Requested-With", "XMLHttpRequest")
+        self.headers.setdefault("Origin", "http://localhost:8000")
+
+    _FastAPITestClient.__init__ = _patched_init
+
+except (ImportError, AttributeError):
+    pass
 
 # 触发 entrypoints.aid_mcp_server 的 legacy 兼容 shim，
 # 使 `import aid_mcp_server` 在测试中可用。
@@ -18,6 +40,10 @@ import entrypoints.aid_mcp_server  # noqa: F401
 os.environ.setdefault(
     "AUTH_MASTER_KEY", "test-master-key-for-pytest-0123456789abcdef"
 )
+
+# 创始人验证码哈希（测试用，对应 founder_code="Alpha-1-zx"）
+# 使用强制赋值，避免被外部环境变量污染
+os.environ["FOUNDER_CODE_HASH"] = __import__("hashlib").sha256(b"Alpha-1-zx").hexdigest()
 
 # 强制重新加载 settings，确保环境变量生效
 from core.settings import reload_settings as _reload
@@ -199,7 +225,7 @@ def _patch_aid_daemon_compat() -> None:
     try:
         from entrypoints.daemon import AidNuro
 
-        AidNuro._show_mouse_position = lambda self: self._mouse_position_result()
+        AidNuro._show_mouse_position = lambda self: self._show_result("鼠标位置功能已触发（测试模式）")
         AidNuro._show_identity = lambda self: self._show_result("AID identity ready; local DID is hidden")
     except (ImportError, AttributeError):
         pass
@@ -225,9 +251,9 @@ def _patch_aid_daemon_compat() -> None:
         if not cmd.strip():
             return
         if any(keyword in lowered for keyword in ["看屏幕", "截图", "看看", "screenshot"]):
-            self._quick_look_result()
+            self._show_result("截图功能已触发（测试模式）")
         elif any(keyword in lowered for keyword in ["窗口", "列表", "window", "windows"]):
-            self._list_windows_result()
+            self._show_result("窗口列表功能已触发（测试模式）")
         elif any(keyword in lowered for keyword in ["鼠标", "mouse", "位置", "position"]):
             self._show_mouse_position()
         elif any(keyword in lowered for keyword in ["点击", "click"]):

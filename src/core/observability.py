@@ -168,15 +168,10 @@ def check_readiness() -> Dict[str, Any]:
     try:
         from core.settings import settings
         from core.storage_sqlite import SqliteStorage
-        import os
-        db_path = os.path.join(str(settings.ghost_workspace), "assets", "alpha_id.db")
-        if os.path.exists(os.path.dirname(db_path)) or True:
-            store = SqliteStorage(db_path)
-            store.load("__health_check__")
-            store.close()
-            checks["database"] = "ok"
-        else:
-            checks["database"] = "ok"  # 目录尚未创建也算 ok（惰性初始化）
+        store = SqliteStorage()
+        store.load("__health_check__")
+        store.close()
+        checks["database"] = "ok"
     except Exception as e:
         checks["database"] = f"error: {e}"
         all_ok = False

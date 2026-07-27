@@ -89,12 +89,15 @@ class TestEncryptionProperty:
         assert enc1["ciphertext"] != enc2["ciphertext"]
         assert enc1["nonce"] != enc2["nonce"]
 
-    @given(plaintext=text(min_size=0, max_size=200))
+    @given(plaintext=text(min_size=4, max_size=200))
     @settings(max_examples=30)
     def test_ciphertext_does_not_contain_plaintext(self, plaintext):
-        """密文不包含明文（仅对非空明文验证）"""
-        if not plaintext:
-            return
+        """密文不包含明文（仅对足够长的明文验证，避免单字符与十六进制字符碰撞）
+
+        注意：密文是十六进制字符串（字符集 0-9, a-f），单字符明文（如 '0', 'a'）
+        天然会出现在十六进制密文中，这是编码特性而非加密漏洞。
+        因此只对长度 >= 4 的明文验证，确保明文不会作为完整片段出现在密文中。
+        """
         key = _derive_key("did:aid:test", b"fixed_salt_16byt")
         encrypted = _encrypt(plaintext, key)
         assert plaintext not in encrypted["ciphertext"]

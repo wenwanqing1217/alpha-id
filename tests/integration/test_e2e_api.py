@@ -183,16 +183,19 @@ class TestIdentityE2E:
     def test_refresh_token(self, client: TestClient):
         """注册 → 登录 → refresh → 新令牌可用"""
         fp = "refresh-device"
-        client.post(
+        # 注册并获取实际 alpha_id（随机生成，非固定 Alpha-001）
+        reg_resp = client.post(
             "/api/v1/identity/register",
             json={
                 "device_fingerprint": fp,
             },
         )
+        assert reg_resp.status_code == 200
+        alpha_id = reg_resp.json()["alpha_id"]
         login_resp = client.post(
             "/api/v1/identity/login",
             json={
-                "alpha_id": "Alpha-001",
+                "alpha_id": alpha_id,
                 "device_fingerprint": fp,
             },
         )

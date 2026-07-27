@@ -174,18 +174,24 @@ class TestAgentLoop:
         assert loop.model == "deepseek-chat"
         assert loop.max_turns == 5
 
+    @patch("core.agent.settings")  # 绕过 API key 检查
     @patch("core.agent._call_llm")
-    def test_run_direct_reply(self, mock_llm):
+    def test_run_direct_reply(self, mock_llm, mock_settings):
         """LLM 直接回复（不调用工具）"""
+        mock_settings.llm_api_key = "test-key"
+        mock_settings.llm_base_url = "https://api.openai.com/v1"
         mock_llm.return_value = "你的身份信息已经查到了，一切正常。"
         loop = AgentLoop("Alpha-Loop-003")
         reply = loop.run("帮我查身份")
         assert reply == "你的身份信息已经查到了，一切正常。"
         assert len(loop.history) == 2  # user + assistant
 
+    @patch("core.agent.settings")  # 绕过 API key 检查
     @patch("core.agent._call_llm")
-    def test_run_tool_call_sequence(self, mock_llm):
+    def test_run_tool_call_sequence(self, mock_llm, mock_settings):
         """LLM 调用一次工具后回复"""
+        mock_settings.llm_api_key = "test-key"
+        mock_settings.llm_base_url = "https://api.openai.com/v1"
         # 第一次返回工具调用，第二次返回最终回答
         mock_llm.side_effect = [
             "__TOOL_CALL__ get_profile({})",
@@ -208,9 +214,12 @@ class TestAgentLoop:
         finally:
             Container.instance()._identity = orig
 
+    @patch("core.agent.settings")  # 绕过 API key 检查
     @patch("core.agent._call_llm")
-    def test_max_turns_reached(self, mock_llm):
+    def test_max_turns_reached(self, mock_llm, mock_settings):
         """达到最大轮次后返回超时信息"""
+        mock_settings.llm_api_key = "test-key"
+        mock_settings.llm_base_url = "https://api.openai.com/v1"
         mock_llm.return_value = "__TOOL_CALL__ get_profile({})"
         loop = AgentLoop("Alpha-Loop-005", max_turns=3)
         from alpha_id.container import Container
@@ -224,9 +233,12 @@ class TestAgentLoop:
         finally:
             Container.instance()._identity = orig
 
+    @patch("core.agent.settings")  # 绕过 API key 检查
     @patch("core.agent._call_llm")
-    def test_unknown_tool_returns_error(self, mock_llm):
+    def test_unknown_tool_returns_error(self, mock_llm, mock_settings):
         """LLM 调用不存在的工具"""
+        mock_settings.llm_api_key = "test-key"
+        mock_settings.llm_base_url = "https://api.openai.com/v1"
         mock_llm.side_effect = [
             "__TOOL_CALL__ nonexistent_tool({})",
             "好的我知道了",

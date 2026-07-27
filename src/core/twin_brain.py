@@ -467,8 +467,12 @@ class TwinBrain:
             if not stored.get("success"):
                 return Response.fail(stored.get("message", "发送消息失败"))
 
+        # 不使用智能回复时，直接返回确认
+        if not self.settings.use_agent_chat:
+            return Response.ok(data={}, message="消息已收到")
+
         # 使用 AgentLoop 生成智能回复
-        if self.settings.use_agent_chat and text.strip():
+        if text.strip():
             try:
                 # AgentLoop 内部已经自动注入：用户档案 + 语义相关记忆 + 工具列表
                 agent_reply = self.agent.run(text)
