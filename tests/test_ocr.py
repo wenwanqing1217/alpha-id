@@ -25,12 +25,18 @@ class TestCoreFunctions:
     def test_extract_structured_no_llm(self, monkeypatch):
         """没有 LLM 客户端时应该报 RuntimeError"""
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        # settings.llm_api_key 在导入时已加载，需要 patch 为空
+        from core.settings import settings
+        monkeypatch.setattr(settings, "llm_api_key", "")
         with pytest.raises(RuntimeError, match="需要 LLM API"):
             extract_structured("test.png", {"test": "test"}, llm_client=None)
 
     def test_analyze_no_llm(self, monkeypatch):
         """没有 LLM 客户端时应该报 RuntimeError"""
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        # settings.llm_api_key 在导入时已加载，需要 patch 为空
+        from core.settings import settings
+        monkeypatch.setattr(settings, "llm_api_key", "")
         with pytest.raises(RuntimeError, match="需要 LLM API"):
             analyze("test.png", llm_client=None)
 

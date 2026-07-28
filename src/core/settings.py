@@ -151,7 +151,7 @@ class Settings(BaseSettings):
     gateway_url: str = Field(default="http://localhost:18080", validation_alias=AliasChoices("GATEWAY_URL"))
     default_alpha_id: str = Field(default="Alpha-001", validation_alias=AliasChoices("DEFAULT_ALPHA_ID"))
     ghost_alpha_id: str = Field(default="Ghost-001", validation_alias=AliasChoices("GHOST_ALPHA_ID"))
-    code_runner_dir: str = Field(default="D:\\MW", validation_alias=AliasChoices("CODE_RUNNER_DIR"))
+    code_runner_dir: str = Field(default="", validation_alias=AliasChoices("CODE_RUNNER_DIR"))
 
     # ── 可选 LLM 备用 ──
     deepseek_api_key: str = Field(default="", validation_alias=AliasChoices("DEEPSEEK_API_KEY"))

@@ -91,15 +91,38 @@ def decrypt(encrypted: str) -> str:
 
 
 def decrypt_if_needed(value: Optional[str]) -> Optional[str]:
-    """如果是 ENC[...] 格式则解密，否则原样返回"""
+    """如果是 ENC[...] 格式则解密，否则原样返回。
+
+    解密失败时抛出 ValueError（而非静默返回空字符串），
+    防止配置错误被忽略导致后续逻辑异常。
+    """
     if value is None:
         return None
     if isinstance(value, str) and value.startswith(_ENC_PREFIX):
         try:
             return decrypt(value)
         except Exception as e:
-            logger.error("解密失败: %s", e)
-            return ""
+            raise ValueError(
+                f"解密失败: 值以 ENC[ 开头但无法解密。请检查 SECRET_ENCRYPTION_KEY "
+                f"是否与加密时一致。原始错误: {e}"
+            ) from e
+    return value
+
+
+def decrypt_if_needed_safe(value: Optional[str]) -> Optional[str]:
+    """安全版本：解密失败时返回 None 而非抛出异常。
+
+    适用于可选配置项（如 LLM_API_KEY），解密失败时返回 None，
+    调用方可判断 None 并跳过相关功能。
+    """
+    if value is None:
+        return None
+    if isinstance(value, str) and value.startswith(_ENC_PREFIX):
+        try:
+            return decrypt(value)
+        except Exception as e:
+            logger.error("解密失败（安全模式，返回 None）: %s", e)
+            return None
     return value
 
 

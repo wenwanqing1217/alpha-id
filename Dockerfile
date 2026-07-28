@@ -9,8 +9,8 @@ RUN pip install --no-cache-dir pip==24.0
 # 复制依赖声明
 COPY pyproject.toml ./
 
-# 安装全部依赖并生成锁文件
-RUN pip install --no-cache-dir -e ".[all]" && \
+# 安装全部依赖（含 mcp + fairy）并生成锁文件
+RUN pip install --no-cache-dir -e ".[mcp,fairy]" && \
     pip freeze --exclude-editable > /tmp/frozen-requirements.txt
 
 # ── 运行阶段 ──
@@ -25,7 +25,7 @@ COPY --from=builder /tmp/frozen-requirements.txt /tmp/ 2>/dev/null || true
 RUN if [ -f /tmp/requirements.txt ]; then \
         pip install --no-cache-dir -r /tmp/requirements.txt; \
     else \
-        pip install --no-cache-dir -e ".[all]"; \
+        pip install --no-cache-dir -e ".[mcp,fairy]"; \
     fi
 
 # 复制应用代码

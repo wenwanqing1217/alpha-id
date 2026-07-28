@@ -285,7 +285,7 @@ class RiskAssessmentEngine:
         self.baseline["common_words"] = current_behavior.common_words
 
     def adjust_thresholds(self, risk_score: float):
-        """自适应调整阈值"""
+        """自适应调整阈值（纯 Python 实现，无需 numpy）"""
         # 记录历史
         self.user_history.append({"timestamp": datetime.now().isoformat(), "risk_score": risk_score})
 
@@ -293,9 +293,11 @@ class RiskAssessmentEngine:
         if len(self.user_history) % 10 == 0 and len(self.user_history) >= 10:
             scores = [h["risk_score"] for h in self.user_history[-10:]]
 
-            # 基于百分位数
-            self.safe_threshold = np.percentile(scores, 10)  # 10%分位数
-            self.caution_threshold = np.percentile(scores, 90)  # 90%分位数
+            # 纯 Python 百分位数计算（无需 numpy）
+            sorted_scores = sorted(scores)
+            n = len(sorted_scores)
+            self.safe_threshold = sorted_scores[max(0, int(n * 0.1))]   # 10% 分位数
+            self.caution_threshold = sorted_scores[min(n - 1, int(n * 0.9))]  # 90% 分位数
 
     def predict_next_risk(self) -> Optional[float]:
         """

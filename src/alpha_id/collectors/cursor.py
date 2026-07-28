@@ -82,6 +82,10 @@ def _extract_from_sqlite(db_path: Path) -> Optional[list]:
             if not tbl.startswith(_ALLOWED_TABLE_PREFIXES):
                 continue
             if any(k in tbl.lower() for k in ["conversation", "chat", "message", "thread"]):
+                # 安全：验证表名只包含字母数字下划线，防止 SQL 注入
+                if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", tbl):
+                    logger.warning("跳过非法表名: %s", tbl)
+                    continue
                 try:
                     rows = cursor.execute(f'SELECT * FROM "{tbl}" LIMIT 200').fetchall()
                     col_names = [d[0] for d in cursor.description]

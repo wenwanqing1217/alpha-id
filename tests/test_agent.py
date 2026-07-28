@@ -180,7 +180,7 @@ class TestAgentLoop:
         """LLM 直接回复（不调用工具）"""
         mock_settings.llm_api_key = "test-key"
         mock_settings.llm_base_url = "https://api.openai.com/v1"
-        mock_llm.return_value = "你的身份信息已经查到了，一切正常。"
+        mock_llm.return_value = {"content": "你的身份信息已经查到了，一切正常。", "tool_calls": None, "raw_message": None}
         loop = AgentLoop("Alpha-Loop-003")
         reply = loop.run("帮我查身份")
         assert reply == "你的身份信息已经查到了，一切正常。"
@@ -194,8 +194,8 @@ class TestAgentLoop:
         mock_settings.llm_base_url = "https://api.openai.com/v1"
         # 第一次返回工具调用，第二次返回最终回答
         mock_llm.side_effect = [
-            "__TOOL_CALL__ get_profile({})",
-            "以下是你的身份信息：...",
+            {"content": "", "tool_calls": [{"id": "call_1", "type": "function", "function": {"name": "get_profile", "arguments": "{}"}}], "raw_message": None},
+            {"content": "以下是你的身份信息：...", "tool_calls": None, "raw_message": None},
         ]
         loop = AgentLoop("Alpha-Loop-004")
         # patch container.identity.get_user_profile 返回模拟数据
@@ -220,7 +220,7 @@ class TestAgentLoop:
         """达到最大轮次后返回超时信息"""
         mock_settings.llm_api_key = "test-key"
         mock_settings.llm_base_url = "https://api.openai.com/v1"
-        mock_llm.return_value = "__TOOL_CALL__ get_profile({})"
+        mock_llm.return_value = {"content": "", "tool_calls": [{"id": "call_1", "type": "function", "function": {"name": "get_profile", "arguments": "{}"}}], "raw_message": None}
         loop = AgentLoop("Alpha-Loop-005", max_turns=3)
         from alpha_id.container import Container
 
@@ -240,8 +240,8 @@ class TestAgentLoop:
         mock_settings.llm_api_key = "test-key"
         mock_settings.llm_base_url = "https://api.openai.com/v1"
         mock_llm.side_effect = [
-            "__TOOL_CALL__ nonexistent_tool({})",
-            "好的我知道了",
+            {"content": "", "tool_calls": [{"id": "call_1", "type": "function", "function": {"name": "nonexistent_tool", "arguments": "{}"}}], "raw_message": None},
+            {"content": "好的我知道了", "tool_calls": None, "raw_message": None},
         ]
         loop = AgentLoop("Alpha-Loop-006")
         from alpha_id.container import Container
@@ -309,18 +309,19 @@ class TestCallLLM:
     def test_no_api_key(self):
         """没有 API key 时返回提示信息"""
         import os
+        from unittest.mock import patch
 
         old_key = os.environ.pop("OPENAI_API_KEY", None)
         old_key2 = os.environ.pop("COZE_WORKLOAD_IDENTITY_API_KEY", None)
-        # _call_llm 会先校验 base_url；测试会话中其他模块（如 tests/integration/
-        # test_e2e_api.py 导入 src.main 触发 load_dotenv）可能把本机 .env 里的
-        # OPENAI_BASE_URL 注入进程环境，导致断言走错分支，这里一并隔离。
         old_base_url = os.environ.pop("OPENAI_BASE_URL", None)
         try:
             from core.agent import _call_llm
+            from core.settings import settings
 
-            result = _call_llm([{"role": "user", "content": "hi"}], [])
-            assert "未配置" in result
+            # settings.llm_api_key 在导入时已加载，需要 patch 为空
+            with patch.object(settings, "llm_api_key", ""):
+                result = _call_llm([{"role": "user", "content": "hi"}], [])
+                assert "未配置" in result["content"]
         finally:
             if old_key:
                 os.environ["OPENAI_API_KEY"] = old_key

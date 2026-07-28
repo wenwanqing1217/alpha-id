@@ -42,12 +42,18 @@ class MemoryStore:
     V2 计划：向量嵌入 + 语义搜索（Chroma/FAISS）
     """
 
-    def __init__(self, alpha_id: str, storage: Optional[StorageBackend] = None):
+    def __init__(
+        self,
+        alpha_id: str,
+        storage: Optional[StorageBackend] = None,
+        vector_persist_dir: Optional[str] = None,
+    ):
         # 防止路径遍历：alpha_id 只允许字母、数字、连字符、下划线
         if not alpha_id or any(c in alpha_id for c in ('..', '/', '\\', ':', '*', '?', '"', '<', '>', '|')):
             raise ValueError(f"Invalid alpha_id: {alpha_id!r} (path traversal detected)")
         self.alpha_id = alpha_id
         self._vector_index = None
+        self._vector_persist_dir = vector_persist_dir
 
         if storage is None:
             # 默认使用 SQLite（WAL 模式，线程安全，零外部依赖）
@@ -138,7 +144,10 @@ class MemoryStore:
         if query_text:
             # 延迟创建向量索引
             if self._vector_index is None:
-                self._vector_index = VectorMemoryIndex(self.alpha_id)
+                self._vector_index = VectorMemoryIndex(
+                    self.alpha_id,
+                    persist_dir=self._vector_persist_dir,
+                )
                 self._vector_index.build_index(memories)
 
             results = self._vector_index.search(query_text, memories)

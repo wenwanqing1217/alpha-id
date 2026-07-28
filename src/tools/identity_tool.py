@@ -5,6 +5,17 @@ from typing import Any, Dict, List, Optional
 
 from tools.tool_decorator import ToolRuntime, tool
 
+# ⚠️ 重要警告：以下所有验证函数均为模拟/演示实现
+# 它们使用 hash(user_id) 生成确定性"匹配度"，不执行任何实际的身份验证
+# 在生产环境中，这些函数必须替换为真实的生物识别/行为分析 API 调用
+# 当前实现仅用于开发和演示目的，不提供任何真实的安全保障
+_MOCK_WARNING = (
+    "⚠️⚠️⚠️ 警告：当前为模拟验证模式（MOCK），不提供真实身份认证 ⚠️⚠️⚠️\n"
+    "匹配度由 hash(user_id) 确定性生成，与实际输入无关。\n"
+    "生产环境必须接入真实声纹/行为/生物识别 API。\n"
+    + "=" * 50 + "\n"
+)
+
 
 def _safe_str(value: Any) -> str:
     """安全转换为str"""
@@ -104,16 +115,16 @@ def verify_voice(user_id: str, audio_input: str, threshold: float = 0.90, runtim
 
         # 根据阈值判断
         if base_match >= threshold:
-            return f"""✅ 声纹校验通过
+            return f"""{_MOCK_WARNING}✅ 声纹校验通过（模拟）
 
 Alpha-ID: {user_id}
 匹配度: {base_match * 100:.1f}%
 校验阈值: {threshold * 100:.0f}%
 校验时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
-身份确认：本人"""
+身份确认：本人（模拟）"""
         else:
-            return f"""❌ 声纹校验失败
+            return f"""{_MOCK_WARNING}❌ 声纹校验失败（模拟）
 
 Alpha-ID: {user_id}
 匹配度: {base_match * 100:.1f}%
@@ -155,7 +166,7 @@ def verify_input_behavior(user_id: str, text_input: str, threshold: float = 0.85
 
         # 根据阈值判断
         if base_match >= threshold:
-            return f"""✅ 输入行为校验通过
+            return f"""{_MOCK_WARNING}✅ 输入行为校验通过
 
 Alpha-ID: {user_id}
 匹配度: {base_match * 100:.1f}%
@@ -170,7 +181,7 @@ Alpha-ID: {user_id}
 身份确认：本人"""
         else:
             # 触发二次验证
-            return f"""⚠️ 输入行为校验异常，触发二次验证
+            return f"""{_MOCK_WARNING}⚠️ 输入行为校验异常，触发二次验证
 
 Alpha-ID: {user_id}
 匹配度: {base_match * 100:.1f}%
@@ -211,7 +222,7 @@ def verify_security_question(
         # 实际应该用更严格的方式
 
         if len(answer) >= 3:
-            return f"""✅ 安全问题验证通过
+            return f"""{_MOCK_WARNING}✅ 安全问题验证通过
 
 Alpha-ID: {user_id}
 问题: {question}
@@ -219,7 +230,7 @@ Alpha-ID: {user_id}
 
 身份确认：本人"""
         else:
-            return f"""❌ 安全问题验证失败
+            return f"""{_MOCK_WARNING}❌ 安全问题验证失败
 
 Alpha-ID: {user_id}
 问题: {question}
@@ -258,7 +269,7 @@ def verify_biometric(
         is_match = len(biometric_data) > 5
 
         if is_match:
-            return f"""✅ {biometric_name}校验通过
+            return f"""{_MOCK_WARNING}✅ {biometric_name}校验通过
 
 Alpha-ID: {user_id}
 验证类型: {biometric_name}
@@ -266,7 +277,7 @@ Alpha-ID: {user_id}
 
 身份确认：本人"""
         else:
-            return f"""❌ {biometric_name}校验失败
+            return f"""{_MOCK_WARNING}❌ {biometric_name}校验失败
 
 Alpha-ID: {user_id}
 验证类型: {biometric_name}
@@ -303,7 +314,7 @@ def multi_factor_auth(
             # 计算综合匹配度
             avg_score = 0.85 + (hash(user_id + str(provided_factors)) % 14) / 100.0
 
-            return f"""✅ 多因子身份认证通过
+            return f"""{_MOCK_WARNING}✅ 多因子身份认证通过
 
 Alpha-ID: {user_id}
 安全级别: {required_level.upper()}
@@ -317,7 +328,7 @@ Alpha-ID: {user_id}
 系统权限: 完全访问"""
 
         else:
-            return f"""❌ 多因子身份认证失败
+            return f"""{_MOCK_WARNING}❌ 多因子身份认证失败
 
 Alpha-ID: {user_id}
 安全级别: {required_level.upper()}

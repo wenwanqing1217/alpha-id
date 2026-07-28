@@ -25,7 +25,7 @@ from typing import List, Optional, Union
 
 from alpha_id.did_resolver import DIDResolver
 from alpha_id.signer import AIDSigner
-from alpha_id.skill_signer import SkillPackage, SkillRegistry, sign_skill
+from alpha_id.skill_signer import SkillPackage, SkillRegistry, SkillSigningError, sign_skill
 
 # ── 仓库协议版本 ──
 
@@ -292,8 +292,11 @@ class SkillRepository:
 
         Returns:
             注册结果
+
+        Raises:
+            SkillSigningError: 技能未签名（拒绝安装未签名技能）
         """
-        # 读取或签名
+        # 读取或拒绝未签名技能
         content = skill.skill_file.read_bytes()
 
         if skill.package_file and skill.package_file.exists():
@@ -312,10 +315,28 @@ class SkillRepository:
                 tags=pkg_data.get("tags", []),
             )
         else:
-            # 未签名，原地签名
-            signer = AIDSigner()
-            signer.generate()
-            pkg = sign_skill(skill.skill_file, signer, name=skill.name)
+            # 无 package.json，检查扫描时是否检测到签名
+            if not skill.is_signed:
+                raise SkillSigningError(
+                    f"技能 '{skill.name}' 未签名，拒绝安装。请让作者先签名技能。"
+                )
+            # 有签名但无 package.json（扫描时检测到签名）
+            pkg = SkillPackage(
+                name=skill.name,
+                version=skill.version or "1.0.0",
+                author_did=skill.author_did,
+                description=skill.description,
+                content_hash="",
+                content_type="python",
+                signature="",
+                signed_at=0.0,
+            )
+
+        # 拒绝未签名技能（有 package.json 但无签名的情况）
+        if not pkg.is_signed:
+            raise SkillSigningError(
+                f"技能 '{skill.name}' 未签名，拒绝安装。请让作者先签名技能。"
+            )
 
         # 注册
         return registry.register(pkg, content=content)

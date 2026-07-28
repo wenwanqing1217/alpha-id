@@ -1,0 +1,34 @@
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  id-token: write  # Required for trusted publishing (OIDC)
+
+jobs:
+  build-and-publish:
+    name: Build & Publish
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/alpha-id-zix/${{ github.ref_name }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install build tools
+        run: pip install build
+
+      - name: Build package
+        run: python -m build
+
+      - name: Publish to PyPI (trusted publishing)
+        uses: pypa/gh-action-pypi-publish@release/v1

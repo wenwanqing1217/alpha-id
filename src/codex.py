@@ -78,7 +78,54 @@ def edit_code(path: str, old_string: str, new_string: str) -> str:
     return f"[OK] Replaced 1 occurrence in {path} ({count} total)"
 
 
+# 危险模块黑名单 — run_python 禁止导入这些模块
+_BLOCKED_MODULES = {
+    "os", "subprocess", "sys", "shutil", "pathlib", "importlib",
+    "ctypes", "socket", "http", "urllib", "ftplib", "smtplib",
+    "email", "webbrowser", "multiprocessing", "threading",
+    "signal", "resource", "gc", "pickle", "shelve", "marshal",
+    "compileall", "py_compile", "code", "codeop", "pdb", "trace",
+    "traceback", "warnings", "logging", "tempfile", "glob", "fnmatch",
+    "fileinput", "filecmp", "stat", "statvfs", "pwd", "grp", "spwd",
+    "crypt", "pty", "tty", "pipes", "posix", "nt", "msvcrt",
+    "winreg", "_winapi", "msilib", "ossaudiodev", "winsound",
+}
+
+
+def _scan_for_blocked_imports(code: str) -> list:
+    """扫描代码中是否包含危险模块导入"""
+    blocked_found = []
+    # 匹配 import xxx 和 from xxx import yyy
+    import re
+    patterns = [
+        r'^\s*import\s+([\w.]+)',
+        r'^\s*from\s+([\w.]+)\s+import',
+    ]
+    for pattern in patterns:
+        for match in re.finditer(pattern, code, re.MULTILINE):
+            module = match.group(1).split('.')[0]
+            if module in _BLOCKED_MODULES:
+                blocked_found.append(module)
+    return blocked_found
+
+
 def run_python(code: str) -> str:
+    """执行 Python 代码（带导入限制）
+
+    ⚠️ 安全说明：
+    - 禁止导入 os/subprocess/socket 等危险模块
+    - 15秒超时
+    - 仅用于受信任的本地 MCP 环境
+    """
+    # 安全检查：扫描危险导入
+    blocked = _scan_for_blocked_imports(code)
+    if blocked:
+        return (
+            f"[BLOCKED] 代码包含危险模块导入: {', '.join(blocked)}\n"
+            f"禁止导入的模块: {', '.join(sorted(_BLOCKED_MODULES))}\n"
+            f"请移除这些导入后重试。"
+        )
+
     import tempfile
 
     @create_retry_decorator(max_attempts=2, retry_exceptions=(OSError,))

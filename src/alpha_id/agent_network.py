@@ -15,12 +15,15 @@ Agent 间通过 DID 互相认证身份，技能调用链可追溯，多方 PoE �
 """
 
 import json
+import logging
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from alpha_id.did_resolver import DIDResolver
+
+logger = logging.getLogger(__name__)
 from alpha_id.poe import PoEClient, PoEStore
 from alpha_id.signer import AIDSigner
 from alpha_id.skill_signer import SkillRegistry, SkillRuntime
@@ -298,6 +301,7 @@ class AgentNetwork:
         """从 PoE ID 追溯完整的调用链
 
         递归地追踪 parent_poe_id，构建完整的调用链。
+        使用 visited 集合检测循环引用，防止无限循环。
 
         Args:
             poe_id: 起始 PoE ID
@@ -307,8 +311,18 @@ class AgentNetwork:
         """
         chain = CallChain()
         current_id = poe_id
+        visited = set()  # 循环检测：记录已访问的 poe_id
 
         while current_id:
+            # 循环检测：如果当前 ID 已访问过，说明存在环，终止追踪
+            if current_id in visited:
+                logger.warning(
+                    "调用链检测到循环引用: poe_id=%s 已访问过，停止追踪",
+                    current_id,
+                )
+                break
+            visited.add(current_id)
+
             poe = self._poe_store.get(current_id)
             if poe is None:
                 break

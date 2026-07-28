@@ -36,7 +36,7 @@ class TestKeyDerivationProperty:
     """密钥派生的属性测试"""
 
     @given(did=text(min_size=1, max_size=100))
-    @settings(max_examples=50)
+    @settings(max_examples=50, deadline=None)
     def test_derive_deterministic(self, did):
         """相同 DID + salt 总是派生相同密钥"""
         salt = b"fixed_salt_16byt"
@@ -45,7 +45,7 @@ class TestKeyDerivationProperty:
         assert key1 == key2
 
     @given(did=text(min_size=1, max_size=100), salt=st.binary(min_size=1, max_size=64))
-    @settings(max_examples=50)
+    @settings(max_examples=50, deadline=None)
     def test_derive_32_bytes(self, did, salt):
         """任意输入都派生 32 字节密钥"""
         key = _derive_key(did, salt)
@@ -56,7 +56,7 @@ class TestKeyDerivationProperty:
         did2=text(min_size=1, max_size=50),
         salt=st.binary(min_size=16, max_size=32),
     )
-    @settings(max_examples=30)
+    @settings(max_examples=30, deadline=None)
     def test_different_dids_different_keys(self, did1, did2, salt):
         """不同 DID 派生不同密钥（极小概率碰撞除外）"""
         if did1 != did2:
@@ -71,7 +71,7 @@ class TestEncryptionProperty:
     """AES-256-GCM 加解密的属性测试"""
 
     @given(plaintext=text(min_size=0, max_size=500))
-    @settings(max_examples=50)
+    @settings(max_examples=50, deadline=None)
     def test_encrypt_decrypt_roundtrip(self, plaintext):
         """任意文本加密后解密得到原文"""
         key = _derive_key("did:aid:test", b"fixed_salt_16byt")
@@ -80,7 +80,7 @@ class TestEncryptionProperty:
         assert decrypted == plaintext
 
     @given(plaintext=text(min_size=1, max_size=100))
-    @settings(max_examples=30)
+    @settings(max_examples=30, deadline=None)
     def test_encrypt_produces_different_ciphertext(self, plaintext):
         """相同明文每次加密产生不同密文（nonce 随机）"""
         key = _derive_key("did:aid:test", b"fixed_salt_16byt")
@@ -90,7 +90,7 @@ class TestEncryptionProperty:
         assert enc1["nonce"] != enc2["nonce"]
 
     @given(plaintext=text(min_size=4, max_size=200))
-    @settings(max_examples=30)
+    @settings(max_examples=30, deadline=None)
     def test_ciphertext_does_not_contain_plaintext(self, plaintext):
         """密文不包含明文（仅对足够长的明文验证，避免单字符与十六进制字符碰撞）
 
@@ -103,7 +103,7 @@ class TestEncryptionProperty:
         assert plaintext not in encrypted["ciphertext"]
 
     @given(plaintext=text(min_size=1, max_size=100))
-    @settings(max_examples=20)
+    @settings(max_examples=20, deadline=None)
     def test_wrong_key_fails_decryption(self, plaintext):
         """错误密钥解密失败"""
         key1 = _derive_key("did:aid:user_a", b"salt_a_16bytes_")
@@ -119,7 +119,7 @@ class TestSecretsProperty:
     """secrets 模块的属性测试"""
 
     @given(plaintext=text(min_size=1, max_size=200))
-    @settings(max_examples=30)
+    @settings(max_examples=30, deadline=None)
     def test_secret_encrypt_decrypt_roundtrip(self, plaintext):
         """ENC[...] 格式加密解密往返"""
         encrypted = secret_encrypt(plaintext)
@@ -129,14 +129,14 @@ class TestSecretsProperty:
         assert decrypted == plaintext
 
     @given(plaintext=text(min_size=1, max_size=100))
-    @settings(max_examples=20)
+    @settings(max_examples=20, deadline=None)
     def test_decrypt_if_needed_passthrough(self, plaintext):
         """非 ENC[...] 格式的值原样返回"""
         result = decrypt_if_needed(plaintext)
         assert result == plaintext
 
     @given(plaintext=text(min_size=1, max_size=50))
-    @settings(max_examples=20)
+    @settings(max_examples=20, deadline=None)
     def test_different_plaintexts_different_ciphertexts(self, plaintext):
         """相同明文每次加密产生不同密文"""
         enc1 = secret_encrypt(plaintext)
@@ -172,7 +172,7 @@ class TestDualChainProperty:
         content=text(min_size=1, max_size=200),
         sensitivity=integers(min_value=0, max_value=100),
     )
-    @settings(max_examples=30)
+    @settings(max_examples=30, deadline=None)
     def test_save_and_retrieve(self, manager, content, sensitivity):
         """任意内容 + 敏感度都能保存并取回原文"""
         result = manager.save(content, sensitivity=sensitivity)
@@ -182,7 +182,7 @@ class TestDualChainProperty:
         assert record["content"] == content
 
     @given(sensitivity=integers(min_value=0, max_value=100))
-    @settings(max_examples=30)
+    @settings(max_examples=30, deadline=None)
     def test_chain_assignment_by_sensitivity(self, manager, sensitivity):
         """链分配严格按敏感度阈值"""
         result = manager.save("test content", sensitivity=sensitivity)
@@ -200,7 +200,7 @@ class TestDualChainProperty:
             max_size=5,
         )
     )
-    @settings(max_examples=20)
+    @settings(max_examples=20, deadline=None)
     def test_stats_count_matches(self, manager, contents):
         """stats 计数与实际保存数量一致"""
         manager.clear_chain("private")

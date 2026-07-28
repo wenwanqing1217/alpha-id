@@ -142,13 +142,13 @@ async def send_sms(request: Request,
                 "channel": "error",
             }
 
-    # 演示模式：仅在显式开启时返回验证码（开发/测试用）
+    # 演示模式：不返回验证码（防止客户端绕过验证）
+    # 开发/测试时可通过服务端日志或测试专用端点获取验证码
     if demo_mode:
         return {
             "success": True,
             "message": "验证码已发送（演示模式）",
             "channel": "demo",
-            "demo": code,
         }
 
     # 无配置且非演示模式 — 返回错误而非静默泄露
@@ -188,7 +188,16 @@ async def face_verify(request: Request,
     alipay_private_key = settings.alipay_private_key
     demo_mode = settings.alipay_demo_mode != "false"
 
-    if demo_mode or not alipay_app_id:
+    # 未配置支付宝时返回错误，而不是默认通过验证（防止认证绕过）
+    if not alipay_app_id or not alipay_private_key:
+        if not demo_mode:
+            raise HTTPException(
+                status_code=503,
+                detail="支付宝认证未配置，请设置 ALIPAY_APP_ID 和 ALIPAY_PRIVATE_KEY",
+            )
+
+    if demo_mode:
+        # 演示模式：仅在显式启用时返回模拟结果，并标记为 demo
         return {
             "success": True,
             "demo": True,

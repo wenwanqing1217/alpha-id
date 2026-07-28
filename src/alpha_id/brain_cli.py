@@ -280,15 +280,11 @@ def history(
 def leaderboard(
     top: int = typer.Option(10, "--top", "-t", help="显示前 N 名"),
 ):
-    """显示信誉排行榜"""
-    import os
-    import tempfile
-
+    """显示信誉排行榜（从持久化存储读取）"""
     from core.storage_sqlite import SqliteStorage
 
-    tmpdir = tempfile.mkdtemp(prefix="aid_rep_")
-    db_path = os.path.join(tmpdir, "rep.db")
-    storage = SqliteStorage(db_path)
+    # 使用持久化存储（默认路径 ~/.alpha-id/alpha_id.db），而非临时数据库
+    storage = SqliteStorage()
     try:
         rankings = ReputationEngine.get_leaderboard(storage, top_n=top)
 
@@ -304,9 +300,7 @@ def leaderboard(
             level = entry.get("level", "?")
             typer.echo(f"  #{rank:2d}  {alpha:20s}  {composite:.1f}  [{level}]")
     finally:
-        import shutil
-
-        shutil.rmtree(tmpdir, ignore_errors=True)
+        storage.close()
 
 
 brain_app.add_typer(reputation_app, name="reputation", help="信誉相关操作")

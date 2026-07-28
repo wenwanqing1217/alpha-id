@@ -21,8 +21,10 @@ MindFlow 多目的地智能路线规划
   }
 """
 
+import ipaddress
 import json
 import logging
+import socket
 import urllib.parse
 import urllib.request
 from typing import Dict, List, Optional
@@ -33,6 +35,40 @@ logger = logging.getLogger("mindflow.route_optimizer")
 
 API_BASE = "https://api.map.baidu.com/agent_plan/v1"
 GEOCODING_URL = "https://api.map.baidu.com/geocoding/v3/"
+
+# 允许的外部 API 域名白名单（防止 SSRF）
+ALLOWED_HOSTS = {"api.map.baidu.com"}
+
+
+def _validate_url_no_ssrf(url: str) -> None:
+    """验证 URL 不指向内网地址，防止 SSRF 攻击。"""
+    parsed = urllib.parse.urlparse(url)
+    hostname = parsed.hostname
+    if not hostname:
+        raise ValueError(f"URL 缺少主机名: {url}")
+
+    # 白名单检查
+    if hostname not in ALLOWED_HOSTS:
+        logger.warning("URL 主机名不在白名单中: %s", hostname)
+
+    # 禁止内网 IP
+    try:
+        addr = ipaddress.ip_address(hostname)
+        if addr.is_private or addr.is_loopback or addr.is_link_local:
+            raise ValueError(f"URL 指向内网地址，已阻止: {hostname}")
+    except ValueError as e:
+        if "内网地址" in str(e):
+            raise
+
+    # DNS 解析后再次检查
+    try:
+        for info in socket.getaddrinfo(hostname, parsed.port or 443):
+            ip = info[4][0]
+            addr = ipaddress.ip_address(ip)
+            if addr.is_private or addr.is_loopback or addr.is_link_local:
+                raise ValueError(f"URL 解析到内网地址，已阻止: {hostname} → {ip}")
+    except socket.gaierror:
+        raise ValueError(f"无法解析主机名: {hostname}")
 
 
 def _get_token() -> str:
@@ -52,6 +88,12 @@ def geocode_address(address: str, city: str = "北京市") -> Optional[Dict]:
         "ak": token,
     }
     url = f"{GEOCODING_URL}?{urllib.parse.urlencode(params)}"
+    # SSRF 防护：验证目标 URL
+    try:
+        _validate_url_no_ssrf(url)
+    except ValueError as e:
+        logger.warning(f"地理编码 URL 安全验证失败: {e}")
+        return None
     try:
         req = urllib.request.Request(url)
         with urllib.request.urlopen(req, timeout=10) as resp:

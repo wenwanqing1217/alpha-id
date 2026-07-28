@@ -97,12 +97,12 @@ class A2AAgentInfo:
 
 # -- Skill Registry --
 
-class SkillRegistry:
+class A2ASkillRegistry:
     """
-    Skill registry - manages skills exposed by this Agent.
+    A2A Skill registry - manages skills exposed by this Agent for A2A protocol.
 
     Usage:
-        registry = SkillRegistry()
+        registry = A2ASkillRegistry()
 
         @registry.skill("greet")
         def greet(params):
@@ -246,10 +246,15 @@ class A2AServer:
         server.start()
     """
 
+    # Replay protection: max age of a request (seconds)
+    MAX_REQUEST_AGE = 300  # 5 minutes
+    # Max number of request IDs to track for replay detection
+    _replay_cache_size = 10000
+
     def __init__(
         self,
         agent=None,
-        skills: Optional[SkillRegistry] = None,
+        skills: Optional[A2ASkillRegistry] = None,
         signer: Optional[A2ASigner] = None,
         did: str = "",
         alpha_id: str = "",
@@ -257,13 +262,16 @@ class A2AServer:
         host: str = "localhost",
     ):
         self._agent = agent
-        self._skills = skills or SkillRegistry()
+        self._skills = skills or A2ASkillRegistry()
         self._signer = signer
         self._did = did
         self._alpha_id = alpha_id
         self._port = port
         self._host = host
         self._app = None
+        # Replay protection: set of seen (caller, request_id) tuples
+        self._seen_requests: set = set()
+        self._request_timestamps: list = []  # For LRU-style eviction
 
     def _build_app(self):
         """Build FastAPI application"""
@@ -274,9 +282,29 @@ class A2AServer:
 
         @app.post("/a2a/call")
         async def handle_call(request: Request):
-            """Handle A2A call"""
+            """Handle A2A call (with replay protection)"""
             body = await request.json()
             call_req = A2ACallRequest(**{k: v for k, v in body.items() if k in A2ACallRequest.__dataclass_fields__})
+
+            # --- Replay protection ---
+            # 1. Reject requests with stale timestamps
+            if abs(time.time() - call_req.timestamp) > A2AServer.MAX_REQUEST_AGE:
+                return JSONResponse(
+                    A2ACallResponse(success=False, error="Request expired (replay?)", request_id=call_req.request_id).to_dict(),
+                    status_code=401,
+                )
+            # 2. Reject duplicate request IDs from same caller
+            replay_key = (call_req.caller, call_req.request_id)
+            if replay_key in self._seen_requests:
+                return JSONResponse(
+                    A2ACallResponse(success=False, error="Duplicate request (replay)", request_id=call_req.request_id).to_dict(),
+                    status_code=401,
+                )
+            self._seen_requests.add(replay_key)
+            # Evict oldest entries if cache grows too large
+            if len(self._seen_requests) > A2AServer._replay_cache_size:
+                # Simple eviction: clear half the set (acceptable for rare overflow)
+                self._seen_requests = set(list(self._seen_requests)[-A2AServer._replay_cache_size // 2:])
 
             # Verify signature
             if self._signer and call_req.proof:
@@ -349,14 +377,20 @@ class A2AServer:
             uvicorn.run(self._app, host="0.0.0.0", port=self._port)
         else:
             import threading
-            t = threading.Thread(
-                target=uvicorn.run,
-                args=(self._app,),
-                kwargs={"host": "0.0.0.0", "port": self._port, "log_level": "warning"},
-                daemon=True,
+            self._server = uvicorn.Server(
+                uvicorn.Config(self._app, host="0.0.0.0", port=self._port, log_level="warning")
             )
-            t.start()
-            return t
+            self._thread = threading.Thread(target=self._server.run, daemon=True)
+            self._thread.start()
+            return self._thread
+
+    def stop(self):
+        """Stop A2A server (non-blocking mode only)"""
+        if hasattr(self, "_server") and self._server:
+            self._server.should_exit = True
+            if hasattr(self, "_thread") and self._thread:
+                self._thread.join(timeout=5)
+            logger.info("A2A Server stopped: %s (port %d)", self._alpha_id, self._port)
 
 
 # -- A2A Client --

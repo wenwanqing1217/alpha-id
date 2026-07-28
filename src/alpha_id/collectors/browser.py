@@ -88,8 +88,9 @@ def _read_history(path: Path, limit: int = 1000) -> list:
     if not history_file.exists():
         return []
 
-    # 复制一份避免 SQLite 锁
-    tmp = tempfile.mktemp(suffix=".db")
+    # 复制一份避免 SQLite 锁；使用 mkstemp 原子创建，避免 mktemp 的 TOCTOU 竞争
+    fd, tmp = tempfile.mkstemp(suffix=".db")
+    os.close(fd)
     try:
         shutil.copy2(history_file, tmp)
         conn = sqlite3.connect(tmp)

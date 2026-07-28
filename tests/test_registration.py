@@ -27,14 +27,37 @@ pytestmark = pytest.mark.skipif(
 
 @pytest.fixture(autouse=True)
 def _reset_all(tmp_path):
-    """每个测试前：重置容器 + 注入临时 SQLite 数据库"""
+    """每个测试前：重置容器 + 注入临时 SQLite 数据库
+
+    关键：必须同时更新 Container.instance() 和 app.state.container，
+    否则端点通过 Depends(get_container) 拿到的是 app.state.container（旧容器），
+    而测试读取的是 Container.instance()（新容器），两者存储路径不同导致 KeyError。
+
+    注意：fixture 必须保存并恢复旧的 app.state.container，避免破坏后续测试
+    （例如 test_web.py 依赖 app.state.container 的原始状态）。
+    """
     from alpha_id.container import Container
     from core.storage_sqlite import SqliteStorage
+    from src.main import app
+
+    # 保存旧状态
+    _old_container = getattr(app.state, "container", None)
 
     container = Container.instance()
     container.reset()
     container.storage = SqliteStorage(str(tmp_path / "test.db"))
-    yield
+    # 同步 app.state.container，确保端点 DI 拿到的是同一个容器
+    app.state.container = container
+    yield container
+    # 恢复旧状态
+    if _old_container is not None:
+        app.state.container = _old_container
+    else:
+        try:
+            del app.state.container
+        except AttributeError:
+            pass
+    container.reset()
 
 
 @pytest.fixture
@@ -44,28 +67,43 @@ def client():
     return TestClient(app)
 
 
+def _get_sms_code(phone: str, container=None) -> str:
+    """从存储中读取指定手机号的验证码（测试辅助函数）"""
+    if container is None:
+        from alpha_id.container import Container
+        container = Container.instance()
+    data = container.storage.load("sms_codes") or {}
+    return data[phone]["code"]
+
+
 class TestRegistration:
     """注册流程"""
 
-    def test_send_sms(self, client):
-        """发送短信验证码"""
+    def test_send_sms(self, client, _reset_all):
+        """发送短信验证码（演示模式不返回验证码，需从存储读取）"""
+        container = _reset_all
+
         resp = client.post("/api/v1/register/send-sms", json={"phone": "13800138000"})
         assert resp.status_code == 200
         data = resp.json()
         assert data["success"] is True
-        assert "demo" in data  # 演示模式返回验证码
-        assert len(data["demo"]) == 6
+        assert data["channel"] == "demo"  # 演示模式
+        # 验证码不返回给客户端（安全），从存储中读取
+        code = _get_sms_code("13800138000", container)
+        assert len(code) == 6
 
     def test_send_sms_invalid_phone(self, client):
         """无效手机号应返回 400"""
         resp = client.post("/api/v1/register/send-sms", json={"phone": "123"})
         assert resp.status_code == 400
 
-    def test_verify_sms(self, client):
+    def test_verify_sms(self, client, _reset_all):
         """发送验证码后应能验证通过"""
+        container = _reset_all
         # 先发送
-        send = client.post("/api/v1/register/send-sms", json={"phone": "13900139000"})
-        code = send.json()["demo"]
+        client.post("/api/v1/register/send-sms", json={"phone": "13900139000"})
+        # 从存储中读取验证码（API 不再返回验证码）
+        code = _get_sms_code("13900139000", container)
 
         # 再验证
         resp = client.post("/api/v1/register/verify-sms", json={"phone": "13900139000", "code": code})
@@ -107,12 +145,14 @@ class TestRegistration:
         assert data["success"] is True
         assert data["data"]["did"] == "did:aid:test123"
 
-    def test_full_flow(self, client):
+    def test_full_flow(self, client, _reset_all):
         """完整的注册流程：SMS → 人脸 → DID 生成 → 完成"""
+        container = _reset_all
         # 1. SMS
         sms = client.post("/api/v1/register/send-sms", json={"phone": "13600136000"})
         assert sms.status_code == 200
-        code = sms.json()["demo"]
+        # 从存储中读取验证码（API 不再返回验证码）
+        code = _get_sms_code("13600136000", container)
 
         # 2. 验证
         verify = client.post("/api/v1/register/verify-sms", json={"phone": "13600136000", "code": code})

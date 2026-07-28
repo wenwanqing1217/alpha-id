@@ -77,7 +77,7 @@ def code_runner(params: dict) -> dict:
         result = subprocess.run(
             ["python", runner_script, text],
             capture_output=True, text=True, timeout=180,
-            cwd=os.environ.get("CODE_RUNNER_DIR", "D:\\MW"),
+            cwd=os.environ.get("CODE_RUNNER_DIR", os.getcwd()),
         )
         output = result.stdout.strip()
         if result.returncode != 0:

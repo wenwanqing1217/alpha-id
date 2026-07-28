@@ -20,12 +20,34 @@ Claude Desktop 配置（claude_desktop_config.json）：
 """
 
 import json
+import os
 import sys
 from typing import Optional
 
 import typer
 
 from mcp.server import FastMCP
+
+# ── 路径安全：防止目录遍历攻击 ──
+# 允许操作的基础目录（默认当前工作目录，可通过环境变量覆盖）
+_ALLOWED_BASE_DIR = os.path.abspath(os.environ.get("AID_CODE_DIR", os.getcwd()))
+
+
+def _safe_path(path: str) -> str:
+    """验证并返回安全路径，防止目录遍历攻击。
+
+    解析为绝对路径后检查是否在允许的基础目录内。
+    抛出 ValueError 如果路径试图越界访问。
+    """
+    # 规范化路径（解析 .. 和符号链接）
+    abs_path = os.path.abspath(os.path.realpath(path))
+    # 确保路径在允许的基础目录内
+    if not abs_path.startswith(_ALLOWED_BASE_DIR + os.sep) and abs_path != _ALLOWED_BASE_DIR:
+        raise ValueError(
+            f"路径越界: '{path}' 解析为 '{abs_path}'，"
+            f"超出允许目录 '{_ALLOWED_BASE_DIR}'"
+        )
+    return abs_path
 
 # 注册 Legacy 兼容的 `aid_mcp_server` 模块别名。
 # 测试通过 `import aid_mcp_server` 引用本模块，使其与真实模块共享属性，
@@ -654,6 +676,13 @@ def get_server_info() -> str:
     else:
         capabilities.append("❌ 记忆网络（memory_graph.py 加载失败）")
 
+    if _has_capability("HAS_ORCHESTRATOR"):
+        capabilities.append(
+            "✅ Alpha-ID 总调度（feed_fetch, capture_scan, obsidian_write, nuro_chat, evolution_learn, orch_status）"
+        )
+    else:
+        capabilities.append(f"❌ Alpha-ID 总调度（{_orchestrator_import_error if '_orchestrator_import_error' in dir() else 'mcp_tools.py 加载失败'}）")
+
     return (
         "🤖 AID MCP Server\n\n"
         "可用能力：\n" + "\n".join(f"  {c}" for c in capabilities) + "\n\n"
@@ -674,17 +703,29 @@ if HAS_CODEX:
     @mcp.tool()
     def read_code(path: str, line_start: int = 1, line_end: int = 0) -> str:
         """读取代码文件，带行号显示。参数：path=文件路径，line_start=起始行，line_end=结束行"""
-        return _codex.tools["read_code"]["fn"](path, line_start, line_end)
+        try:
+            safe = _safe_path(path)
+        except ValueError as e:
+            return f"❌ 路径不安全: {e}"
+        return _codex.tools["read_code"]["fn"](safe, line_start, line_end)
 
     @mcp.tool()
     def search_code(pattern: str, path: str = "") -> str:
         """在代码库中搜索文本或正则表达式。参数：pattern=搜索模式，path=可选目录"""
-        return _codex.tools["search_code"]["fn"](pattern, path)
+        try:
+            safe = _safe_path(path) if path else _ALLOWED_BASE_DIR
+        except ValueError as e:
+            return f"❌ 路径不安全: {e}"
+        return _codex.tools["search_code"]["fn"](pattern, safe)
 
     @mcp.tool()
     def edit_code(path: str, old_string: str, new_string: str) -> str:
         """替换代码文件中的文本。参数：path=文件路径，old_string=旧文本，new_string=新文本"""
-        return _codex.tools["edit_code"]["fn"](path, old_string, new_string)
+        try:
+            safe = _safe_path(path)
+        except ValueError as e:
+            return f"❌ 路径不安全: {e}"
+        return _codex.tools["edit_code"]["fn"](safe, old_string, new_string)
 
     @mcp.tool()
     def run_python(code: str) -> str:
@@ -694,12 +735,20 @@ if HAS_CODEX:
     @mcp.tool()
     def list_code_files(path: str = ".", pattern: str = "*.py") -> str:
         """列出代码目录中的文件。参数：path=目录路径，pattern=匹配模式"""
-        return _codex.tools["list_files"]["fn"](path, pattern)
+        try:
+            safe = _safe_path(path)
+        except ValueError as e:
+            return f"❌ 路径不安全: {e}"
+        return _codex.tools["list_files"]["fn"](safe, pattern)
 
     @mcp.tool()
     def count_code_lines(path: str = ".") -> str:
         """统计代码目录中的 Python 行数。参数：path=目录路径"""
-        return _codex.tools["count_loc"]["fn"](path)
+        try:
+            safe = _safe_path(path)
+        except ValueError as e:
+            return f"❌ 路径不安全: {e}"
+        return _codex.tools["count_loc"]["fn"](safe)
 
 
 # ══════════════════════════════════════════════
@@ -882,6 +931,20 @@ if _has_capability("HAS_MEMORY_GRAPH"):
             sensitivity=sensitivity,
             source=source,
         )
+
+
+# ══════════════════════════════════════════════
+#  Alpha-ID Orchestrator 工具（延迟注册）
+# ══════════════════════════════════════════════
+
+try:
+    from alpha_id.mcp_tools import register_orchestrator_tools
+    # 注册到当前 mcp 实例
+    register_orchestrator_tools(mcp)
+    HAS_ORCHESTRATOR = True
+except ImportError as e:
+    HAS_ORCHESTRATOR = False
+    _orchestrator_import_error = str(e)
 
 
 # ══════════════════════════════════════════════

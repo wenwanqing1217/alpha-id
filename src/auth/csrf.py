@@ -38,11 +38,13 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         app: ASGIApp,
         allowed_origins: Set[str],
         exempt_paths: Optional[Set[str]] = None,
+        exempt_prefixes: Optional[Set[str]] = None,
         enforce_custom_header: bool = True,
     ) -> None:
         super().__init__(app)
         self._allowed_origins = allowed_origins
         self._exempt_paths = exempt_paths or set()
+        self._exempt_prefixes = exempt_prefixes or set()
         self._enforce_custom_header = enforce_custom_header
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
@@ -53,7 +55,10 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         path = request.url.path
 
         # 豁免路径（如 webhook 回调、OAuth 回调等外部入口）
+        # 支持精确匹配和前缀匹配（如 /api/v1/register/ 匹配所有注册接口）
         if path in self._exempt_paths:
+            return await call_next(request)
+        if any(path.startswith(prefix) for prefix in self._exempt_prefixes):
             return await call_next(request)
 
         # 自定义头检查 — 浏览器跨域 fetch 无法设置自定义头

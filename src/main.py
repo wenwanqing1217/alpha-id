@@ -62,13 +62,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     app.state.container = container
 
     # 启动：A2A 服务器（后台线程，端口 9001）
+    a2a_server = None
     if settings.a2a_enabled:
         try:
             from alpha_id.did import DIDRegistry
-            from core.a2a import A2AServer, A2ASigner, SkillRegistry
+            from core.a2a import A2AServer, A2ASigner, A2ASkillRegistry
 
             # 构建技能注册表
-            skills = SkillRegistry()
+            skills = A2ASkillRegistry()
 
             # 注册示例技能
             @skills.skill("ping", description="健康检查")
@@ -103,7 +104,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
 
     yield
 
-    # 关闭：释放资源（HTTP 客户端、LLM 客户端、容器）
+    # 关闭：释放资源（A2A 服务器、HTTP 客户端、LLM 客户端、容器）
+    if a2a_server is not None:
+        try:
+            a2a_server.stop()
+        except Exception as exc:
+            logger.warning("A2A 服务器停止失败: %s", exc)
     from core.http_client import close_clients
     from core.llm_async import close_llm_client
     await close_llm_client()
@@ -149,11 +155,21 @@ app.add_middleware(
         "/api/v1/register/generate-did",
         "/api/v1/register/complete",
         # 身份认证接口（Bearer Token 已防伪造，CSRF 不适用）
-        "/api/v1/identity/auth/verify",
-        "/api/v1/identity/auth/login",
-        "/api/v1/identity/auth/refresh",
-        "/api/v1/identity/auth/bind-device",
+        "/api/v1/identity/login",
+        "/api/v1/identity/refresh",
         "/api/v1/identity/register",
+        "/api/v1/identity/auth/verify",
+        # Agent 接口（Gateway 代理调用，Bearer Token 已防伪造）
+        "/api/v1/agent/chat",
+        "/api/v1/agent/status",
+    },
+    # 前缀匹配：所有以此开头的路径都豁免（更灵活，避免遗漏子路径）
+    exempt_prefixes={
+        "/api/v1/register/",  # 所有注册相关接口
+        "/api/v1/identity/login",
+        "/api/v1/identity/refresh",
+        "/api/v1/identity/register",
+        "/api/v1/identity/auth/",
     },
     enforce_custom_header=True,
 )
@@ -188,12 +204,11 @@ def health(container: Container = Depends(get_container)):
     """真实健康检查：验证关键组件可达性（通过 Container 获取存储后端）"""
     checks = {"status": "ok", "version": settings.app_version, "service": "alpha-id"}
 
-    # 1. 存储后端连通性
+    # 1. 存储后端连通性（只读检查，避免健康检查产生副作用）
     try:
         store = container.storage
-        # 简单读写验证
+        # 仅尝试读取一个已知可能存在的键，验证存储后端可达
         test_key = "__healthcheck__"
-        store.save(test_key, {"ts": __import__("datetime").datetime.now().isoformat()})
         store.load(test_key)
         checks["database"] = "ok"
     except Exception as e:

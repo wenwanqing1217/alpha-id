@@ -14,8 +14,11 @@ class TestReActEngineInit:
 
     def test_init_without_api_key(self):
         from core.agent_react import ReActEngine
+        from core.settings import settings
 
-        engine = ReActEngine(alpha_id="Alpha-Test-001")
+        # settings.llm_api_key 在导入时已加载，需要 patch 为空
+        with patch.object(settings, "llm_api_key", ""):
+            engine = ReActEngine(alpha_id="Alpha-Test-001")
         assert engine.alpha_id == "Alpha-Test-001"
         assert engine.api_key == ""
         assert len(engine.tools) == 6
@@ -39,8 +42,11 @@ class TestReActEngineInit:
 class TestThinkNoApiKey:
     def test_think_returns_error_without_key(self):
         from core.agent_react import ReActEngine
+        from core.settings import settings
 
-        engine = ReActEngine(alpha_id="Alpha-Test-001")
+        # settings.llm_api_key 在导入时已加载，需要 patch 为空
+        with patch.object(settings, "llm_api_key", ""):
+            engine = ReActEngine(alpha_id="Alpha-Test-001")
         result = engine.think()
         assert result["status"] == "error"
         assert "LLM" in result["observation"]

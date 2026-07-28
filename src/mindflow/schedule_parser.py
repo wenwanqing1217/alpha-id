@@ -15,8 +15,11 @@ MindFlow 自然语言日程解析器
   ]
 """
 
+import ipaddress
 import json
 import logging
+import socket
+import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
@@ -26,6 +29,38 @@ from core.settings import settings
 logger = logging.getLogger("mindflow.schedule_parser")
 
 
+def _validate_url_no_ssrf(url: str) -> None:
+    """验证 URL 不指向内网地址，防止 SSRF 攻击。
+
+    解析主机名 → 解析为 IP → 检查是否为私有/回环/链路本地地址。
+    抛出 ValueError 如果 URL 不安全。
+    """
+    parsed = urllib.parse.urlparse(url)
+    hostname = parsed.hostname
+    if not hostname:
+        raise ValueError(f"URL 缺少主机名: {url}")
+
+    # 禁止内网 IP 直接访问
+    try:
+        addr = ipaddress.ip_address(hostname)
+        if addr.is_private or addr.is_loopback or addr.is_link_local or addr.is_multicast:
+            raise ValueError(f"URL 指向内网地址，已阻止: {hostname}")
+    except ValueError as e:
+        if "内网地址" in str(e):
+            raise
+        # 不是有效 IP，继续 DNS 解析检查
+
+    # DNS 解析后再次检查（防止 DNS 重绑定）
+    try:
+        for info in socket.getaddrinfo(hostname, parsed.port or 443):
+            ip = info[4][0]
+            addr = ipaddress.ip_address(ip)
+            if addr.is_private or addr.is_loopback or addr.is_link_local or addr.is_multicast:
+                raise ValueError(f"URL 解析到内网地址，已阻止: {hostname} → {ip}")
+    except socket.gaierror:
+        raise ValueError(f"无法解析主机名: {hostname}")
+
+
 def _llm_parse_schedule(text: str, user_context: str = "") -> Optional[List[Dict]]:
     """用 LLM 解析自然语言日程"""
     api_key = settings.llm_api_key
@@ -33,6 +68,13 @@ def _llm_parse_schedule(text: str, user_context: str = "") -> Optional[List[Dict
     model = settings.llm_model
 
     if not api_key or not base_url:
+        return None
+
+    # SSRF 防护：验证 LLM 端点 URL 不指向内网
+    try:
+        _validate_url_no_ssrf(f"{base_url}/chat/completions")
+    except ValueError as e:
+        logger.warning(f"LLM URL 安全验证失败: {e}")
         return None
 
     today = datetime.now()

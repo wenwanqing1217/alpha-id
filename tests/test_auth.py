@@ -204,6 +204,8 @@ class TestAuthVerifyEndpoint:
         os.environ["COZE_WORKSPACE_PATH"] = self.tmp_dir
         os.makedirs(os.path.join(self.tmp_dir, "assets"), exist_ok=True)
 
+        # 保存旧单例，测试结束后恢复，避免破坏后续测试
+        self._old_instance = Container._instance
         Container._instance = None
         self.container = Container.instance()
 
@@ -214,6 +216,14 @@ class TestAuthVerifyEndpoint:
         )
         self.access_token = create_access_token("Alpha-1")
         self.refresh_token = create_refresh_token("Alpha-1")
+        yield
+        # 恢复旧单例（close 新建的单例，回滚到测试前状态）
+        if self.container is not None:
+            try:
+                self.container.close()
+            except Exception:
+                pass
+        Container._instance = self._old_instance
 
     def test_verify_valid_access_token(self):
         from fastapi.testclient import TestClient

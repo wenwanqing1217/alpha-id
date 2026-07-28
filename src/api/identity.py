@@ -1,9 +1,11 @@
 """用户身份 API 路由"""
 
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Optional
+
+from fastapi import APIRouter, Depends, Header, HTTPException
 
 from alpha_id.container import Container, get_container
-from auth.jwt import create_access_token, create_refresh_token, decode_token, rotate_token
+from auth.jwt import create_access_token, create_refresh_token, decode_token, revoke_token, rotate_token
 from auth.middleware import require_user
 from core.user_identity import UserIdentityManager
 
@@ -70,13 +72,21 @@ def refresh_token(body: RefreshRequest):
 
 
 @router.post("/logout")
-def logout(_: str = Depends(require_user)):
-    """登出：撤销当前 access token"""
-    # 从依赖注入链中获取当前 token 并撤销
-    # 注意：access token 仍有效期内可被撤销
-    # 实际撤销在 require_user 中通过 request.state 获取 jti
-    # 这里简化处理：客户端丢弃令牌，服务端短期过期（30分钟）
-    return {"success": True, "message": "已登出"}
+def logout(
+    authorization: Optional[str] = Header(None),
+    _: str = Depends(require_user),
+):
+    """登出：撤销当前 access token（将 jti 加入黑名单）"""
+    # 从 Authorization header 提取原始 token 并撤销
+    if authorization:
+        scheme, _, token = authorization.partition(" ")
+        if scheme.lower() == "bearer" and token:
+            try:
+                revoke_token(token)
+            except ValueError:
+                # 令牌已过期或无效，无需撤销
+                pass
+    return {"success": True, "message": "已登出，令牌已撤销"}
 
 
 # ── 跨服务验证端点（供其他项目验证 AID 签发的 JWT） ──

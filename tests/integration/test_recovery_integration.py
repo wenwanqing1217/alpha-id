@@ -181,6 +181,7 @@ def test_recovery_auto_status_progression(tmp_path):
     storage = JsonStorage(db_file)
     engine = RecoveryEngine(storage=storage)
 
+    # time_lock_hours=0.0001 ≈ 0.36s，留足余量避免 CI/负载下 flaky
     result = engine.initiate_recovery(
         target_did="did:aid:Auto",
         target_alpha_id="Auto",
@@ -188,7 +189,7 @@ def test_recovery_auto_status_progression(tmp_path):
         old_public_key_hex="bb" * 32,
         initiator="did:aid:Auto",
         witnesses=["did:aid:W1"],
-        time_lock_hours=0.00001,
+        time_lock_hours=0.0001,
         witness_threshold=1,
     )
     rid = result["request_id"]
@@ -199,6 +200,6 @@ def test_recovery_auto_status_progression(tmp_path):
     assert status["status"] == "ready"  # 刚签名，时间锁尚未过
 
     # 等时间锁过，check_readiness 会推进到 executable
-    time.sleep(0.05)
+    time.sleep(0.5)
     status = engine.check_readiness(rid)
     assert status["status"] == "executable"

@@ -1,4 +1,4 @@
-# alpha-id-zix
+﻿# alpha-id-zix
 
 <p align="center">
   <a href="https://pypi.org/project/alpha-id-zix/"><img src="https://img.shields.io/pypi/v/alpha-id-zix.svg?logo=pypi&label=PyPI&logoColor=gold" alt="PyPI"></a>
@@ -66,6 +66,37 @@ python -m src.main          # 默认端口 8000
 | Risk engine | Device / behavior / voice 3D scoring | 三维风控评估 |
 | GDPR compliance | Data export + right to be forgotten | 数据导出与被遗忘权 |
 | Observability | Prometheus metrics + readiness probe | 可观测性指标 |
+| **Orchestrator** | Master scheduler with 5 background loops | 总调度器：串联所有模块 |
+| **Smart Capture** | Detective not mover — finds contradictions | 智能采集：发现矛盾/卡住/偏离 |
+| **Agent Feed** | GitHub/HN/ArXiv/RSS → Agent learning | 资讯采集：Agent 学习养料 |
+| **Self Evolution** | Learn lessons, audit preferences | 自进化：从纠正中学习教训 |
+| **Obsidian Bridge** | Bidirectional sync with Obsidian vault | Obsidian 双向同步 |
+| **NURO Bridge** | Desktop pet ↔ Alpha-ID connection | 桌宠连接：本地+云端 |
+| **Feishu Bridge** | Feishu ↔ Alpha-ID + Code Mode | 飞书集成：消息→记忆 + 代码模式（atomcode/zcode/codex） |
+| **Tool Orchestrator** | Multi-tool coding orchestration (serial/parallel) | 编程工具协同调度：串行/并行 + 线程池 + TTL 清理 |
+| **Codex API** | HTTP wrapper for Codex CLI | Codex CLI HTTP 接口：atomcode/codex 后端 + API Key 认证 |
+| **Baidu Map** | Baidu Map AI skill client | 百度地图 AI 技能：地点/路线/天气/地理编码 |
+| **MCP Tools** | 24 tools exposing all new capabilities | 24个 MCP 工具 |
+
+---
+
+## Orchestrator CLI / 总调度器
+
+```bash
+# 基础启动（Feed + Capture + NURO + Evolution）
+python -m alpha_id.orchestrate_cli start
+
+# 完整启用（包括 Obsidian 和飞书）
+python -m alpha_id.orchestrate_cli start \
+    --obsidian-vault "D:/MyVault" \
+    --git-repos "D:/MW,D:/Projects"
+
+# 查看状态 / 单次资讯 / 单次扫描 / NURO 聊天
+python -m alpha_id.orchestrate_cli status
+python -m alpha_id.orchestrate_cli feed
+python -m alpha_id.orchestrate_cli scan
+python -m alpha_id.orchestrate_cli chat "你好"
+```
 
 ---
 
@@ -84,7 +115,7 @@ python -m src.main          # 默认端口 8000
 | GDPR | `/api/v1/gdpr/*` | 2 | 数据导出/删除 |
 | 注册流程 | `/api/v1/register/*` | 6 | SMS/人脸/DID 生成 |
 
-Swagger UI: `http://localhost:8000/docs`  
+Swagger UI: `http://localhost:8000/docs`
 ReDoc: `http://localhost:8000/redoc`
 
 ---
@@ -97,15 +128,18 @@ ReDoc: `http://localhost:8000/redoc`
 alpha-id / 身份层
   DID · JWT · signing · collectors · CLI
   TwinBrain · AgentLoop · A2A · DualChain
-  
+  Orchestrator · SmartCapture · AgentFeed
+  SelfEvolution · ObsidianBridge · NUROBridge
+  FeishuBridge · MCPTools
+
 mindflow-map / 执行层
   workflow engine · intent recognition
-  
+
 zcode-brain / 编排层
   role matching · safety guardrails · task scheduling
 ```
 
-### 内部模块结构（v0.3.3）
+### 内部模块结构（v0.4.0）
 
 ```
 src/
@@ -132,14 +166,34 @@ src/
 │   ├── user_identity.py     ← 用户身份管理
 │   ├── alpha_social.py      ← 社交网络管理
 │   ├── memory_store.py      ← 记忆存储
+│   ├── event_bus.py         ← 事件总线（blinker）
+│   ├── orchestrator.py      ← MasterOrchestrator 总调度
 │   └── observability.py     ← Prometheus 指标
+├── alpha_id/                ← 子包（DID/skill/新模块等）
+│   ├── did.py               ← DID 生成/解析/验证
+│   ├── signer.py            ← 数字签名 ed25519
+│   ├── agent_network.py     ← Agent 网络
+│   ├── container.py         ← 应用级依赖容器（lazy init）
+│   ├── orchestrator.py      ← 总调度器定义
+│   ├── feed.py              ← AgentFeed 资讯采集
+│   ├── smart_capture.py     ← SmartCapture 智能采集
+│   ├── self_evolution.py    ← SelfEvolution 自进化
+│   ├── obsidian_bridge.py   ← ObsidianBridge 双向同步
+│   ├── nuro_bridge.py       ← NUROBridge 桌宠连接
+│   ├── feishu_bridge.py     ← FeishuBridge 飞书集成
+│   ├── mcp_tools.py         ← 18个 MCP 工具
+│   ├── orchestrate_cli.py   ← Orchestrator CLI
+│   ├── web.py               ← FastAPI Web 应用
+│   ├── collectors/          ← 采集器×9
+│   ├── mining/              ← 挖矿扫描
+│   └── *_cli.py             ← 各类 CLI 工具
 ├── auth/                    ← 认证与安全
 │   ├── jwt.py               ← JWT 签发/验证/轮换
 │   ├── csrf.py              ← CSRF 防护中间件
 │   ├── middleware.py         ← require_user 依赖
 │   └── token_store.py       ← 令牌撤销存储
 ├── entrypoints/             ← 入口点（CLI/MCP/daemon）
-└── alpha_id/                ← 子包（DID/skill/poe 等）
+└── tools/                   ← 工具集
 ```
 
 ---
@@ -161,6 +215,10 @@ src/
 | `RATE_LIMIT_ENABLED` | `true` | 是否启用限流 |
 | `RATE_LIMIT_RPM` | `60` | 每分钟请求数限制 |
 | `CORS_ORIGINS` | `http://localhost:3000,...` | 允许的跨域来源 |
+| `OBSIDIAN_VAULT` | *(可选)* | Obsidian 笔记库路径 |
+| `FEISHU_APP_ID` | *(可选)* | 飞书 App ID |
+| `FEISHU_APP_SECRET` | *(可选)* | 飞书 App Secret |
+| `GITHUB_TOKEN` | *(可选)* | GitHub API Token（提高速率限制） |
 
 ---
 

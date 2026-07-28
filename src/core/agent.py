@@ -220,14 +220,14 @@ def _make_tools(alpha_id: str, backends: Optional[AgentContainer] = None, signer
         result = backends.social.send_friend_request(alpha_id, to_alpha_id, message)
         return json.dumps(result, ensure_ascii=False)
 
-    def save_memory(content: str, category: str = "general", sensitivity: str = "0") -> str:
+    def save_memory(content: str, category: str = "general", sensitivity: int = 0) -> str:
         """保存一条长期记忆"""
-        mem = backends.memory.save(content, category=category, sensitivity=int(sensitivity))
+        mem = backends.memory.save(content, category=category, sensitivity=sensitivity)
         return json.dumps(mem, ensure_ascii=False)
 
-    def query_memory(query: str = "", keyword: str = "", limit: str = "5") -> str:
+    def query_memory(query: str = "", keyword: str = "", limit: int = 5) -> str:
         """查询长期记忆（支持语义搜索和关键词搜索）"""
-        results = backends.memory.query(query_text=query or None, keyword=keyword or None, limit=int(limit))
+        results = backends.memory.query(query_text=query or None, keyword=keyword or None, limit=limit)
         return json.dumps(results, ensure_ascii=False)
 
     # ── ActionEngine 工具 ──
@@ -269,9 +269,9 @@ def _make_tools(alpha_id: str, backends: Optional[AgentContainer] = None, signer
             ensure_ascii=False,
         )
 
-    def get_action_history(limit: str = "10") -> str:
+    def get_action_history(limit: int = 10) -> str:
         """查询行动历史"""
-        results = backends.actions.get_history(limit=int(limit))
+        results = backends.actions.get_history(limit=limit)
         return json.dumps(results, ensure_ascii=False) if results else "暂无行动记录"
 
     # ── Skill 工具 ──
@@ -402,7 +402,7 @@ def _make_tools(alpha_id: str, backends: Optional[AgentContainer] = None, signer
                 "properties": {
                     "content": {"type": "string", "description": "记忆内容"},
                     "category": {"type": "string", "description": "分类: general/knowledge/social/experience"},
-                    "sensitivity": {"type": "string", "description": "敏感度 0-100"},
+                    "sensitivity": {"type": "integer", "description": "敏感度 0-100"},
                 },
                 "required": ["content"],
             },
@@ -416,7 +416,7 @@ def _make_tools(alpha_id: str, backends: Optional[AgentContainer] = None, signer
                 "properties": {
                     "query": {"type": "string", "description": "语义搜索关键词"},
                     "keyword": {"type": "string", "description": "精确关键词"},
-                    "limit": {"type": "string", "description": "返回条数"},
+                    "limit": {"type": "integer", "description": "返回条数"},
                 },
             },
             fn=query_memory,
@@ -463,7 +463,7 @@ def _make_tools(alpha_id: str, backends: Optional[AgentContainer] = None, signer
             parameters={
                 "type": "object",
                 "properties": {
-                    "limit": {"type": "string", "description": "返回条数，默认 10"},
+                    "limit": {"type": "integer", "description": "返回条数，默认 10"},
                 },
             },
             fn=get_action_history,
@@ -522,10 +522,13 @@ def _get_llm_client() -> "httpx.Client":
     return _llm_client
 
 
-def _call_llm(messages: List[Dict[str, str]], tools_schema: List[Dict[str, Any]], model: str = "") -> str:
+def _call_llm(messages: List[Dict[str, str]], tools_schema: List[Dict[str, Any]], model: str = "") -> Dict[str, Any]:
     """
-    调用 LLM，返回文本响应。
-    优先使用 httpx（连接复用），未安装时回退到 urllib。
+    调用 LLM，返回结构化响应。
+    返回 {"content": str, "tool_calls": [...], "raw_message": dict}
+    - content: 文本回复（无 tool_calls 时）
+    - tool_calls: 原始 tool_calls 列表（有 tool_calls 时），用于构造正确的 assistant 消息
+    - raw_message: 完整的 message 对象
     """
 
     api_key = settings.llm_api_key
@@ -534,10 +537,10 @@ def _call_llm(messages: List[Dict[str, str]], tools_schema: List[Dict[str, Any]]
     try:
         base_url = _validate_llm_base_url(base_url)
     except ValueError as exc:
-        return f"[LLM 配置错误] {exc}"
+        return {"content": f"[LLM 配置错误] {exc}", "tool_calls": None, "raw_message": None}
 
     if not api_key:
-        return "[LLM 未配置：请设置 OPENAI_API_KEY 环境变量]"
+        return {"content": "[LLM 未配置：请设置 OPENAI_API_KEY 环境变量]", "tool_calls": None, "raw_message": None}
 
     if not model:
         model = settings.llm_model
@@ -587,19 +590,17 @@ def _call_llm(messages: List[Dict[str, str]], tools_schema: List[Dict[str, Any]]
         choice = result["choices"][0]
         msg = choice["message"]
 
-        if msg.get("tool_calls"):
-            lines = []
-            for tc in msg["tool_calls"]:
-                fn = tc["function"]
-                lines.append(f"__TOOL_CALL__ id:{tc['id']} {fn['name']}({fn['arguments']})")
-            return "\n".join(lines)
+        tool_calls = msg.get("tool_calls")
+        if tool_calls:
+            # 返回原始 tool_calls 数据，供 run() 构造正确的 assistant 消息
+            return {"content": msg.get("content", "") or "", "tool_calls": tool_calls, "raw_message": msg}
 
-        return msg.get("content", "") or ""
+        return {"content": msg.get("content", "") or "", "tool_calls": None, "raw_message": msg}
 
     except Exception as e:
         duration = time.perf_counter() - start
         record_llm_call(model, False, duration)
-        return f"[LLM 调用异常] {e}"
+        return {"content": f"[LLM 调用异常] {e}", "tool_calls": None, "raw_message": None}
 
 
 # ── 工具调用解析 ──
@@ -761,7 +762,7 @@ class AgentLoop:
         """执行一次完整的 LLM + Tools + Loop（支持多个 tool call）
 
         使用 _call_llm() 统一调用 LLM，避免重复的 HTTP 请求代码。
-        _call_llm 返回文本或 __TOOL_CALL__ 标记，本方法负责解析和执行工具。
+        _call_llm 返回 {"content": str, "tool_calls": [...], "raw_message": dict}
         """
         logger.info("用户输入: %s", user_input)
         messages = self._build_messages(user_input)
@@ -774,26 +775,40 @@ class AgentLoop:
         for turn in range(self.max_turns):
             logger.info("第 %d 轮 LLM 调用", turn + 1)
 
-            # 使用 _call_llm 统一调用（支持 mock 和错误处理）
-            llm_response = _call_llm(messages, tools_schema, self.model)
+            # 使用 _call_llm 统一调用
+            llm_result = _call_llm(messages, tools_schema, self.model)
+            llm_response = llm_result["content"]
 
             # _call_llm 返回错误消息时直接返回
             if llm_response.startswith("[LLM") or llm_response.startswith("["):
-                # 检查是否是 __TOOL_CALL__ 标记（不以 [ 开头）
-                if not llm_response.startswith("__TOOL_CALL__"):
-                    return llm_response
+                return llm_response
 
-            # 解析工具调用
-            tool_results = self._execute_tool_calls(llm_response)
-
-            # 没有工具调用 → 直接返回最终回答
-            if tool_results is None:
+            # 没有 tool_calls → 直接返回最终回答
+            if not llm_result["tool_calls"]:
                 self.history.append({"role": "user", "content": user_input})
                 self.history.append({"role": "assistant", "content": llm_response})
                 return llm_response
 
-            # 有工具调用 → 将结果注入消息历史，继续下一轮
-            messages.append({"role": "assistant", "content": llm_response})
+            # 有 tool_calls → 执行工具并构造正确的 assistant 消息格式
+            tool_calls = llm_result["tool_calls"]
+            tool_results = self._execute_tool_calls_v2(tool_calls)
+
+            # 构造符合 OpenAI/DeepSeek 格式的 assistant 消息
+            messages.append({
+                "role": "assistant",
+                "content": llm_response if llm_response else None,
+                "tool_calls": [
+                    {
+                        "id": tc["id"],
+                        "type": "function",
+                        "function": {
+                            "name": tc["function"]["name"],
+                            "arguments": tc["function"]["arguments"],
+                        }
+                    }
+                    for tc in tool_calls
+                ]
+            })
             for tool_call_id, name, result in tool_results:
                 messages.append({"role": "tool", "tool_call_id": tool_call_id, "content": result})
 
@@ -822,6 +837,38 @@ class AgentLoop:
             args_str = match.group(3) or "{}"
             try:
                 args = json.loads(args_str)
+            except json.JSONDecodeError:
+                args = {}
+            logger.info("工具调用: %s(%s)", name, args)
+            tool = self.tool_map.get(name)
+            if tool is None:
+                result = f"[未知工具: {name}]"
+                logger.warning("未知工具: %s", name)
+            else:
+                try:
+                    result = tool(**args)
+                except Exception as e:
+                    logger.warning("工具执行异常 %s: %s", name, e)
+                    result = f"[工具错误] {e}"
+            results.append((tool_call_id, name, result))
+        return results
+
+    def _execute_tool_calls_v2(self, tool_calls: List[Dict]) -> List[tuple]:
+        """从原始 tool_calls 数据（OpenAI 格式）解析并执行工具
+
+        Args:
+            tool_calls: [{"id": ..., "function": {"name": ..., "arguments": ...}}, ...]
+
+        Returns:
+            List[(tool_call_id, name, result)]
+        """
+        results = []
+        for tc in tool_calls:
+            tool_call_id = tc["id"]
+            name = tc["function"]["name"]
+            args_str = tc["function"].get("arguments", "{}")
+            try:
+                args = json.loads(args_str) if args_str else {}
             except json.JSONDecodeError:
                 args = {}
             logger.info("工具调用: %s(%s)", name, args)

@@ -5,6 +5,10 @@
 2. 已知公钥字节（内存中）
 3. Git 仓库 / HTTP（未来）
 
+缓存策略：
+- 使用 LRU 驱逐，最大缓存 1000 个 DID Document
+- 防止无限增长导致 OOM
+
 用法：
     resolver = DIDResolver()
     doc = resolver.resolve("did:aid:abc123...")
@@ -14,12 +18,15 @@
 
 import hashlib
 import json
+from collections import OrderedDict
 from pathlib import Path
 from typing import Optional
 
 from alpha_id.did import DIDDocument, _b58encode
 
-_RESOLVER_CACHE: dict[str, DIDDocument] = {}
+# LRU 缓存最大容量
+_CACHE_MAX_SIZE = 1000
+_RESOLVER_CACHE: "OrderedDict[str, DIDDocument]" = OrderedDict()
 
 
 class DIDResolver:
@@ -37,14 +44,15 @@ class DIDResolver:
         if not did.startswith("did:aid:"):
             return None
 
-        # 检查缓存
+        # 检查缓存（LRU：移到末尾表示最近使用）
         if did in _RESOLVER_CACHE:
+            _RESOLVER_CACHE.move_to_end(did)
             return _RESOLVER_CACHE[did]
 
         # 1. 尝试本地 .aid/ 目录
         doc = self._resolve_local(did)
         if doc:
-            _RESOLVER_CACHE[did] = doc
+            _cache_set(did, doc)
             return doc
 
         return None
@@ -67,7 +75,7 @@ class DIDResolver:
             ],
             authentication=[vm_id],
         )
-        _RESOLVER_CACHE[did] = doc
+        _cache_set(did, doc)
         return doc
 
     def resolve_with_key(self, did: str, public_key_hex: str) -> Optional[DIDDocument]:
@@ -105,3 +113,16 @@ class DIDResolver:
         from alpha_id.did import DIDRegistry
 
         return DIDRegistry.did_matches_key(did, public_key_bytes)
+
+
+def _cache_set(did: str, doc: DIDDocument) -> None:
+    """带 LRU 驱逐的缓存插入"""
+    if did in _RESOLVER_CACHE:
+        # 已存在，移到末尾（最近使用）
+        _RESOLVER_CACHE.move_to_end(did)
+        _RESOLVER_CACHE[did] = doc
+    else:
+        # 超过容量时驱逐最旧的条目
+        if len(_RESOLVER_CACHE) >= _CACHE_MAX_SIZE:
+            _RESOLVER_CACHE.popitem(last=False)
+        _RESOLVER_CACHE[did] = doc

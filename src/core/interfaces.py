@@ -39,14 +39,6 @@ class PoEStore:
     def get(self, execution_id: str) -> Optional[Dict[str, Any]]: ...  # pragma: no cover
 
 
-class SkillRegistry:
-    """Skill package registry."""
-
-    def get(self, name: str) -> Optional[Dict[str, Any]]: ...  # pragma: no cover
-
-    def list_skills(self) -> List[Dict[str, Any]]: ...  # pragma: no cover
-
-
 class SkillAttributionTracker:
     """Track skill usage attribution."""
 
@@ -76,9 +68,6 @@ class AgentContainer:
 
     @property
     def actions(self) -> Any: ...  # pragma: no cover
-
-    @property
-    def skill_registry(self) -> "SkillRegistry": ...  # pragma: no cover
 
     @property
     def skill_tracker(self) -> "SkillAttributionTracker": ...  # pragma: no cover

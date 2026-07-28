@@ -101,12 +101,12 @@ class TestWebChat:
         assert resp.status_code == 400
 
     def test_chat_unauthenticated(self, client):
-        """未认证用户访问 /chat 时自动注册并允许聊天（飞书等外部来源场景）"""
+        """未认证用户访问 /chat — 用户不存在时返回 401（不再自动注册，防止滥用）"""
         resp = client.post("/chat", json={"alpha_id": "Alpha-Nobody", "message": "hi"})
-        # 当前设计：允许匿名访问，自动注册新用户
-        assert resp.status_code == 200
+        # 当前设计：用户不存在时返回 401，要求先注册
+        assert resp.status_code == 401
         data = resp.json()
-        assert "reply" in data
+        assert "error" in data
 
     def test_chat_basic(self, client):
         """Without API key returns unconfigured prompt"""

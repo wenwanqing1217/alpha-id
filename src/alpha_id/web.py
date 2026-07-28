@@ -275,6 +275,26 @@ async def login(req: LoginRequest):
     }
 
 
+# ── 速率限制器（简单内存实现，生产环境应使用 Redis） ──
+_chat_rate_limit: Dict[str, List[float]] = {}  # alpha_id -> [timestamp, ...]
+_CHAT_RATE_MAX = 30  # 每分钟最大请求数
+_CHAT_RATE_WINDOW = 60.0  # 窗口大小（秒）
+
+
+def _check_rate_limit(alpha_id: str) -> bool:
+    """检查是否超过速率限制，返回 True 表示允许"""
+    import time
+    now = time.time()
+    timestamps = _chat_rate_limit.get(alpha_id, [])
+    # 清理过期记录
+    timestamps = [t for t in timestamps if now - t < _CHAT_RATE_WINDOW]
+    _chat_rate_limit[alpha_id] = timestamps
+    if len(timestamps) >= _CHAT_RATE_MAX:
+        return False
+    timestamps.append(now)
+    return True
+
+
 @app.post("/chat")
 async def chat(req: ChatRequest):
     if not req.alpha_id.strip():
@@ -290,11 +310,19 @@ async def chat(req: ChatRequest):
 
     container = _get_container()
 
-    # 验证用户存在
-    # 自动注册不存在的用户（飞书等外部来源首次对话时自动创建）
+    # 验证用户存在 — 不再自动注册（防止滥用创建大量虚假用户）
     if not _user_exists(req.alpha_id):
-        container.identity.register_user(device_fingerprint=f"auto_{req.alpha_id}")
-        logger.info("已自动注册新用户: %s", req.alpha_id)
+        return JSONResponse(
+            status_code=401,
+            content={"error": "用户不存在，请先注册"},
+        )
+
+    # 速率限制检查
+    if not _check_rate_limit(req.alpha_id):
+        return JSONResponse(
+            status_code=429,
+            content={"error": "请求过于频繁，请稍后再试"},
+        )
 
     # 获取大脑并唤醒
     brain = _get_or_create_brain(req.alpha_id)
@@ -326,7 +354,7 @@ async def chat(req: ChatRequest):
 @app.post("/memory/store")
 async def memory_store(req: Request):
     """Store a memory directly (bypass AgentLoop/LLM, zero token cost).
-    
+
     Expected JSON body:
     {
         "alpha_id": "Alpha-001",
@@ -337,6 +365,8 @@ async def memory_store(req: Request):
         "tags": ["doubao", "chat"],
         "metadata": {}  // optional, stored as tags
     }
+
+    安全：需要 X-Alpha-ID 头认证，且只能为自己的 alpha_id 存储记忆。
     """
     import json as _json
     body = None
@@ -350,10 +380,22 @@ async def memory_store(req: Request):
     if not alpha_id or not content:
         return JSONResponse(status_code=400, content={"error": "alpha_id and content required"})
 
+    # 认证：从 header 获取调用者身份，必须与 body 中的 alpha_id 一致
+    caller_alpha_id = req.headers.get("X-Alpha-ID", "")
+    if not caller_alpha_id or caller_alpha_id != alpha_id:
+        return JSONResponse(
+            status_code=403,
+            content={"error": "未授权：X-Alpha-ID 头必须与 body 中的 alpha_id 一致"},
+        )
+
     container = _get_container()
+
+    # 用户必须已存在，不再自动注册
     if not _user_exists(alpha_id):
-        container.identity.register_user(device_fingerprint=f"auto_{alpha_id}")
-        logger.info("Auto-registered user for memory store: %s", alpha_id)
+        return JSONResponse(
+            status_code=401,
+            content={"error": "用户不存在，请先注册"},
+        )
 
     memory = container.memory
     result = memory.save(

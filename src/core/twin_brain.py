@@ -235,16 +235,14 @@ class TwinBrain:
 
     # ── 核心方法 ──
 
-    def receive(self, message: "Message") -> "Response":  # noqa: F821
+    def _check_state_for_message(self, message: "Message") -> "Optional[Response]":  # noqa: F821
         """
-        接收并处理外部消息。
+        消息接收前的状态检查。
 
-        对外部应用的统一入口。消息类型决定了路由：
-        - chat / friend_request → 社交模块
-        - profile_query → 身份模块
-        - ping → 心跳回复
+        Returns:
+            None 表示状态正常，可以继续处理；Response 表示被拒绝，直接返回。
         """
-        from core.message import MessageType, Response
+        from core.message import Response
 
         logger.info("%s 收到消息 type=%s sender=%s", self.alpha_id, message.msg_type, message.sender)
 
@@ -257,6 +255,24 @@ class TwinBrain:
         if self.state == BrainState.ERROR:
             logger.warning("%s 消息被拒: 大脑异常状态", self.alpha_id)
             return Response.fail("该 Alpha-ID 当前异常，请稍后再试", error_code="ERROR")
+
+        return None
+
+    def receive(self, message: "Message") -> "Response":  # noqa: F821
+        """
+        接收并处理外部消息。
+
+        对外部应用的统一入口。消息类型决定了路由：
+        - chat / friend_request → 社交模块
+        - profile_query → 身份模块
+        - ping → 心跳回复
+        """
+        from core.message import MessageType, Response
+
+        # 状态检查
+        state_response = self._check_state_for_message(message)
+        if state_response is not None:
+            return state_response
 
         self._message_count += 1
         self.last_active_time = time.time()
@@ -299,25 +315,16 @@ class TwinBrain:
         """
         from core.message import MessageType, Response
 
-        logger.info("%s [async] 收到消息 type=%s sender=%s", self.alpha_id, message.msg_type, message.sender)
-
-        if self.state == BrainState.SLEEP:
-            if self.settings.auto_reply:
-                return Response.ok(data={"auto_reply": True}, message=self.settings.auto_reply_text)
-            logger.warning("%s [async] 消息被拒: 大脑休眠中", self.alpha_id)
-            return Response.fail("该 Alpha-ID 当前不在线", error_code="SLEEPING")
-
-        if self.state == BrainState.ERROR:
-            logger.warning("%s [async] 消息被拒: 大脑异常状态", self.alpha_id)
-            return Response.fail("该 Alpha-ID 当前异常，请稍后再试", error_code="ERROR")
+        # 状态检查（复用同步版本的逻辑）
+        state_response = self._check_state_for_message(message)
+        if state_response is not None:
+            return state_response
 
         self._message_count += 1
         self.last_active_time = time.time()
 
-        msg_type = message.msg_type
-
         # 只有聊天消息走异步 LLM 路径
-        if msg_type == MessageType.CHAT:
+        if message.msg_type == MessageType.CHAT:
             return await self._ahandle_chat(message)
 
         # 其他消息类型回退到同步实现
