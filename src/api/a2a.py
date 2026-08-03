@@ -89,6 +89,35 @@ class A2AAuditQuery(BaseModel):
     offset: int = Field(0, ge=0, description="偏移量")
 
 
+class A2ACapability(BaseModel):
+    """Agent 能力声明（Google A2A 兼容）"""
+    streaming: bool = False
+    push_notifications: bool = False
+    state_transition_history: bool = False
+
+
+class A2AAuthentication(BaseModel):
+    """Agent 认证配置（Google A2A 兼容）"""
+    schemes: List[str] = Field(default_factory=lambda: ["bearer"])
+    credentials: Optional[str] = None
+
+
+class A2AAgentCard(BaseModel):
+    """Agent Card（Google A2A 规范：/.well-known/agent.json）
+
+    参考: https://a2a-protocol.org/specification/
+    """
+    name: str = Field(..., description="Agent 名称")
+    description: str = Field("", description="Agent 描述")
+    url: str = Field(..., description="Agent 端点 URL")
+    version: str = Field("1.0.0", description="版本号")
+    capabilities: A2ACapability = Field(default_factory=A2ACapability)
+    authentication: A2AAuthentication = Field(default_factory=A2AAuthentication)
+    skills: List[Dict[str, Any]] = Field(default_factory=list, description="可用技能列表")
+    default_input_modes: List[str] = Field(default_factory=lambda: ["text"])
+    default_output_modes: List[str] = Field(default_factory=lambda: ["text"])
+
+
 # ── 全局状态（服务级单例，与 main.py lifespan 生命周期一致）──
 
 
@@ -454,6 +483,49 @@ async def a2a_list_audit(request: Request, query: A2AAuditQuery = ...):
         records = [r for r in records if r.get("skill") == query.skill]
 
     return {"records": records, "total": total}
+
+
+@router.get("/.well-known/agent.json", response_class=JSONResponse)
+async def a2a_agent_card(request: Request):
+    """A2A Agent Card（Google A2A 规范：/.well-known/agent.json）
+
+    返回当前 Agent 的能力声明，供其他 Agent 发现和调用。
+    参考: https://a2a-protocol.org/specification/
+    """
+    state = _get_a2a_state(request)
+    skills = _get_skills(state)
+    registry = _get_registry(state)
+
+    # 构建技能列表（与 Google A2A Agent Card 格式对齐）
+    skill_cards = []
+    for skill_info in skills.list_skills():
+        skill_cards.append({
+            "id": skill_info["name"],
+            "name": skill_info["name"],
+            "description": skill_info.get("description", ""),
+            "tags": [],
+        })
+
+    # 构建 Agent Card
+    card = A2AAgentCard(
+        name=state.get("alpha_id", "Alpha-ID Agent"),
+        description="Alpha-ID A2A Agent — 身份治理 + 双链记忆 + 可验证执行",
+        url=str(request.base_url).rstrip("/"),
+        version="0.3.0",
+        capabilities=A2ACapability(
+            streaming=False,  # Phase 2 将支持 SSE streaming
+            push_notifications=False,
+            state_transition_history=True,  # PoE 提供执行历史
+        ),
+        authentication=A2AAuthentication(
+            schemes=["bearer", "ed25519"],
+        ),
+        skills=skill_cards,
+        default_input_modes=["text", "application/json"],
+        default_output_modes=["text", "application/json"],
+    )
+
+    return JSONResponse(content=card.model_dump(mode="json"))
 
 
 @router.get("/health")

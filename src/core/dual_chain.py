@@ -119,13 +119,16 @@ class DualChainManager:
             from core.storage_sqlite import SqliteStorage
             self._private_storage = SqliteStorage(db_path)
             self._knowledge_storage = SqliteStorage(db_path)
-            self._chain_key_private = _sanitize_alpha_id(f"private_{alpha_id}")
-            self._chain_key_knowledge = _sanitize_alpha_id(f"knowledge_{alpha_id}")
         else:
             self._private_storage = storage
             self._knowledge_storage = storage
-            self._chain_key_private = _sanitize_alpha_id(f"private_{alpha_id}")
-            self._chain_key_knowledge = _sanitize_alpha_id(f"knowledge_{alpha_id}")
+
+        # 记录级存储的 collection 名称（避免与旧文档级 key 冲突）
+        self._collection_private = _sanitize_alpha_id(f"private_{alpha_id}")
+        self._collection_knowledge = _sanitize_alpha_id(f"knowledge_{alpha_id}")
+        # 链元数据（document-level，小而少变）
+        self._meta_key_private = _sanitize_alpha_id(f"private_{alpha_id}_meta")
+        self._meta_key_knowledge = _sanitize_alpha_id(f"knowledge_{alpha_id}_meta")
 
         self._init_stores()
 
@@ -145,14 +148,27 @@ class DualChainManager:
             return salt
 
     def _init_stores(self):
-        """初始化两条链的存储"""
-        for store, key in [
-            (self._private_storage, self._chain_key_private),
-            (self._knowledge_storage, self._chain_key_knowledge),
+        """初始化两条链的存储（记录级 collection + 兼容旧文档级数据迁移）"""
+        for chain, storage, collection, meta_key in [
+            ("private", self._private_storage, self._collection_private, self._meta_key_private),
+            ("knowledge", self._knowledge_storage, self._collection_knowledge, self._meta_key_knowledge),
         ]:
-            data = store.load(key)
-            if data is None:
-                store.save(key, {"memories": {}, "chain_meta": {"created_at": datetime.now().isoformat()}})
+            # 确保 chain metadata 存在
+            meta = storage.load(meta_key)
+            if meta is None:
+                # 检查旧文档级数据是否存在（向后兼容迁移）
+                old_key = _sanitize_alpha_id(f"{chain}_{self.alpha_id}")
+                old_data = storage.load(old_key)
+                if old_data and old_data.get("memories"):
+                    # 迁移：将旧文档拆分为记录级存储
+                    memories = old_data.get("memories", {})
+                    for mem_id, mem_record in memories.items():
+                        storage.put(collection, mem_id, mem_record)
+                    logger.info("已迁移 %d 条记忆从旧文档格式到记录级存储 (%s chain)", len(memories), chain)
+                    # 可选：删除旧文档以节省空间
+                    # storage.save(old_key, None)  # 某些后端不支持，保留旧数据
+                meta = {"created_at": datetime.now().isoformat(), "migrated_from_doc": bool(old_data)}
+                storage.save(meta_key, meta)
 
     # ── 核心写入 ──
 
@@ -188,13 +204,13 @@ class DualChainManager:
 
     def _get_storage(self, chain: str):
         storage = self._private_storage if chain == "private" else self._knowledge_storage
-        key = self._chain_key_private if chain == "private" else self._chain_key_knowledge
-        return storage, key
+        collection = self._collection_private if chain == "private" else self._collection_knowledge
+        return storage, collection
 
     def _save_to_chain(self, chain: str, memory_id: str, record: Dict) -> Dict[str, Any]:
-        """写入指定链"""
-        storage, key = self._get_storage(chain)
-        data = storage.load(key) or {"memories": {}, "chain_meta": {}}
+        """写入指定链（记录级存储，O(1) 不加载全文档）"""
+        storage, collection = self._get_storage(chain)
+        meta_key = self._meta_key_private if chain == "private" else self._meta_key_knowledge
 
         if chain == "private":
             # 加密内容
@@ -203,8 +219,15 @@ class DualChainManager:
             record["nonce"] = encrypted["nonce"]
             record["encrypted"] = True
 
-        data["memories"][memory_id] = record
-        storage.save(key, data)
+        # 记录级写入：只写这一条，不加载全文档
+        storage.put(collection, memory_id, record)
+
+        # 更新链元数据（小型 document，可接受全量读写）
+        meta = storage.load(meta_key) or {}
+        meta.setdefault("record_count", 0)
+        meta["record_count"] += 1
+        meta["last_updated"] = datetime.now().isoformat()
+        storage.save(meta_key, meta)
 
         return {
             "success": True,
@@ -217,13 +240,12 @@ class DualChainManager:
     # ── 核心读取 ──
 
     def get(self, memory_id: str, chain: Optional[str] = None) -> Optional[Dict[str, Any]]:
-        """获取单条记忆（自动搜索两条链）"""
+        """获取单条记忆（自动搜索两条链，记录级 O(1) 查询）"""
         for c in (["private", "knowledge"] if chain is None else [chain]):
-            storage, key = self._get_storage(c)
-            data = storage.load(key) or {}
-            memories = data.get("memories", {})
-            if memory_id in memories:
-                record = dict(memories[memory_id])
+            storage, collection = self._get_storage(c)
+            record = storage.get(collection, memory_id)
+            if record is not None:
+                record = dict(record)
                 record["_chain"] = c
                 if c == "private" and record.get("encrypted"):
                     try:
@@ -233,7 +255,6 @@ class DualChainManager:
                         )
                         record["content"] = decrypted
                     except Exception as exc:
-                        # 解密失败不静默吞异常，记录日志便于排查数据损坏或密钥变更
                         logger.warning("Private chain decryption failed for record %s: %s", record.get("id", "?"), exc)
                         record["content"] = "[解密失败]"
                 return record
@@ -248,7 +269,7 @@ class DualChainManager:
         limit: int = 20,
     ) -> List[Dict[str, Any]]:
         """
-        查询记忆。
+        查询记忆（记录级存储，O(记录数) 而非 O(全文档大小)）。
 
         Args:
             chain: "private" / "knowledge" / "all"
@@ -261,20 +282,23 @@ class DualChainManager:
         chains = ["private", "knowledge"] if chain == "all" else [chain]
 
         for c in chains:
-            storage, key = self._get_storage(c)
-            data = storage.load(key) or {}
-            memories = data.get("memories", {})
+            storage, collection = self._get_storage(c)
 
-            for mid, mem in memories.items():
+            # 记录级列表：只加载符合条件的记录，不加载全文档
+            filters = {}
+            if category:
+                filters["category"] = category
+            if max_sensitivity < 100:
+                # sensitivity 过滤在客户端做（存储层不支持范围查询）
+                pass
+            memories = storage.list(collection, filters=filters if filters else None)
+
+            for mem in memories:
                 # 敏感度过滤
                 if mem.get("sensitivity", 0) > max_sensitivity:
                     continue
-                # 分类过滤
-                if category and mem.get("category") != category:
-                    continue
 
                 record = dict(mem)
-                record["memory_id"] = mid
                 record["_chain"] = c
 
                 # 解密私有链内容用于搜索
@@ -286,10 +310,9 @@ class DualChainManager:
                         )
                         record["content"] = decrypted
                     except Exception as exc:
-                        # 解密失败不静默吞异常，记录日志便于排查
                         logger.warning("Private chain decryption failed during query: %s", exc)
                         record["content"] = "[解密失败]"
-                        continue  # 解密失败则跳过
+                        continue
 
                 # 关键词搜索
                 if keyword:
@@ -316,7 +339,7 @@ class DualChainManager:
 
     def migrate(self, memory_id: str, target_chain: str) -> Dict[str, Any]:
         """
-        将记忆迁移到另一条链。
+        将记忆迁移到另一条链（记录级操作）。
 
         - 迁到私有链：加密内容
         - 迁到知识链：解密内容
@@ -325,12 +348,11 @@ class DualChainManager:
         source_chain = None
         record = None
         for c in ["private", "knowledge"]:
-            storage, key = self._get_storage(c)
-            data = storage.load(key) or {}
-            memories = data.get("memories", {})
-            if memory_id in memories:
+            storage, collection = self._get_storage(c)
+            rec = storage.get(collection, memory_id)
+            if rec is not None:
                 source_chain = c
-                record = dict(memories[memory_id])
+                record = dict(rec)
                 break
 
         if record is None:
@@ -359,15 +381,11 @@ class DualChainManager:
         else:
             record["sensitivity"] = min(record.get("sensitivity", PRIVACY_THRESHOLD), PRIVACY_THRESHOLD - 1)
 
-        # 从源链删除
-        src_storage, src_key = self._get_storage(source_chain)
-        src_data = src_storage.load(src_key) or {}
-        src_memories = src_data.get("memories", {})
-        if memory_id in src_memories:
-            del src_memories[memory_id]
-            src_storage.save(src_key, {**src_data, "memories": src_memories})
+        # 从源链删除（记录级）
+        src_storage, src_collection = self._get_storage(source_chain)
+        src_storage.delete(src_collection, memory_id)
 
-        # 写入目标链
+        # 写入目标链（记录级）
         result = self._save_to_chain(target_chain, memory_id, record)
         result["migrated_from"] = source_chain
         return result
@@ -375,19 +393,31 @@ class DualChainManager:
     # ── 统计 ──
 
     def stats(self) -> ChainStats:
-        """获取双链统计"""
-        priv_storage, priv_key = self._get_storage("private")
-        know_storage, know_key = self._get_storage("knowledge")
-        priv_data = priv_storage.load(priv_key) or {}
-        know_data = know_storage.load(know_key) or {}
-        priv_memories = priv_data.get("memories", {})
-        know_memories = know_data.get("memories", {})
+        """获取双链统计（记录级计数，不加载全文档）"""
+        priv_storage, priv_collection = self._get_storage("private")
+        know_storage, know_collection = self._get_storage("knowledge")
 
-        private_count = len(priv_memories)
-        knowledge_count = len(know_memories)
+        # 优先从元数据读取计数（O(1)）
+        priv_meta = priv_storage.load(self._meta_key_private) or {}
+        know_meta = know_storage.load(self._meta_key_knowledge) or {}
+
+        private_count = priv_meta.get("record_count")
+        knowledge_count = know_meta.get("record_count")
+
+        # 如果元数据不可用，回退到 list 计数（仍然不加载全文档）
+        if private_count is None:
+            private_count = priv_storage.count(priv_collection)
+        if knowledge_count is None:
+            knowledge_count = know_storage.count(know_collection)
+
         total = private_count + knowledge_count
 
-        encrypted = sum(1 for m in priv_memories.values() if m.get("encrypted", False))
+        # 加密比例：只统计私有链（需要逐条检查 encrypted 标记）
+        # 对于大量记录，使用 list + filter 而非全文档加载
+        encrypted = 0
+        if private_count > 0:
+            priv_records = priv_storage.list(priv_collection, filters={"encrypted": True})
+            encrypted = len(priv_records)
         ratio = encrypted / private_count if private_count > 0 else 1.0
 
         return ChainStats(
@@ -400,38 +430,51 @@ class DualChainManager:
     # ── 删除 ──
 
     def delete(self, memory_id: str) -> Dict[str, Any]:
-        """从任一链删除记忆"""
+        """从任一链删除记忆（记录级 O(1)）"""
         for c in ["private", "knowledge"]:
-            storage, key = self._get_storage(c)
-            data = storage.load(key) or {}
-            memories = data.get("memories", {})
-            if memory_id in memories:
-                del memories[memory_id]
-                storage.save(key, {**data, "memories": memories})
+            storage, collection = self._get_storage(c)
+            existing = storage.get(collection, memory_id)
+            if existing is not None:
+                storage.delete(collection, memory_id)
+                # 更新链元数据
+                meta_key = self._meta_key_private if c == "private" else self._meta_key_knowledge
+                meta = storage.load(meta_key) or {}
+                meta.setdefault("record_count", 1)
+                meta["record_count"] = max(0, meta["record_count"] - 1)
+                meta["last_updated"] = datetime.now().isoformat()
+                storage.save(meta_key, meta)
                 return {"success": True, "message": f"已从{'私有' if c == 'private' else '知识'}链删除"}
         return {"success": False, "message": "记忆不存在"}
 
     def clear_chain(self, chain: str) -> Dict[str, Any]:
-        """清空指定链"""
-        storage, key = self._get_storage(chain)
-        data = storage.load(key) or {}
-        data["memories"] = {}
-        storage.save(key, data)
+        """清空指定链（记录级批量删除）"""
+        storage, collection = self._get_storage(chain)
+        meta_key = self._meta_key_private if chain == "private" else self._meta_key_knowledge
+
+        # 列出所有记录并逐条删除（兼容所有 StorageBackend 实现）
+        all_records = storage.list(collection)
+        for rec in all_records:
+            mem_id = rec.get("memory_id")
+            if mem_id:
+                storage.delete(collection, mem_id)
+
+        # 重置元数据
+        meta = {"created_at": datetime.now().isoformat(), "record_count": 0}
+        storage.save(meta_key, meta)
+
         return {"success": True, "message": f"{'私有' if chain == 'private' else '知识'}链已清空"}
 
     # ── 批量操作 ──
 
     def list_chain(self, chain: str, limit: int = 50) -> List[Dict[str, Any]]:
-        """列出指定链的所有记忆（不解密私有链摘要）"""
-        storage, key = self._get_storage(chain)
-        data = storage.load(key) or {}
-        memories = data.get("memories", {})
+        """列出指定链的记忆摘要（不解密私有链内容）"""
+        storage, collection = self._get_storage(chain)
+        records = storage.list(collection)
         results = []
-        for mid, mem in list(memories.items())[:limit]:
-            record = dict(mem)
-            record["memory_id"] = mid
+        for rec in records[:limit]:
+            record = dict(rec)
             record["_chain"] = chain
-            if chain == "private" and mem.get("encrypted"):
+            if chain == "private" and rec.get("encrypted"):
                 record["content"] = "[已加密]"
             results.append(record)
         results.sort(key=lambda x: x.get("timestamp", 0), reverse=True)
