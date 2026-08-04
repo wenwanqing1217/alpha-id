@@ -222,14 +222,6 @@ def _patch_aid_daemon_compat() -> None:
     # （Windows fatal exception，无法被 except 捕获）。
     tk.Tk.return_value.winfo_id.return_value = 1
 
-    try:
-        from entrypoints.daemon import AidNuro
-
-        AidNuro._show_mouse_position = lambda self: self._show_result("鼠标位置功能已触发（测试模式）")
-        AidNuro._show_identity = lambda self: self._show_result("AID identity ready; local DID is hidden")
-    except (ImportError, AttributeError):
-        pass
-
     def _parse_and_click(self, text: str) -> None:
         match = re.search(r"(?:点击|Click)[\s:：]*([0-9]+)[\s,，/]+([0-9]+)", text, flags=re.IGNORECASE)
         if not match:
@@ -265,9 +257,16 @@ def _patch_aid_daemon_compat() -> None:
         else:
             self._show_result("不懂指令，请说：看屏幕 / 窗口列表 / 鼠标位置 / 点击 x y / 输入 文字")
 
-    AidNuro._parse_and_click = _parse_and_click
-    AidNuro._parse_and_type = _parse_and_type
-    AidNuro._process_command = _process_command
+    try:
+        from entrypoints.daemon import AidNuro
+
+        AidNuro._show_mouse_position = lambda self: self._show_result("鼠标位置功能已触发（测试模式）")
+        AidNuro._show_identity = lambda self: self._show_result("AID identity ready; local DID is hidden")
+        AidNuro._parse_and_click = _parse_and_click
+        AidNuro._parse_and_type = _parse_and_type
+        AidNuro._process_command = _process_command
+    except (ImportError, AttributeError):
+        pass
 
 
 _patch_aid_daemon_compat()
