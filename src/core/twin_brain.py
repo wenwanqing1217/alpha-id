@@ -157,9 +157,11 @@ class TwinBrain:
         """行动引擎（惰性加载）"""
         if self._actions is None:
             from core.action_engine import ActionEngine, ConsoleAdapter
+            from core.action_engine.adapters.wechat import WeChatAdapter
 
             self._actions = ActionEngine(alpha_id=self.alpha_id)
             self._actions.register_adapter(ConsoleAdapter())
+            self._actions.register_adapter(WeChatAdapter())
         return self._actions
 
     @property

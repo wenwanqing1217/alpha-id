@@ -259,15 +259,24 @@ class EventBus:
             logger.info("EventBus 无注册处理器，消费循环等待中...")
             # 即使没有初始处理器，也保持循环运行（后续注册的处理器也能收到）
             stream_keys = [f"{STREAM_PREFIX}:{et}" for et in EventType.__dict__.values() if isinstance(et, str)]
+            for stream_key in stream_keys:
+                try:
+                    redis_client.xgroup_create(stream_key, self._consumer_group, id="0", mkstream=True)
+                except redis.exceptions.ResponseError as e:
+                    if "BUSYGROUP" not in str(e):
+                        logger.debug("EventBus 自动创建 consumer group [%s]: %s", stream_key, e)
 
         logger.info("EventBus 消费循环启动: %d 个 stream", len(stream_keys))
+
+        # Build streams dict: {stream_key: ">"} — ">" means only new messages
+        streams_dict = {sk: ">" for sk in stream_keys}
 
         while self._consuming:
             try:
                 result = redis_client.xreadgroup(
                     groupname=self._consumer_group,
                     consumername=self._consumer_name,
-                    streams=stream_keys,
+                    streams=streams_dict,
                     count=_BATCH_SIZE,
                     block=_BLOCK_TIMEOUT_MS,
                 )

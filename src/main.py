@@ -115,6 +115,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     # 保存主 event loop 引用，供跨线程异步调度使用（如飞书回调）
     app.state._main_event_loop = asyncio.get_event_loop()
 
+    # 启动：EventBus 跨服务事件消费（Redis Streams XREADGROUP）
+    # TERM: EventBus — Redis Streams 跨服务事件总线（替代旧 blinker 实现）
+    try:
+        from core.event_bus import get_event_bus
+        event_bus = get_event_bus()
+        event_bus.start_consuming()
+        app.state.event_bus = event_bus
+        logger.info("EventBus 消费已启动（Redis Streams XREADGROUP）")
+    except Exception as exc:
+        logger.warning("EventBus 启动失败（非阻塞，本地 emit/on 仍可用）: %s", exc)
+
     # 启动：A2A 协议（路由集成，非独立线程）
     if settings.a2a_enabled:
         try:
@@ -397,6 +408,12 @@ app.add_middleware(
         "/api/v1/identity/refresh",
         "/api/v1/identity/register",
         "/api/v1/identity/auth/",
+        # Gateway 代理接口（Gateway 已做 Tenant Auth + Rate Limit，跳过 CSRF 避免重复验证）
+        "/api/v1/social/",
+        "/api/v1/gdpr/",
+        "/api/v1/brain/",
+        "/api/v1/voice/",
+        "/api/v1/risk/",
     },
     enforce_custom_header=True,
 )
