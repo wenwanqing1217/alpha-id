@@ -47,6 +47,7 @@ from .api.observability import router as observability_router  # noqa: E402
 from .api.registration import router as registration_router  # noqa: E402
 from .api.risk import router as risk_router  # noqa: E402
 from .api.social import router as social_router  # noqa: E402
+from .api.voice import router as voice_router  # noqa: E402
 
 
 class SecurityHeadersMiddleware:
@@ -411,6 +412,7 @@ app.include_router(observability_router)
 app.include_router(agent_router)
 app.include_router(a2a_router)
 app.include_router(gdpr_router)
+app.include_router(voice_router)
 
 
 @app.post("/webhook/feishu")
