@@ -1,3 +1,9 @@
+# TERM: OrchestratorEngine — 统一后台循环管理（合并自 alpha_id/orchestrator.py + core/orchestrator.py）
+# TERM: TwinBrain — 智能体大脑（唯一实例，惰性初始化）
+# TERM: ChannelAdapter — 渠道适配器基类（飞书/Web/微信/Telegram）
+# TERM: EventBus — Redis Streams 跨服务事件总线（替代旧 blinker 实现）
+# TERM: LoopPhase — 后台循环阶段枚举（MEMORY/OPS/SOCIAL）
+
 """
 OrchestratorEngine — Ghost 平台统一调度引擎
 
