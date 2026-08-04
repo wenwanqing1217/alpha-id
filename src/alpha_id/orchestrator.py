@@ -29,8 +29,21 @@ Alpha-ID Master Orchestrator — 总调度器
   5. NURO 观察/聊天 → 本地小模型 + 云端大模型
   6. SelfEvolution 从纠正中学习 → 审视偏好 → 知识沉淀
 
+依赖注入（Phase 2 迁移）：
+    # 新用法：注入 container
+    container = Container.instance()
+    orch = MasterOrchestrator(config, container=container)
+
+    # 旧用法（兼容）：自动取单例
+    orch = MasterOrchestrator(config)
+
+异常处理（Phase 2）：
+    - 使用新的异常层次：TransientError / PermanentError
+    - 不再吞掉异常，至少记录日志
+    - 循环内异常不会终止循环，但会上报 EventBus
+
 用法：
-    orch = MasterOrchestrator(alpha_id="Alpha-001")
+    orch = MasterOrchestrator(config, container=container)
     orch.start()           # 启动所有后台循环
     orch.stop()            # 优雅停止
     orch.get_status()      # 获取全局状态
@@ -44,6 +57,8 @@ from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional
 
 from core.event_bus import EventBus, EventType, get_event_bus
+
+from .exceptions import TransientError, PermanentError, ResourceBusyError
 
 logger = logging.getLogger(__name__)
 
@@ -98,12 +113,13 @@ class MasterOrchestrator:
     4. 提供统一的状态查询和控制接口
     """
 
-    def __init__(self, config: Optional[OrchestratorConfig] = None):
+    def __init__(self, config: Optional[OrchestratorConfig] = None, container: Optional[Any] = None):
         self.config = config or OrchestratorConfig()
         self._alpha_id = self.config.alpha_id
 
         # 核心组件（延迟初始化）
-        self._container = None
+        # 依赖注入：优先使用传入的 container，否则回退到单例
+        self._container = container
         self._brain = None
         self._enricher = None
         self._event_bus: EventBus = get_event_bus()
@@ -134,7 +150,9 @@ class MasterOrchestrator:
     # ── 初始化 ──
 
     def _init_container(self):
-        """初始化依赖容器"""
+        """初始化依赖容器（仅在未注入时取单例）"""
+        if self._container is not None:
+            return  # 已通过 DI 注入
         from alpha_id.container import Container
         self._container = Container.instance()
 
@@ -282,8 +300,21 @@ class MasterOrchestrator:
                     sensitivity=5,
                     source="smart_capture",
                 )
-            except Exception:
-                pass
+            except TransientError as e:
+                logger.warning("观察存储暂时失败（可重试）: %s", e)
+                self._stats["errors"] += 1
+            except PermanentError as e:
+                logger.error("观察存储永久失败: %s", e)
+                self._stats["errors"] += 1
+            except Exception as e:
+                # 兜底：未知异常不吞掉，记录后上报 EventBus
+                logger.error("观察存储异常: %s", e, exc_info=True)
+                self._stats["errors"] += 1
+                self._event_bus.emit(EventType.SYSTEM_ERROR, {
+                    "source": "orchestrator._on_new_observation",
+                    "error": str(e),
+                    "observation_id": getattr(obs, "id", "unknown"),
+                }, source="orchestrator")
 
     def _on_obsidian_change(self, event):
         """Obsidian 笔记变更"""
@@ -329,8 +360,11 @@ class MasterOrchestrator:
                         sensitivity=3,
                         source="feishu",
                     )
-                except Exception:
-                    pass
+                except TransientError as e:
+                    logger.warning("飞书工作上下文存储暂时失败: %s", e)
+                except Exception as e:
+                    logger.error("飞书工作上下文存储异常: %s", e, exc_info=True)
+                    self._stats["errors"] += 1
 
     def _on_nuro_event(self, event):
         """NURO 事件"""
@@ -349,8 +383,11 @@ class MasterOrchestrator:
                         sensitivity=2,
                         source="nuro",
                     )
-                except Exception:
-                    pass
+                except TransientError as e:
+                    logger.warning("屏幕观察存储暂时失败: %s", e)
+                except Exception as e:
+                    logger.error("屏幕观察存储异常: %s", e, exc_info=True)
+                    self._stats["errors"] += 1
 
     def _on_memory_written(self, data):
         """记忆写入事件"""
@@ -399,8 +436,11 @@ class MasterOrchestrator:
                         ctx["languages"].append("typescript")
                     if "项目" in content:
                         ctx["current_projects"].append(content[:100])
-        except Exception:
-            pass
+        except TransientError as e:
+            logger.warning("用户上下文构建暂时失败: %s", e)
+        except Exception as e:
+            logger.error("用户上下文构建异常: %s", e, exc_info=True)
+            self._stats["errors"] += 1
 
         return ctx
 
@@ -492,6 +532,13 @@ class MasterOrchestrator:
 
             self._stop_event.wait(self.config.nuro_proactive_interval)
 
+    def _loop_feishu(self):
+        """飞书 WebSocket 长连接循环"""
+        if not self._feishu:
+            return
+        logger.info("飞书 WebSocket 长连接启动")
+        self._feishu.start_websocket(stop_event=self._stop_event)
+
     # ── 公共 API ──
 
     def start(self):
@@ -523,8 +570,9 @@ class MasterOrchestrator:
         if self.config.enable_self_evolution:
             self._init_evolution()
 
-        # 连接 EventBus
+        # 连接 EventBus（本地信号 + Redis Streams）
         self._wire_event_bus()
+        self._event_bus.start_consuming()
 
         # 唤醒大脑
         if self._brain:
@@ -541,6 +589,7 @@ class MasterOrchestrator:
             ("obsidian", self._loop_obsidian, self.config.enable_obsidian and self._obsidian is not None),
             ("evolution", self._loop_evolution, self.config.enable_self_evolution),
             ("nuro", self._loop_nuro, self.config.enable_nuro),
+            ("feishu", self._loop_feishu, self.config.enable_feishu and self._feishu is not None),
         ]
 
         for name, target, enabled in loop_configs:
