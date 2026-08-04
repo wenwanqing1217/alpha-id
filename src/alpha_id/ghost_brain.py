@@ -1,3 +1,4 @@
+# TERM: GhostBrain — 桌面精灵大脑（通过 Gateway 统一接口进行对话，支持本地 Ollama 推理）
 """
 NURO Ghost — Ghost Platform 桌面精灵大脑
 

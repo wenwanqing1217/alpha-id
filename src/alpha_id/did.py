@@ -1,3 +1,4 @@
+# TERM: Alpha-ID — 身份层 DID（did:aid 方法，纯 Python stdlib）
 """
 AID — Agent Identity Decentralized Identifier (DID)
 

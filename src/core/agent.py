@@ -1,3 +1,4 @@
+# TERM: AgentLoop — 智能体纯循环（LLM + Tools + Loop，ReAct 模式，不依赖任何框架）
 """
 Agent 纯循环 —— LLM + Tools + Loop，不依赖任何框架
 

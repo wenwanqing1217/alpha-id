@@ -1,3 +1,4 @@
+# TERM: GhostVoice — 语音模块（STT Whisper + TTS Coqui，shim 复用 fairy.fairy_voice）
 """
 NURO Ghost — Ghost Platform 语音模块（shim）
 

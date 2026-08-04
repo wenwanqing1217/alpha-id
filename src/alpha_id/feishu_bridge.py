@@ -1,3 +1,4 @@
+# TERM: FeishuBridge — 飞书渠道适配器（ChannelAdapter 实现，WebSocket + Webhook 双模式）
 """
 Alpha-ID Feishu Bridge — 飞书集成
 ===================================

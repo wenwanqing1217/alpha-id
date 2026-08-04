@@ -1,3 +1,4 @@
+# TERM: ChannelAdapter — 渠道适配器基类（飞书/Web/微信/Telegram，PlatformAdapter 实现）
 """
 平台适配器 —— 抽象所有外部平台的执行接口
 """

@@ -1,3 +1,4 @@
+# TERM: Agent — Alpha-ID SDK 一站式入口（TwinBrain + AgentLoop + ChannelAdapter 统一接口）
 """
 Alpha-ID Agent — SDK 一站式入口
 

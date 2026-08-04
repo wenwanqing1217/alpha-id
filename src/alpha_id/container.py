@@ -1,3 +1,4 @@
+# TERM: Container — 依赖注入容器（替代模块级全局单例，支持 SQLite/PostgreSQL 切换）
 """
 依赖容器 — 替代模块级全局单例
 

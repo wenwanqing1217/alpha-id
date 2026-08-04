@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# TERM: AgentGraph — A2A 网络拓扑（运行时计算，非持久化）
 """
 A2A Protocol - Agent-to-Agent Communication
 
