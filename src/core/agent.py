@@ -20,10 +20,11 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 from urllib.parse import urlparse
 
-from core.interfaces import AgentContainer
-from core.settings import settings
 from core.http_client import request
+from core.interfaces import AgentContainer
 from core.observability import record_llm_call
+from core.settings import settings
+from core.tracing import trace_span
 
 try:
     import httpx
@@ -42,7 +43,7 @@ LLM_MAX_TOKENS = 2048
 LLM_TIMEOUT_SECONDS = 60.0
 LLM_KEEPALIVE_CONNECTIONS = 5
 LLM_KEEPALIVE_EXPIRY_SECONDS = 30.0
-LLM_MAX_TURNS_DEFAULT = 3
+LLM_MAX_TURNS_DEFAULT = 6
 LLM_CONTEXT_HISTORY_LIMIT = 20
 LLM_MAX_SENSITIVITY_DEFAULT = 70
 LLM_MEMORY_QUERY_LIMIT = 5
@@ -335,6 +336,184 @@ def _make_tools(alpha_id: str, backends: Optional[AgentContainer] = None, signer
         except Exception as e:
             return f"[查询技能信息失败] {e}"
 
+    # ── 电脑操控工具（AtomCode 模式） ──
+
+    def run_command(command: str, timeout: int = 30) -> str:
+        """在系统终端执行一条命令，返回 stdout/stderr。timeout 单位秒"""
+        import subprocess
+        try:
+            result = subprocess.run(
+                command,
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                encoding="utf-8",
+                errors="replace",
+            )
+            output = result.stdout or ""
+            if result.stderr:
+                output += "\n[stderr] " + result.stderr
+            if result.returncode != 0:
+                output += f"\n[exit code: {result.returncode}]"
+            return output.strip() or "(无输出)"
+        except subprocess.TimeoutExpired:
+            return f"[超时] 命令执行超过 {timeout} 秒"
+        except Exception as e:
+            return f"[命令执行错误] {e}"
+
+    def read_file(path: str) -> str:
+        """读取文件内容（UTF-8），适合读取代码、文本、配置文件"""
+        from pathlib import Path
+        try:
+            p = Path(path)
+            if not p.exists():
+                return f"[文件不存在] {path}"
+            if p.stat().st_size > 1_000_000:
+                return f"[文件过大] {path} ({p.stat().st_size} 字节)，请用 read_file_partial"
+            return p.read_text(encoding="utf-8", errors="replace")
+        except Exception as e:
+            return f"[读取失败] {e}"
+
+    def read_file_partial(path: str, offset: int = 0, limit: int = 200) -> str:
+        """读取文件的指定行范围，适合大文件"""
+        from pathlib import Path
+        try:
+            p = Path(path)
+            if not p.exists():
+                return f"[文件不存在] {path}"
+            lines = p.read_text(encoding="utf-8", errors="replace").splitlines()
+            total = len(lines)
+            selected = lines[offset:offset + limit]
+            result = "\n".join(f"{i+1}: {line}" for i, line in enumerate(selected, start=offset))
+            return f"// 共 {total} 行，显示 {offset+1}-{offset+len(selected)} 行\n{result}"
+        except Exception as e:
+            return f"[读取失败] {e}"
+
+    def write_file(path: str, content: str) -> str:
+        """写入文件（UTF-8），自动创建父目录"""
+        from pathlib import Path
+        try:
+            p = Path(path)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(content, encoding="utf-8")
+            return f"已写入 {path} ({len(content)} 字符)"
+        except Exception as e:
+            return f"[写入失败] {e}"
+
+    def list_files(path: str = ".", pattern: str = "*") -> str:
+        """列出目录下的文件和子目录，支持 glob 模式"""
+        from pathlib import Path
+        try:
+            p = Path(path)
+            if not p.exists():
+                return f"[目录不存在] {path}"
+            if p.is_file():
+                return f"[是文件] {path}，请用 read_file 读取"
+            items = sorted(p.glob(pattern))
+            if not items:
+                return f"(空目录) {path}"
+            lines = []
+            for item in items:
+                marker = "📁" if item.is_dir() else "📄"
+                size = item.stat().st_size if item.is_file() else ""
+                lines.append(f"{marker} {item.name} {size}")
+            return "\n".join(lines)
+        except Exception as e:
+            return f"[列出失败] {e}"
+
+    def open_atomcode(project_path: str = "") -> str:
+        """用 VS Code / AtomCode 打开一个项目目录"""
+        import subprocess
+        target = project_path or r"D:\MW\alphaid\projects"
+        try:
+            # 尝试用 code (VS Code) 打开
+            subprocess.Popen(
+                ["code", target],
+                shell=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            return f"已用 VS Code 打开 {target}"
+        except FileNotFoundError:
+            pass
+        # 回退：用资源管理器打开
+        try:
+            subprocess.Popen(
+                ["explorer", target],
+                shell=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            return f"已用资源管理器打开 {target}"
+        except Exception as e:
+            return f"[打开失败] {target}: {e}"
+
+    def navigate_to(destination: str, mode: str = "driving") -> str:
+        """生成地图导航链接，用户可在手机上点击直接打开地图 App 导航。
+        
+        mode: driving(驾车), walking(步行), bicycling(骑行), transit(公交)
+        
+        返回格式化的导航链接文本，不要打开浏览器——服务器端打开无用。
+        """
+        import urllib.parse
+
+        # 百度地图导航链接（手机浏览器打开后会跳转 App）
+        baidu_url = (
+            "https://api.map.baidu.com/direction?"
+            f"destination={urllib.parse.quote(destination)}"
+            "&coord_type=gcj02"
+            f"&mode={mode}"
+            "&src=alphaid"
+        )
+
+        # 高德地图导航链接（覆盖更多机型）
+        amap_url = (
+            "https://uri.amap.com/navigation?"
+            f"to=0,0,{urllib.parse.quote(destination)}"
+            f"&mode={mode}"
+            "&src=alphaid"
+        )
+
+        mode_names = {"driving": "驾车", "walking": "步行", "bicycling": "骑行", "transit": "公交"}
+        mode_name = mode_names.get(mode, mode)
+
+        return (
+            f"📍 导航到「{destination}」（{mode_name}）\n\n"
+            f"百度地图：{baidu_url}\n"
+            f"高德地图：{amap_url}\n\n"
+            f"👉 点击任一链接即可在手机上开始导航"
+        )
+
+    def search_nearby(keyword: str, location: str = "") -> str:
+        """生成附近地点搜索链接，用户可在手机上点击打开地图查看。"""
+        import urllib.parse
+
+        query = f"{location}附近 {keyword}" if location else keyword
+
+        # 百度地图地点搜索
+        baidu_url = (
+            "https://api.map.baidu.com/place/search?"
+            f"query={urllib.parse.quote(keyword)}"
+            f"&region={urllib.parse.quote(location) if location else '全国'}"
+            "&output=html"
+            "&src=alphaid"
+        )
+
+        # 高德地图搜索
+        amap_url = (
+            "https://uri.amap.com/search?"
+            f"keyword={urllib.parse.quote(query)}"
+            "&src=alphaid"
+        )
+
+        return (
+            f"🔍 搜索「{query}」\n\n"
+            f"百度地图：{baidu_url}\n"
+            f"高德地图：{amap_url}\n\n"
+            f"👉 点击链接在手机上查看附近结果"
+        )
+
     return [
         Tool(
             name="get_profile",
@@ -498,6 +677,107 @@ def _make_tools(alpha_id: str, backends: Optional[AgentContainer] = None, signer
                 "required": ["name"],
             },
             fn=get_skill_info,
+        ),
+        Tool(
+            name="run_command",
+            description="在系统终端执行一条命令（如 dir、ls、pip install、python 脚本等），返回输出结果。timeout 默认 30 秒",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "command": {"type": "string", "description": "要执行的终端命令"},
+                    "timeout": {"type": "integer", "description": "超时时间（秒），默认 30"},
+                },
+                "required": ["command"],
+            },
+            fn=run_command,
+        ),
+        Tool(
+            name="read_file",
+            description="读取文件内容（UTF-8），适合代码、文本、配置文件。文件超过 1MB 时提示用 read_file_partial",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "文件绝对路径或相对路径"},
+                },
+                "required": ["path"],
+            },
+            fn=read_file,
+        ),
+        Tool(
+            name="read_file_partial",
+            description="读取大文件的指定行范围，适合日志、大代码文件",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "文件路径"},
+                    "offset": {"type": "integer", "description": "起始行号（0 开始），默认 0"},
+                    "limit": {"type": "integer", "description": "读取行数，默认 200"},
+                },
+                "required": ["path"],
+            },
+            fn=read_file_partial,
+        ),
+        Tool(
+            name="write_file",
+            description="写入/创建文件（UTF-8），自动创建父目录。可用来创建新文件、修改代码",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "文件路径"},
+                    "content": {"type": "string", "description": "文件内容"},
+                },
+                "required": ["path", "content"],
+            },
+            fn=write_file,
+        ),
+        Tool(
+            name="list_files",
+            description="列出目录下的文件和子目录，支持 glob 模式（如 *.py、src/**/*）",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "目录路径，默认当前目录"},
+                    "pattern": {"type": "string", "description": "glob 模式，默认 *（全部）"},
+                },
+            },
+            fn=list_files,
+        ),
+        Tool(
+            name="open_atomcode",
+            description="用 VS Code（或资源管理器）打开一个项目目录，方便在 AtomCode 中开发",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "project_path": {"type": "string", "description": "项目目录路径，默认 D:\\MW\\alphaid\\projects"},
+                },
+            },
+            fn=open_atomcode,
+        ),
+        Tool(
+            name="navigate_to",
+            description="打开地图导航到指定目的地。mode 可选: driving(驾车), walking(步行), bicycling(骑行), transit(公交)",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "destination": {"type": "string", "description": "目的地名称或地址，如'天安门'、'北京西站'"},
+                    "mode": {"type": "string", "description": "出行模式: driving/walking/bicycling/transit，默认 driving"},
+                },
+                "required": ["destination"],
+            },
+            fn=navigate_to,
+        ),
+        Tool(
+            name="search_nearby",
+            description="搜索附近的地点（餐厅、加油站、医院、超市等）",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "keyword": {"type": "string", "description": "搜索关键词，如'餐厅'、'加油站'、'医院'"},
+                    "location": {"type": "string", "description": "所在位置（可选），如'天安门'"},
+                },
+                "required": ["keyword"],
+            },
+            fn=search_nearby,
         ),
     ]
 
@@ -667,6 +947,61 @@ _SYSTEM_PROMPT = """你是 {alpha_id} 的智能总助（Executive Assistant）�
 - 重要事项主动提醒
 - 能基于记忆给出个性化建议
 
+## AtomCode 编程助手
+当对方提到以下关键词时，说明他想切换到 AtomCode 编程模式：
+- "切atomcode"、"切 atomcode"、"atomcode"、"写代码"、"写项目"、"开发"、"编程"、"代码"、"打开项目"
+
+**AtomCode 是什么：**
+- AtomCode 是一个 AI 编程助手（类似 Cursor/Windsurf），专门用于写代码、开发项目
+- 它支持多文件编辑、终端执行、项目级重构
+- 位于 `D:\\MW\\alphaid\\projects` 目录，与 `.atomcode` 配置配合使用
+
+**你有真正的电脑操控工具，可以直接执行操作：**
+- `open_atomcode(project_path)` — 用 VS Code 打开项目目录
+- `list_files(path, pattern)` — 列出目录内容
+- `read_file(path)` / `read_file_partial(path, offset, limit)` — 读取文件
+- `write_file(path, content)` — 写入/创建文件
+- `run_command(command, timeout)` — 执行终端命令（pip install、python、git 等）
+
+**如何回应：**
+- 当对方说"切atomcode"时，回复确认已切换，并询问要做什么项目
+- 当对方说"打开项目"时，用 `open_atomcode` 打开对应目录，并用 `list_files` 展示项目结构
+- 当对方说"写代码"、"开发"等，主动询问是否要切换到 AtomCode 模式
+- **不要只回复文字，要真正调用工具执行操作！** 比如：
+  - "帮我打开 nebula 项目" → 调用 `open_atomcode("D:\\MW\\nebula")` + `list_files`
+  - "新建一个 hello.py" → 调用 `write_file("D:\\MW\\alphaid\\projects\\hello.py", "print('hello')")`
+  - "运行这个脚本" → 调用 `run_command("python D:\\MW\\alphaid\\projects\\hello.py")`
+  - "看看项目结构" → 调用 `list_files("D:\\MW\\nebula", "*")`
+
+## 地图导航
+当对方提到以下关键词时，说明他想导航或搜索地点：
+- "我要去"、"我去"、"导航到"、"带我去"、"怎么去"、"怎么走"
+- "附近"、"找附近"、"最近的"、"搜索附近"
+- "路线"、"出行"、"开车"、"地铁"
+
+**导航工具：**
+- `navigate_to(destination, mode)` — 生成百度地图/高德地图导航链接，用户可在手机上点击直接开始导航
+- `search_nearby(keyword, location)` — 生成附近地点搜索链接，用户可在手机上查看结果
+
+**重要：工具返回的是链接文本，会自动通过飞书发到对方手机上。不要打开浏览器！**
+
+**如何回应：**
+- 当对方说"我要去天安门"时，调用 `navigate_to("天安门")`，把返回的链接发给对方
+- 当对方说"附近有什么餐厅"时，调用 `search_nearby("餐厅")`，把链接发给对方
+- 当对方说"从公司到机场怎么走"时，调用 `navigate_to("机场")`
+- **不要只回复文字，要真正调用工具获取链接！** 对方在手机上点开链接就能开始导航
+
+## 模式切换
+**切回正常模式：**
+当对方说"切回来"、"切回正常"、"退出atomcode"、"不写了"、"完事了"、"退出编程"时，立即确认已切回正常聊天模式，恢复日常对话能力。
+- 不需要调用工具，直接回复确认即可
+- 回复示例："已切回正常模式，有什么需要帮忙的？"
+
+**模式说明：**
+- 正常模式：日常对话、导航、搜索、闲聊，什么都能聊
+- AtomCode 模式：专注编程，调用 run_command/write_file/read_file 等工具写代码
+- 两个模式随时可以切换，不需要重启任何东西
+
 ## 记忆分级指南
 - sensitivity=0-20：日常闲聊，不重要
 - sensitivity=21-50：个人偏好、习惯、兴趣（重要）
@@ -764,30 +1099,34 @@ class AgentLoop:
         使用 _call_llm() 统一调用 LLM，避免重复的 HTTP 请求代码。
         _call_llm 返回 {"content": str, "tool_calls": [...], "raw_message": dict}
         """
-        logger.info("用户输入: %s", user_input)
-        messages = self._build_messages(user_input)
+        with trace_span("agent_loop.run", agent_id=self.alpha_id, mode="sync") as span:
+            logger.info("用户输入: %s", user_input)
+            span.events.append({"type": "user_input", "content": user_input[:100]})
+            messages = self._build_messages(user_input)
 
-        if not settings.llm_api_key:
-            return "[LLM 未配置：请设置 OPENAI_API_KEY 环境变量]"
+            if not settings.llm_api_key:
+                return "[LLM 未配置：请设置 OPENAI_API_KEY 环境变量]"
 
-        tools_schema = [t.to_schema() for t in self.tools] if self.tools else []
+            tools_schema = [t.to_schema() for t in self.tools] if self.tools else []
 
-        for turn in range(self.max_turns):
-            logger.info("第 %d 轮 LLM 调用", turn + 1)
+            for turn in range(self.max_turns):
+                logger.info("第 %d 轮 LLM 调用", turn + 1)
 
-            # 使用 _call_llm 统一调用
-            llm_result = _call_llm(messages, tools_schema, self.model)
-            llm_response = llm_result["content"]
+                # 使用 _call_llm 统一调用
+                llm_result = _call_llm(messages, tools_schema, self.model)
+                llm_response = llm_result["content"]
 
-            # _call_llm 返回错误消息时直接返回
-            if llm_response.startswith("[LLM") or llm_response.startswith("["):
-                return llm_response
+                # _call_llm 返回错误消息时直接返回
+                if llm_response.startswith("[LLM") or llm_response.startswith("["):
+                    span.events.append({"type": "error", "message": llm_response})
+                    return llm_response
 
-            # 没有 tool_calls → 直接返回最终回答
-            if not llm_result["tool_calls"]:
-                self.history.append({"role": "user", "content": user_input})
-                self.history.append({"role": "assistant", "content": llm_response})
-                return llm_response
+                # 没有 tool_calls → 直接返回最终回答
+                if not llm_result["tool_calls"]:
+                    self.history.append({"role": "user", "content": user_input})
+                    self.history.append({"role": "assistant", "content": llm_response})
+                    span.events.append({"type": "final_response", "turn": str(turn + 1)})
+                    return llm_response
 
             # 有 tool_calls → 执行工具并构造正确的 assistant 消息格式
             tool_calls = llm_result["tool_calls"]
@@ -892,19 +1231,21 @@ class AgentLoop:
         工具执行仍为同步（大部分工具是 CPU 密集/IO 同步），
         如果工具是异步的，可改用 async_to_sync 包装。
         """
-        logger.info("[async] 用户输入: %s", user_input)
-        messages = self._build_messages(user_input)
+        with trace_span("agent_loop.arun", agent_id=self.alpha_id, mode="async") as span:
+            logger.info("[async] 用户输入: %s", user_input)
+            span.events.append({"type": "user_input", "content": user_input[:100]})
+            messages = self._build_messages(user_input)
 
-        if not settings.llm_api_key:
-            return "[LLM 未配置：请设置 OPENAI_API_KEY 环境变量]"
+            if not settings.llm_api_key:
+                return "[LLM 未配置：请设置 OPENAI_API_KEY 环境变量]"
 
-        tools_payload = (
-            [{"type": "function", "function": t.to_schema()} for t in self.tools]
-            if self.tools else None
-        )
+            tools_payload = (
+                [{"type": "function", "function": t.to_schema()} for t in self.tools]
+                if self.tools else None
+            )
 
-        from core.llm_async import get_llm_client
-        llm_client = await get_llm_client()
+            from core.llm_async import get_llm_client
+            llm_client = await get_llm_client()
 
         for turn in range(self.max_turns):
             logger.info("[async] 第 %d 轮 LLM 调用", turn + 1)

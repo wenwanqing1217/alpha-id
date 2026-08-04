@@ -26,14 +26,13 @@ Alpha-ID Feishu Bridge — 飞书集成
   飞书也是编程入口——用户说"写个XXX"，系统应切换到代码模式。
 """
 
-import hashlib
 import json
 import logging
 import os
 import re
-import tempfile
+import threading
 import time
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
@@ -331,6 +330,7 @@ class FeishuBridge:
         self._token_expire = 0.0
         self._callbacks: List[Callable[[FeishuMessage], None]] = []
         self._stats = {"received": 0, "sent": 0, "extracted": 0, "code_runs": 0}
+        self._ws_client = None  # 飞书 SDK 长连接客户端
 
         # 代码模式
         self._runner = CodeRunner()
@@ -634,6 +634,115 @@ class FeishuBridge:
 
         self._stats["extracted"] += 1
         return context
+
+    # ── WebSocket 长连接（飞书官方 SDK） ──
+
+    def start_websocket(self, stop_event=None):
+        """
+        使用飞书官方 SDK (lark_oapi) 启动 WebSocket 长连接
+
+        飞书长连接协议：
+        1. SDK 内部通过 REST API 获取动态 WSS 地址
+        2. 使用 protobuf 帧格式通信
+        3. 自动处理鉴权、心跳、ACK、断线重连
+
+        Args:
+            stop_event: threading.Event 用于停止循环
+        """
+        try:
+            import lark_oapi as lark
+        except ImportError:
+            logger.error("lark_oapi 未安装，无法启动飞书长连接。请运行: pip install lark-oapi")
+            return
+
+        if not self._app_id or not self._app_secret:
+            logger.error("飞书凭证未配置，无法启动长连接")
+            return
+
+        def _on_message_receive(data):
+            """处理飞书消息事件 (P2ImMessageReceiveV1)"""
+            try:
+                event = data.event
+                message = event.message
+                sender = event.sender
+
+                msg = FeishuMessage(
+                    msg_id=message.message_id if message else "",
+                    sender=sender.sender_id.open_id if sender and sender.sender_id else "",
+                    chat_id=message.chat_id if message else "",
+                    content=self._extract_sdk_text(message),
+                    msg_type=message.message_type if message else "text",
+                )
+
+                self._stats["received"] += 1
+                logger.info("飞书消息收到: chat=%s sender=%s content=%s",
+                            msg.chat_id[:12] if msg.chat_id else "?",
+                            msg.sender[:12] if msg.sender else "?",
+                            msg.content[:50])
+
+                # 通知回调
+                for cb in self._callbacks:
+                    try:
+                        cb(msg)
+                    except Exception as e:
+                        logger.error("飞书回调执行异常: %s", e)
+
+            except Exception as e:
+                logger.error("飞书消息处理异常: %s", e)
+
+        # 构建事件处理器
+        event_handler = lark.EventDispatcherHandler.builder("", "") \
+            .register_p2_im_message_receive_v1(_on_message_receive) \
+            .build()
+
+        # 创建长连接客户端
+        cli = lark.ws.Client(
+            self._app_id,
+            self._app_secret,
+            event_handler=event_handler,
+            log_level=lark.LogLevel.INFO,
+        )
+
+        self._ws_client = cli
+        logger.info("飞书 WebSocket 长连接启动中（官方 SDK）...")
+
+        # cli.start() 是阻塞调用，SDK 内部自动处理重连
+        try:
+            cli.start()
+        except KeyboardInterrupt:
+            logger.info("飞书长连接收到中断信号，正在停止...")
+        except Exception as e:
+            logger.error("飞书长连接异常: %s", e)
+
+    def _extract_sdk_text(self, message) -> str:
+        """从 SDK 消息对象中提取文本"""
+        if not message:
+            return ""
+
+        msg_type = message.message_type or "text"
+        content_str = message.content or "{}"
+
+        try:
+            data = json.loads(content_str)
+        except Exception:
+            return content_str
+
+        if msg_type == "text":
+            return data.get("text", "")
+        elif msg_type == "post":
+            parts = []
+            content_list = data.get("content", [])
+            for block in content_list:
+                if isinstance(block, list):
+                    for seg in block:
+                        if isinstance(seg, dict):
+                            if seg.get("tag") == "text":
+                                parts.append(seg.get("text", ""))
+                            elif seg.get("tag") == "at":
+                                parts.append(f"@{seg.get('user_id', 'unknown')}")
+            return " ".join(parts)
+
+        return data.get("text", "")
 
     # ── 统计 ──
 

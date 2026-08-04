@@ -80,6 +80,7 @@ class MasterOrchestrator:
         self._brain = None
         self._enricher = None
         self._event_bus: EventBus = get_event_bus()
+        self._running = False
 
         # 统计
         self._stats = {

@@ -50,7 +50,7 @@ def get_storage(db_path: str = None) -> StorageBackend:
     backend = settings.storage_backend
     if backend == "json":
         if db_path is None:
-            db_path = str(settings.ghost_workspace / "assets" / "ghost_data.json")
+            db_path = str(settings.alpha_id_path / "ghost_data.json")
         storage = JsonStorage(db_path)
         logger.info("存储后端: JSON (%s)", db_path)
         return storage

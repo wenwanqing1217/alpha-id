@@ -24,23 +24,20 @@ router = APIRouter(prefix="/api/v1/agent", tags=["Agent"])
 
 
 @router.post("/chat", response_model=AgentChatResponse)
-def chat(body: AgentChatRequest,
-         alpha_id: str = Depends(require_user),
-         container: Container = Depends(get_container)):
-    """与 Agent 对话 — 自动选择 AgentLoop 或 ReActEngine"""
+async def chat(body: AgentChatRequest,
+               alpha_id: str = Depends(require_user),
+               container: Container = Depends(get_container)):
+    """与 Agent 对话 — 自动选择 AgentLoop（异步）或 ReActEngine（同步）"""
     brain = TwinBrain(alpha_id=alpha_id, storage=container.storage)
 
     if body.use_react:
-        # 使用 ReAct 思考引擎
         from core.agent_react import ReActEngine
-
         engine = ReActEngine(alpha_id=alpha_id, brain=brain)
         result = engine.think(body.message)
         reply = result.get("thought", "") or result.get("observation", "")
     else:
-        # 使用标准 AgentLoop
         loop = AgentLoop(alpha_id=alpha_id)
-        reply = loop.run(body.message)
+        reply = await loop.arun(body.message)
 
     return AgentChatResponse(
         alpha_id=alpha_id,

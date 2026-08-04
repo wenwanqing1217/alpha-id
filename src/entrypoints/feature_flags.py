@@ -28,9 +28,9 @@ except ImportError:
 
 # ── 大脑 ──
 _HAS_BRAIN = False
-FairyBrain = None
+GhostBrain = None
 try:
-    from fairy.fairy_brain import FairyBrain  # noqa: F811
+    from alpha_id.ghost_brain import GhostBrain  # noqa: F811
 
     _HAS_BRAIN = True
 except ImportError:
@@ -38,10 +38,10 @@ except ImportError:
 
 # ── 语音 ──
 _HAS_VOICE = False
-FairyVoice = None
+GhostVoice = None
 WakeupListener = None
 try:
-    from fairy.fairy_voice import FairyVoice, WakeupListener  # noqa: F811
+    from alpha_id.ghost_voice import GhostVoice, WakeupListener  # noqa: F811
 
     _HAS_VOICE = True
 except ImportError:
@@ -49,10 +49,10 @@ except ImportError:
 
 # ── 角色 ──
 _HAS_CHARACTER = False
-FairyCharacter = None
-FairyState = None
+GhostCharacter = None
+GhostState = None
 try:
-    from fairy.fairy_character import FairyCharacter, FairyState  # noqa: F811
+    from alpha_id.ghost_character import GhostCharacter, GhostState  # noqa: F811
 
     _HAS_CHARACTER = True
 except ImportError:
@@ -60,9 +60,9 @@ except ImportError:
 
 # ── 观察器 ──
 _HAS_OBSERVER = False
-FairyObserver = None
+GhostObserver = None
 try:
-    from fairy.fairy_observer import FairyObserver  # noqa: F811
+    from alpha_id.ghost_observer import GhostObserver  # noqa: F811
 
     _HAS_OBSERVER = True
 except ImportError:
@@ -70,9 +70,9 @@ except ImportError:
 
 # ── 通知气泡 ──
 _HAS_POPUP = False
-FairyPopup = None
+GhostPopup = None
 try:
-    from fairy.fairy_popup import FairyPopup  # noqa: F811
+    from alpha_id.ghost_popup import GhostPopup  # noqa: F811
 
     _HAS_POPUP = True
 except ImportError:
@@ -80,9 +80,9 @@ except ImportError:
 
 # ── 身份派生 ──
 _HAS_IDENTITY = False
-FairyIdentity = None
+GhostIdentity = None
 try:
-    from fairy.fairy_identity import FairyIdentity  # noqa: F811
+    from alpha_id.ghost_identity import GhostIdentity  # noqa: F811
 
     _HAS_IDENTITY = True
 except ImportError:
@@ -90,9 +90,9 @@ except ImportError:
 
 # ── 双链记忆 ──
 _HAS_MEMORY = False
-FairyMemory = None
+GhostMemory = None
 try:
-    from fairy.fairy_memory import FairyMemory  # noqa: F811
+    from alpha_id.ghost_memory import GhostMemory  # noqa: F811
 
     _HAS_MEMORY = True
 except ImportError:
@@ -100,9 +100,9 @@ except ImportError:
 
 # ── 每日总结 ──
 _HAS_DAILY = False
-FairyDaily = None
+GhostDaily = None
 try:
-    from fairy.fairy_daily import FairyDaily  # noqa: F811
+    from alpha_id.ghost_daily import GhostDaily  # noqa: F811
 
     _HAS_DAILY = True
 except ImportError:

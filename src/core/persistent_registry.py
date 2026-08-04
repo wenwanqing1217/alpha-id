@@ -185,6 +185,10 @@ class PersistentA2ARegistry:
     def list_agents(self) -> List[Dict[str, Any]]:
         return self._registry.list_agents()
 
+    def to_payload(self) -> Dict[str, Any]:
+        """代理 to_payload 到内部 A2ARegistry"""
+        return self._registry.to_payload()
+
     def authorize_call(self, caller: str, target: str, skill: str) -> Dict[str, Any]:
         return self._registry.authorize_call(caller, target, skill)
 

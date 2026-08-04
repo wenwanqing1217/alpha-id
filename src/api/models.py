@@ -44,9 +44,10 @@ class VerifyResponse(BaseModel):
 
 
 class RegisterRequest(BaseModel):
-    device_fingerprint: str = Field(..., description="设备指纹")
+    device_fingerprint: Optional[str] = Field(None, description="设备指纹（quick-register 时自动生成为 auto_xxx）")
     is_founder: bool = False
     founder_code: Optional[str] = None
+    alpha_id: Optional[str] = Field(None, description="自定义 alpha_id（DID 注册/外部系统传入）")
 
 
 class DeviceBindRequest(BaseModel):

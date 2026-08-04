@@ -61,6 +61,7 @@ class TestAPIContract:
     def test_health_endpoint_contract(self):
         """/health 端点符合契约"""
         from fastapi.testclient import TestClient
+
         from src.main import app
         client = TestClient(app)
         resp = client.get("/health")
@@ -72,6 +73,7 @@ class TestAPIContract:
     def test_ready_endpoint_contract(self):
         """/ready 端点符合契约"""
         from fastapi.testclient import TestClient
+
         from src.main import app
         client = TestClient(app)
         resp = client.get("/ready")
@@ -81,6 +83,7 @@ class TestAPIContract:
     def test_metrics_endpoint_contract(self):
         """/metrics 端点符合契约"""
         from fastapi.testclient import TestClient
+
         from src.main import app
         client = TestClient(app)
         resp = client.get("/metrics")
@@ -91,6 +94,7 @@ class TestAPIContract:
     def test_identity_endpoints_require_auth(self):
         """身份相关端点需要认证"""
         from fastapi.testclient import TestClient
+
         from src.main import app
         client = TestClient(app)
         # 无 token 访问 /me 应返回 401
@@ -100,6 +104,7 @@ class TestAPIContract:
     def test_register_endpoint_validates_input(self):
         """注册端点验证输入"""
         from fastapi.testclient import TestClient
+
         from src.main import app
         client = TestClient(app)
         # 空请求体应返回 422（验证错误）

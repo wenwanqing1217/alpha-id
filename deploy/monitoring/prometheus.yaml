@@ -1,0 +1,74 @@
+# Prometheus 配置 — 采集 Alpha-ID 业务指标 + GPU 指标
+#
+# GPU 指标来源：
+# 1. DCGM-Exporter（NVIDIA 官方）暴露 GPU 硬件指标
+# 2. Alpha-ID 应用自身暴露的业务指标（通过 /metrics 端点）
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# 告警规则
+rule_files:
+  - "gpu_alerts.yml"
+
+# 采集目标
+scrape_configs:
+  # ── Alpha-ID 应用指标 ──
+  - job_name: "alpha-id"
+    kubernetes_sd_configs:
+    - role: pod
+      namespaces:
+        names:
+        - alpha-id
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+      action: keep
+      regex: true
+    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+      action: replace
+      target_label: __metrics_path__
+      regex: (.+)
+    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_port]
+      action: replace
+      target_label: __address__
+      regex: (.+)
+      replacement: $1
+
+  # ── DCGM GPU 硬件指标 ──
+  - job_name: "dcgm-exporter"
+    kubernetes_sd_configs:
+    - role: pod
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_pod_label_app]
+      action: keep
+      regex: dcgm-exporter
+    - source_labels: [__meta_kubernetes_pod_ip]
+      action: replace
+      target_label: __address__
+      regex: (.+)
+      replacement: ${1}:9400
+
+  # ── K8s 节点指标 ──
+  - job_name: "kubernetes-nodes"
+    kubernetes_sd_configs:
+    - role: node
+    relabel_configs:
+    - action: labelmap
+      regex: __meta_kubernetes_node_label_(.+)
+
+  # ── K8s Pod 指标 ──
+  - job_name: "kubernetes-pods"
+    kubernetes_sd_configs:
+    - role: pod
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+      action: keep
+      regex: true
+
+# 告警管理器
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      - alertmanager:9093

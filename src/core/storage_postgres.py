@@ -140,8 +140,11 @@ class PostgresStorage(StorageBackend):
             if row is None:
                 return None
             data = row["data"]
-            # psycopb returns JSONB as dict directly
-            return data if isinstance(data, dict) else self._deserialize(data)
+            # psycopg2/psycopg returns JSONB as native Python types (dict, list, int, etc.)
+            # Only deserialize if it's still a string (e.g., from raw SQL drivers)
+            if isinstance(data, str):
+                return self._deserialize(data)
+            return data
 
     def save(self, key: str, data: Dict[str, Any]):
         """保存整个集合"""

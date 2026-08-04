@@ -13,7 +13,7 @@
 
 
 
-  <link rel=stylesheet href=ghost.css>
+  <link rel=stylesheet href=/static/ghost.css>
 </head>
 <body class="cosmic-bg text-slate-200 min-h-screen relative">
 
@@ -56,12 +56,9 @@
     </a>
 
     <div class="hidden lg:flex items-center gap-1 text-sm">
-      <a href="#vision" class="nav-pill group relative px-4 py-2.5 rounded-lg text-slate-300 min-w-[64px] text-center">愿景<span class="nav-underline"></span></a>
-      <a href="#concepts" class="nav-pill group relative px-4 py-2.5 rounded-lg text-slate-300 min-w-[64px] text-center">核心概念<span class="nav-underline"></span></a>
-      <a href="#architecture" class="nav-pill group relative px-4 py-2.5 rounded-lg text-slate-300 min-w-[64px] text-center">技术架构<span class="nav-underline"></span></a>
-      <a href="#framework" class="nav-pill group relative px-4 py-2.5 rounded-lg text-slate-300 min-w-[64px] text-center">方法论<span class="nav-underline"></span></a>
-      <a href="#execution" class="nav-pill group relative px-4 py-2.5 rounded-lg text-slate-300 min-w-[64px] text-center">执行计划<span class="nav-underline"></span></a>
-      <a href="#pillars" class="nav-pill group relative px-4 py-2.5 rounded-lg text-slate-300 min-w-[64px] text-center">能力<span class="nav-underline"></span></a>
+      <a href="#hero" onclick="showLayer('hero')" class="nav-pill group relative px-4 py-2.5 rounded-lg text-slate-300 min-w-[64px] text-center">展示<span class="nav-underline"></span></a>
+      <a href="#platform-operations" onclick="showLayer('platform-operations')" class="nav-pill group relative px-4 py-2.5 rounded-lg text-slate-300 min-w-[64px] text-center">操作<span class="nav-underline"></span></a>
+      <a href="#platform-ecosystem" onclick="showLayer('platform-ecosystem')" class="nav-pill group relative px-4 py-2.5 rounded-lg text-slate-300 min-w-[64px] text-center">生态<span class="nav-underline"></span></a>
     </div>
 
     <div class="flex items-center gap-2">
@@ -246,6 +243,64 @@
 </section>
 
 <div class="glow-divider max-w-4xl mx-auto"></div>
+
+<!-- ============ 平台总览 · 三层模型 ============ -->
+<section id="platform-showcase" class="py-20 md:py-28 px-5 md:px-8">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-16 reveal">
+      <div class="inline-flex items-center gap-2 mb-4">
+        <span class="chapter-num text-sm">PLATFORM · THREE LAYERS</span>
+        <span class="h-px w-12 bg-nebula-500/30"></span>
+      </div>
+      <h2 class="text-4xl md:text-5xl font-black text-white mb-4">Ghost <span class="text-gradient">Platform</span></h2>
+      <p class="text-slate-400 max-w-2xl mx-auto">从展示到操作再到生态，三层模型驱动你的数字灵魂完整运转。</p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6 reveal">
+      <!-- Layer 1: Showcase -->
+      <a href="#vision" class="glass rounded-3xl p-7 node group hover:border-nebula-500/30 transition block">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-nebula-500 to-purple-600 flex items-center justify-center text-2xl mb-5 shadow-lg shadow-nebula-500/30">展</div>
+        <div class="text-xs text-nebula-300 font-mono tracking-wider mb-2">LAYER 01 · SHOWCASE</div>
+        <h3 class="text-xl font-bold text-white mb-3 group-hover:text-nebula-300 transition">展示层</h3>
+        <p class="text-sm text-slate-400 mb-4">品牌、愿景、技术架构与方法论。Alpha-ID 的数字身份全景。</p>
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-nebula-400"></span>品牌与愿景</div>
+          <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-nebula-400"></span>技术架构</div>
+          <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-nebula-400"></span>六套思维框架</div>
+          <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-nebula-400"></span>90 天执行计划</div>
+        </div>
+      </a>
+
+      <!-- Layer 2: Operations -->
+      <a href="#platform-operations" class="glass rounded-3xl p-7 node group hover:border-cosmic-500/30 transition block">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-cosmic-500 to-blue-600 flex items-center justify-center text-2xl mb-5 shadow-lg shadow-cosmic-500/30">操</div>
+        <div class="text-xs text-cosmic-300 font-mono tracking-wider mb-2">LAYER 02 · OPERATIONS</div>
+        <h3 class="text-xl font-bold text-white mb-3 group-hover:text-cosmic-300 transition">操作层</h3>
+        <p class="text-sm text-slate-400 mb-4">电商、记忆、工作流与智能体。你的日常数字工作台。</p>
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-cosmic-400"></span>Ghost DS 看板</div>
+          <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-cosmic-400"></span>商品 / 订单管理</div>
+          <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-cosmic-400"></span>豆包记忆桥</div>
+          <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-cosmic-400"></span>Agent 工作流</div>
+        </div>
+      </a>
+
+      <!-- Layer 3: Ecosystem -->
+      <a href="#platform-ecosystem" class="glass rounded-3xl p-7 node group hover:border-amber-500/30 transition block">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-2xl mb-5 shadow-lg shadow-amber-500/30">生</div>
+        <div class="text-xs text-amber-300 font-mono tracking-wider mb-2">LAYER 03 · ECOSYSTEM</div>
+        <h3 class="text-xl font-bold text-white mb-3 group-hover:text-amber-300 transition">生态层</h3>
+        <p class="text-sm text-slate-400 mb-4">Agent 网络、A2A 协议、技能市场。连接与协作。</p>
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>A2A 网络拓扑</div>
+          <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>Agent 注册与发现</div>
+          <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>Ghost 工作台</div>
+          <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>技能市场</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
 
 <!-- ============ 01 · 愿景与问题 ============ -->
 <section id="vision" class="py-20 md:py-28 px-5 md:px-8">
@@ -1855,7 +1910,7 @@
 <div class="glow-divider max-w-4xl mx-auto"></div>
 
 <!-- ============ 05 · 生态演化 ============ -->
-<section id="framework" class="py-20 md:py-28 px-5 md:px-8">
+<section id="ecosystem" class="py-20 md:py-28 px-5 md:px-8">
   <div class="max-w-7xl mx-auto">
     <div class="text-center mb-16 reveal">
       <div class="inline-flex items-center gap-2 mb-4">
@@ -1981,31 +2036,25 @@
   </div>
 </div>
 
-<div class="flex" style="min-height:calc(100vh - 72px);">
-  <!-- Sidebar -->
+  <div class="flex" style="min-height:calc(100vh - 72px);">
+  <!-- Sidebar — A2A 生态区 -->
   <aside class="wb-sidebar">
     <nav class="flex-1 p-4 space-y-1">
-      <div class="text-[10px] text-slate-500 font-mono tracking-wider mb-3 px-3">功能模块</div>
-      <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-white bg-nebula-500/15 border border-nebula-500/25 router-nav-btn active" data-route="intent">
-        <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-nebula-500/20 flex items-center justify-center text-xs">⚡</span>意图解析</span>
+      <div class="text-[10px] text-slate-500 font-mono tracking-wider mb-3 px-3">A2A 生态区</div>
+      <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-white bg-nebula-500/15 border border-nebula-500/25 router-nav-btn active" data-route="dashboard">
+        <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-nebula-500/20 flex items-center justify-center text-xs">🏠</span>控制台</span>
       </button>
-      <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="routing">
-        <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-cosmic-500/20 flex items-center justify-center text-xs">🔀</span>Skill 路由</span>
+      <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="my-agents">
+        <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-emerald-500/20 flex items-center justify-center text-xs">🤖</span>我的 Agent</span>
       </button>
-      <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="decision">
-        <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-pink-500/20 flex items-center justify-center text-xs">🌳</span>决策树</span>
+      <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="a2a-network">
+        <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-purple-500/20 flex items-center justify-center text-xs">🌐</span>A2A 网络</span>
       </button>
       <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="memory">
-        <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-amber-500/20 flex items-center justify-center text-xs">🧠</span>记忆图谱</span>
-      </button>
-      <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="agents">
-        <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-emerald-500/20 flex items-center justify-center text-xs">🤖</span>Agent 广场</span>
+        <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-amber-500/20 flex items-center justify-center text-xs">🧠</span>记忆</span>
       </button>
       <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="doubao">
         <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-sky-500/20 flex items-center justify-center text-xs">💬</span>豆包记忆桥</span>
-      </button>
-            <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="graph">
-        <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-purple-500/20 flex items-center justify-center text-xs">🌌</span>记忆星云</span>
       </button>
       <div class="mt-6 text-[10px] text-slate-500 font-mono tracking-wider mb-3 px-3">系统</div>
       <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="logs">
@@ -2014,159 +2063,137 @@
       <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="settings">
         <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-slate-500/20 flex items-center justify-center text-xs">⚙️</span>设置</span>
       </button>
+      <div class="mt-4 px-3">
+        <button onclick="showMindflow()" class="w-full text-xs px-3 py-2 rounded-lg bg-pink-500/10 border border-pink-500/20 text-pink-300 hover:bg-pink-500/20 transition text-center">🎨 协作模式 →</button>
+      </div>
     </nav>
     <div class="p-4 border-t border-nebula-500/10">
       <div class="text-[10px] text-slate-500 font-mono mb-2">身份状态</div>
       <div class="flex items-center gap-2 text-xs text-nebula-300">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        DID 已验证
+        <span id="sidebar-alpha-id">Alpha-ID</span>
       </div>
     </div>
   </aside>
 
   <!-- Main Content -->
   <div class="wb-content">
-    <!-- 意图解析面板 -->
-    <div id="route-intent" class="wb-route-panel">
-      <h2 class="text-2xl font-bold text-white mb-2">意图解析引擎</h2>
-      <p class="text-slate-400 text-sm mb-6">输入你的意图，路由器自动解析、匹配 Skill、生成执行方案。</p>
+    <!-- 控制台：四层 Agent 总览 -->
+    <div id="route-dashboard" class="wb-route-panel active">
+      <h2 class="text-2xl font-bold text-white mb-2">控制台</h2>
+      <p class="text-slate-400 text-sm mb-6">A2A 生态状态总览 — 四层 Agent 运行状况</p>
 
-      <div class="mb-8">
-        <div class="flex gap-3">
-          <input type="text" class="intent-input flex-1" id="intent-input" placeholder="输入你的意图，例如：帮我写一个 MCP Server 的 PoC" />
-          <button class="btn-primary px-6 py-3 rounded-xl text-white font-semibold text-sm whitespace-nowrap" onclick="parseIntent()">解析</button>
+      <!-- 四层 Agent 卡片 -->
+      <div class="space-y-4 mb-8">
+        <div class="router-node">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="text-sm font-semibold text-white">总控 Agent</span>
+            <span class="tag tag-emerald text-[10px] font-mono" id="dash-controller-status">在线</span>
+          </div>
+          <div class="grid grid-cols-3 gap-3">
+            <div class="text-center p-2 rounded-lg bg-white/5">
+              <div class="text-lg font-bold text-white" id="dash-controller-id">Alpha-000</div>
+              <div class="text-[10px] text-slate-500">ID</div>
+            </div>
+            <div class="text-center p-2 rounded-lg bg-white/5">
+              <div class="text-lg font-bold text-emerald-300" id="dash-controller-tasks">-</div>
+              <div class="text-[10px] text-slate-500">当前任务</div>
+            </div>
+            <div class="text-center p-2 rounded-lg bg-white/5">
+              <div class="text-lg font-bold text-white" id="dash-controller-uptime">-</div>
+              <div class="text-[10px] text-slate-500">活跃度</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="router-node">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="w-3 h-3 rounded-full bg-sky-400"></span>
+            <span class="text-sm font-semibold text-white">个人私有 Agent</span>
+            <span class="tag tag-blue text-[10px] font-mono" id="dash-private-count">0 个</span>
+          </div>
+          <div id="dash-private-list" class="space-y-1.5">
+            <div class="text-xs text-slate-500 py-2">加载中...</div>
+          </div>
+        </div>
+
+        <div class="router-node">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="w-3 h-3 rounded-full bg-purple-400"></span>
+            <span class="text-sm font-semibold text-white">平台公共 Agent</span>
+            <span class="tag tag-purple text-[10px] font-mono" id="dash-public-count">0 个</span>
+          </div>
+          <div id="dash-public-list" class="space-y-1.5">
+            <div class="text-xs text-slate-500 py-2">加载中...</div>
+          </div>
+        </div>
+
+        <div class="router-node">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+            <span class="text-sm font-semibold text-white">商用 Agent</span>
+            <span class="tag tag-amber text-[10px] font-mono" id="dash-commercial-status">按需调用</span>
+          </div>
+          <div id="dash-commercial-list" class="space-y-1.5">
+            <div class="text-xs text-slate-500 py-2">暂无商用 Agent</div>
+          </div>
         </div>
       </div>
 
-            <!-- Quick stats -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <!-- 快速统计 -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="router-node text-center">
-          <div class="text-2xl font-black text-gradient" id="stats-total-users">-</div>
-          <div class="text-[10px] text-slate-500 font-mono">Total Users</div>
+          <div class="text-2xl font-black text-gradient" id="dash-total-agents">-</div>
+          <div class="text-[10px] text-slate-500 font-mono">Total Agents</div>
         </div>
         <div class="router-node text-center">
-          <div class="text-2xl font-black text-gradient" id="stats-active-users">-</div>
-          <div class="text-[10px] text-slate-500 font-mono">Active Users</div>
+          <div class="text-2xl font-black text-gradient" id="dash-total-skills">-</div>
+          <div class="text-[10px] text-slate-500 font-mono">Skills</div>
         </div>
         <div class="router-node text-center">
-          <div class="text-2xl font-black text-gradient" id="stats-memories">-</div>
-          <div class="text-[10px] text-slate-500 font-mono">Memories</div>
+          <div class="text-2xl font-black text-gradient" id="dash-audit-count">-</div>
+          <div class="text-[10px] text-slate-500 font-mono">Audit Records</div>
         </div>
         <div class="router-node text-center">
-          <div class="text-2xl font-black text-gradient" id="stats-health">-</div>
+          <div class="text-2xl font-black text-gradient" id="dash-system-health">-</div>
           <div class="text-[10px] text-slate-500 font-mono">System</div>
         </div>
       </div>
+    </div>
 
-<!-- 解析结果 -->
-      <div id="intent-result" class="hidden space-y-4">
-        <div class="router-node active">
-          <div class="flex items-center gap-2 mb-3">
-            <span class="tag tag-blue font-mono">意图识别</span>
-            <span class="text-xs text-slate-500 font-mono">confidence: 0.94</span>
-          </div>
-          <div class="text-sm text-slate-300" id="parsed-intent-text">构建 MCP Server 概念验证</div>
-        </div>
-
-        <div class="router-node">
-          <div class="flex items-center gap-2 mb-3">
-            <span class="tag tag-emerald font-mono">匹配 Skill</span>
-            <span class="text-xs text-slate-500 font-mono">3 candidates</span>
-          </div>
-          <div class="space-y-2" id="skill-candidates">
-            <div class="flex items-center justify-between p-3 rounded-lg bg-white/5">
-              <div>
-                <div class="text-sm text-white font-medium">code_generate</div>
-                <div class="text-xs text-slate-500">生成 MCP Server Python 代码</div>
-              </div>
-              <span class="tag tag-emerald text-[10px]">0.92</span>
-            </div>
-            <div class="flex items-center justify-between p-3 rounded-lg bg-white/5">
-              <div>
-                <div class="text-sm text-white font-medium">doc_search</div>
-                <div class="text-xs text-slate-500">搜索 MCP 官方文档</div>
-              </div>
-              <span class="tag tag-blue text-[10px]">0.78</span>
-            </div>
-            <div class="flex items-center justify-between p-3 rounded-lg bg-white/5">
-              <div>
-                <div class="text-sm text-white font-medium">test_runner</div>
-                <div class="text-xs text-slate-500">运行测试验证</div>
-              </div>
-              <span class="tag tag-slate text-[10px]">0.65</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="router-node">
-          <div class="flex items-center gap-2 mb-3">
-            <span class="tag tag-amber font-mono">决策树</span>
-            <span class="text-xs text-slate-500 font-mono">3 branches</span>
-          </div>
-          <div class="grid md:grid-cols-3 gap-3" id="decision-branches">
-            <div class="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
-              <div class="text-xs text-emerald-300 font-mono mb-2">方案 A · 推荐</div>
-              <div class="text-sm text-white font-medium">FastMCP 框架</div>
-              <div class="text-xs text-slate-500 mt-1">Python · 200行 · 30min</div>
-            </div>
-            <div class="p-4 rounded-xl bg-white/5 border border-white/10">
-              <div class="text-xs text-slate-400 font-mono mb-2">方案 B</div>
-              <div class="text-sm text-white font-medium">官方 SDK</div>
-              <div class="text-xs text-slate-500 mt-1">TypeScript · 350行 · 45min</div>
-            </div>
-            <div class="p-4 rounded-xl bg-white/5 border border-white/10">
-              <div class="text-xs text-slate-400 font-mono mb-2">方案 C</div>
-              <div class="text-sm text-white font-medium">手写协议</div>
-              <div class="text-xs text-slate-500 mt-1">Python · 500行 · 90min</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 默认提示 -->
-      <div id="intent-placeholder" class="text-center py-16">
-        <div class="text-5xl mb-4 opacity-50">⚡</div>
-        <div class="text-slate-400 text-sm">输入意图，开始智能路由</div>
+    <!-- 我的 Agent 管理页 -->
+    <div id="route-my-agents" class="wb-route-panel hidden">
+      <h2 class="text-2xl font-bold text-white mb-2">我的 Agent</h2>
+      <p class="text-slate-400 text-sm mb-6">查看、启动、休眠你的个人 Agent 集群。</p>
+      <div id="my-agents-content" class="space-y-3">
+        <div class="text-center text-slate-500 py-8">加载中...</div>
       </div>
     </div>
 
-    <!-- 其他路由面板（隐藏） -->
-    <div id="route-routing" class="wb-route-panel hidden">
-      <h2 class="text-2xl font-bold text-white mb-2">Skill 路由</h2>
-      <p class="text-slate-400 text-sm mb-6">管理已注册的技能和路由规则。</p>
-      <div class="space-y-3">
-        <div class="router-node">
-          <div class="flex items-center justify-between">
-            <div class="text-sm text-white">已注册 Skill</div>
-            <span class="tag tag-emerald font-mono">7 active</span>
-          </div>
+    <!-- A2A 网络拓扑页 -->
+    <div id="route-a2a-network" class="wb-route-panel hidden">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-white">🌐 A2A 网络拓扑</h2>
+          <p class="text-slate-400 text-sm">Agent 协作关系图 — 节点 = Agent，连线 = 通信关系</p>
         </div>
-        <div class="router-node">
-          <div class="flex items-center justify-between">
-            <div class="text-sm text-white">路由命中率</div>
-            <span class="tag tag-blue font-mono">94.2%</span>
-          </div>
-        </div>
-        <div class="router-node">
-          <div class="flex items-center justify-between">
-            <div class="text-sm text-white">平均响应</div>
-            <span class="tag tag-amber font-mono">1.3s</span>
-          </div>
-        </div>
+        <div class="text-xs text-slate-500" id="topology-stats"></div>
+      </div>
+      <div class="router-node" style="height:500px;position:relative;overflow:hidden;">
+        <svg id="topology-svg" width="100%" height="100%"></svg>
+      </div>
+      <div id="topology-detail" class="router-node hidden mt-4">
+        <h3 class="text-sm font-medium text-white mb-2" id="topology-detail-title"></h3>
+        <p class="text-sm text-slate-300" id="topology-detail-content"></p>
+        <div class="text-xs text-slate-500 mt-2" id="topology-detail-meta"></div>
       </div>
     </div>
 
-    <div id="route-decision" class="wb-route-panel hidden">
-      <h2 class="text-2xl font-bold text-white mb-2">决策树</h2>
-      <p class="text-slate-400 text-sm mb-6">可视化的多分支决策推演。</p>
-      <div class="router-node">
-        <div class="text-sm text-slate-300">决策引擎已就绪。输入意图后自动生成 3 条推演分支，支持反向验证和置信度评分。</div>
-      </div>
-    </div>
-
+    <!-- 记忆面板 -->
     <div id="route-memory" class="wb-route-panel hidden">
-      <h2 class="text-2xl font-bold text-white mb-2">记忆图谱</h2>
-      <p class="text-slate-400 text-sm mb-6">你的因果节点和三层记忆。</p>
+      <h2 class="text-2xl font-bold text-white mb-2">记忆</h2>
+      <p class="text-slate-400 text-sm mb-6">双链记忆总览 — 私有链 + 知识链。</p>
       <div class="grid md:grid-cols-3 gap-4">
         <div class="router-node text-center">
           <div class="text-3xl font-black text-gradient mb-1" id="mem-total">-</div>
@@ -2183,14 +2210,6 @@
       </div>
     </div>
 
-    <div id="route-agents" class="wb-route-panel hidden">
-      <h2 class="text-2xl font-bold text-white mb-2">Agent 广场</h2>
-      <p class="text-slate-400 text-sm mb-6">与其他 Agent 协作，无需平台中介。</p>
-      <div class="router-node">
-        <div class="text-sm text-slate-300">A2A 协议已启用。你的 Agent 可以与其他 Agent 直接通信、协作、共享因果知识。</div>
-      </div>
-    </div>
-
     <div id="route-doubao" class="wb-route-panel hidden">
       <div class="flex items-center justify-between mb-6">
         <div>
@@ -2199,7 +2218,7 @@
         </div>
         <div class="flex gap-2">
           <button onclick="window.open('https://www.doubao.com','_blank')" class="px-4 py-2 bg-sky-500/20 text-sky-300 rounded-lg text-sm hover:bg-sky-500/30 transition border border-sky-500/30">└─ 豆包</button>
-          <button onclick="window.open('http://localhost:2002','_blank')" class="px-4 py-2 bg-purple-500/20 text-purple-300 rounded-lg text-sm hover:bg-purple-500/30 transition border border-purple-500/30">🤖 Nebula</button>
+          <button onclick="window.open(CONFIG.nebula,'_blank')" class="px-4 py-2 bg-purple-500/20 text-purple-300 rounded-lg text-sm hover:bg-purple-500/30 transition border border-purple-500/30">🤖 Nebula</button>
         </div>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -2251,13 +2270,13 @@
           </button>
         </div>
         <div id="doubao-iframe" class="hidden rounded-lg overflow-hidden border border-white/10 bg-white/5">
-          <iframe src="http://localhost:18080/v1/doubao" width="100%" height="500" frameborder="0" class="rounded-lg"></iframe>
+          <iframe src="" id="doubao-iframe-src" width="100%" height="500" frameborder="0" class="rounded-lg"></iframe>
         </div>
       </div>
 
     </div>
 
-    <div id="route-graph"id="route-graph" class="wb-route-panel hidden">
+    <div id="route-graph" class="wb-route-panel hidden">
       <div class="flex items-center justify-between mb-6">
         <div>
           <h2 class="text-2xl font-bold text-white">🌌 记忆星云</h2>
@@ -2440,6 +2459,168 @@
 
 </main>
 
+<div class="glow-divider max-w-4xl mx-auto"></div>
+
+<!-- ============ 02 · 操作层 · Ghost DS ============ -->
+<section id="platform-operations" class="py-20 md:py-28 px-5 md:px-8">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-16 reveal">
+      <div class="inline-flex items-center gap-2 mb-4">
+        <span class="chapter-num text-sm">LAYER 02 · OPERATIONS</span>
+        <span class="h-px w-12 bg-cosmic-500/30"></span>
+      </div>
+      <h2 class="text-4xl md:text-5xl font-black text-white mb-4">操作层 · <span class="text-gradient">Ghost DS</span></h2>
+      <p class="text-slate-400 max-w-2xl mx-auto">你的数字工作台。电商运营、记忆管理、Agent 协作 —— 一站式操作入口。</p>
+    </div>
+
+    <!--
+      服务地址说明：
+      - A2A 接口：同源相对路径（由 Alpha-ID :8000 直接提供）
+      - Ghost DS：开发环境默认 localhost:3000，生产环境请修改为实际域名
+      - Ghost Workbench：同源相对路径 /workbench/workbench.html
+    -->
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5 reveal">
+      <a href="http://localhost:3000/dashboard" target="_blank" rel="noopener" class="glass rounded-3xl p-6 node group hover:border-cosmic-500/30 transition block">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-xl bg-cosmic-500/15 border border-cosmic-500/30 flex items-center justify-center text-lg">📊</div>
+          <div>
+            <div class="text-sm font-bold text-white group-hover:text-cosmic-300 transition">电商看板</div>
+            <div class="text-[10px] text-slate-500 font-mono">DASHBOARD</div>
+          </div>
+        </div>
+        <p class="text-xs text-slate-400">销售概览、趋势分析、核心指标实时监控。</p>
+      </a>
+
+      <a href="http://localhost:3000/products" target="_blank" rel="noopener" class="glass rounded-3xl p-6 node group hover:border-cosmic-500/30 transition block">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-xl bg-cosmic-500/15 border border-cosmic-500/30 flex items-center justify-center text-lg">⬚</div>
+          <div>
+            <div class="text-sm font-bold text-white group-hover:text-cosmic-300 transition">商品管理</div>
+            <div class="text-[10px] text-slate-500 font-mono">PRODUCTS</div>
+          </div>
+        </div>
+        <p class="text-xs text-slate-400">商品上下架、库存管理、价格策略。</p>
+      </a>
+
+      <a href="http://localhost:3000/orders" target="_blank" rel="noopener" class="glass rounded-3xl p-6 node group hover:border-cosmic-500/30 transition block">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-xl bg-cosmic-500/15 border border-cosmic-500/30 flex items-center justify-center text-lg">☰</div>
+          <div>
+            <div class="text-sm font-bold text-white group-hover:text-cosmic-300 transition">订单管理</div>
+            <div class="text-[10px] text-slate-500 font-mono">ORDERS</div>
+          </div>
+        </div>
+        <p class="text-xs text-slate-400">订单查询、状态追踪、退款处理。</p>
+      </a>
+
+      <a href="http://localhost:3000/memory" target="_blank" rel="noopener" class="glass rounded-3xl p-6 node group hover:border-cosmic-500/30 transition block">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-lg">💬</div>
+          <div>
+            <div class="text-sm font-bold text-white group-hover:text-sky-300 transition">豆包记忆桥</div>
+            <div class="text-[10px] text-slate-500 font-mono">MEMORY</div>
+          </div>
+        </div>
+        <p class="text-xs text-slate-400">豆包对话自动同步到 Ghost 知识链，跨平台记忆互通。</p>
+      </a>
+
+      <a href="http://localhost:3000/settings" target="_blank" rel="noopener" class="glass rounded-3xl p-6 node group hover:border-cosmic-500/30 transition block">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-xl bg-cosmic-500/15 border border-cosmic-500/30 flex items-center justify-center text-lg">⚙</div>
+          <div>
+            <div class="text-sm font-bold text-white group-hover:text-cosmic-300 transition">店铺设置</div>
+            <div class="text-[10px] text-slate-500 font-mono">SETTINGS</div>
+          </div>
+        </div>
+        <p class="text-xs text-slate-400">ShopLazza 店铺配置、Webhook 管理、同步设置。</p>
+      </a>
+
+      <a href="http://localhost:8080/ecosystem" target="_blank" rel="noopener" class="glass rounded-3xl p-6 node group hover:border-amber-500/30 transition block">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-lg">🕸</div>
+          <div>
+            <div class="text-sm font-bold text-white group-hover:text-amber-300 transition">Agent 网络</div>
+            <div class="text-[10px] text-slate-500 font-mono">ECOSYSTEM</div>
+          </div>
+        </div>
+        <p class="text-xs text-slate-400">Agent 注册、发现、A2A 通信与协作网络。</p>
+      </a>
+    </div>
+
+    <div class="text-center mt-10 reveal">
+      <a href="http://localhost:3000/" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-sm text-cosmic-400 hover:text-cosmic-300 transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+        打开 Ghost DS 操作台
+      </a>
+    </div>
+  </div>
+</section>
+
+<div class="glow-divider max-w-4xl mx-auto"></div>
+
+<!-- ============ 03 · 生态层 ============ -->
+<section id="platform-ecosystem" class="py-20 md:py-28 px-5 md:px-8">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-16 reveal">
+      <div class="inline-flex items-center gap-2 mb-4">
+        <span class="chapter-num text-sm">LAYER 03 · ECOSYSTEM</span>
+        <span class="h-px w-12 bg-amber-500/30"></span>
+      </div>
+      <h2 class="text-4xl md:text-5xl font-black text-white mb-4">生态层 · <span class="text-gradient">Agent Network</span></h2>
+      <p class="text-slate-400 max-w-2xl mx-auto">A2A 协议驱动的 Agent 协作网络。注册、发现、调用 —— 去中心化智能体生态。</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-5 reveal">
+      <a href="/api/v1/a2a/discover" target="_blank" class="glass rounded-3xl p-6 node group hover:border-amber-500/30 transition block text-center">
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-xl mb-4">🔍</div>
+        <div class="text-sm font-bold text-white mb-1 group-hover:text-amber-300 transition">Agent 发现</div>
+        <div class="text-[10px] text-slate-500 font-mono mb-3">DISCOVER</div>
+        <p class="text-xs text-slate-400">浏览已注册的 Agent 卡片，按能力域搜索。</p>
+      </a>
+
+      <a href="/api/v1/a2a/agents" target="_blank" class="glass rounded-3xl p-6 node group hover:border-amber-500/30 transition block text-center">
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-xl mb-4">📋</div>
+        <div class="text-sm font-bold text-white mb-1 group-hover:text-amber-300 transition">Agent 列表</div>
+        <div class="text-[10px] text-slate-500 font-mono mb-3">REGISTRY</div>
+        <p class="text-xs text-slate-400">查看所有注册 Agent 的详细信息与状态。</p>
+      </a>
+
+      <a href="/api/v1/a2a/skills" target="_blank" class="glass rounded-3xl p-6 node group hover:border-amber-500/30 transition block text-center">
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-xl mb-4">🛠</div>
+        <div class="text-sm font-bold text-white mb-1 group-hover:text-amber-300 transition">技能市场</div>
+        <div class="text-[10px] text-slate-500 font-mono mb-3">SKILLS</div>
+        <p class="text-xs text-slate-400">浏览可用的 A2A 技能，跨 Agent 调用。</p>
+      </a>
+
+      <a href="/api/v1/a2a/audit" target="_blank" class="glass rounded-3xl p-6 node group hover:border-amber-500/30 transition block text-center">
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-xl mb-4">📊</div>
+        <div class="text-sm font-bold text-white mb-1 group-hover:text-amber-300 transition">审计日志</div>
+        <div class="text-[10px] text-slate-500 font-mono mb-3">AUDIT</div>
+        <p class="text-xs text-slate-400">A2A 调用审计记录，可追溯、可验证。</p>
+      </a>
+    </div>
+
+    <!-- Protocol Info -->
+    <div class="glass rounded-3xl p-8 mt-10 reveal">
+      <div class="text-xs text-amber-300 font-mono tracking-wider mb-4">A2A · PROTOCOL</div>
+      <div class="grid md:grid-cols-3 gap-6">
+        <div>
+          <div class="text-sm font-bold text-white mb-2">Ed25519 签名</div>
+          <p class="text-xs text-slate-400">每条 A2A 消息都经过 Ed25519 签名验证，确保 Agent 身份真实可信。</p>
+        </div>
+        <div>
+          <div class="text-sm font-bold text-white mb-2">PoE 可验证执行</div>
+          <p class="text-xs text-slate-400">Proof of Execution 记录每次调用的完整证据链，可审计、可追溯。</p>
+        </div>
+        <div>
+          <div class="text-sm font-bold text-white mb-2">去中心化注册</div>
+          <p class="text-xs text-slate-400">Agent 自主注册到网络，无需中心化授权。TTL 心跳保持活跃。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ============ 注册/登录流程模态框 ============ -->
 <div class="reg-overlay" id="reg-modal">
   <div class="reg-modal">
@@ -2509,7 +2690,7 @@
   </div>
 </div>
 <!-- 滚动显现脚本 -->
-<script src=ghost.js></script>
+<script src=/static/ghost.js></script>
 
 </body>
 </html>

@@ -378,7 +378,17 @@ document.addEventListener('DOMContentLoaded', function() {
   var regPhone = '';
   var regTimer = null;
   var regCountdown = 0;
-  var GATEWAY_URL = 'http://localhost:18080';
+
+  // ============ 平台配置 ============
+  // 部署时修改这些值为实际的服务地址
+  var CONFIG = {
+    ds: 'http://localhost:3000',        // Ghost DS 操作台
+    gateway: 'http://localhost:18080',  // Ghost Gateway
+    nebula: 'http://localhost:2002',    // Nebula 工作流引擎
+    orchestrator: 'http://localhost:19090', // Orchestrator
+    alphaId: window.location.origin,    // Alpha-ID 服务（自动检测）
+  };
+  var GATEWAY_URL = CONFIG.gateway;
 
   window.showRegistration = function() {
     var modal = document.getElementById('reg-modal');
@@ -620,16 +630,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (settingsDid) settingsDid.textContent = currentUserDID;
 
     showWorkbench();
-    // 注册后引导：尝试导入数据或探索
+    // 注册后引导：加载控制台数据
     setTimeout(function() {
-      var el = document.getElementById('parsed-intent-text');
-      if (el) el.textContent = '👋 欢迎！这是你的 A2A 生态区。左侧选择功能开始探索，或先导入你的数据。';
-      var result = document.getElementById('intent-result');
-      var placeholder = document.getElementById('intent-placeholder');
-      if (result && placeholder) {
-        placeholder.classList.add('hidden');
-        result.classList.remove('hidden');
-      }
+      loadDashboard();
     }, 500);
   };
   // ============ 视图切换 ============
@@ -672,53 +675,240 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // ============ Web 4.0 路由切换 ============
-  document.querySelectorAll('.router-nav-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var route = this.getAttribute('data-route');
-      if (!route) return;
-
-      // 更新按钮状态
-      document.querySelectorAll('.router-nav-btn').forEach(function(b) {
-        b.classList.remove('active', 'bg-nebula-500/15', 'border-nebula-500/25', 'text-white');
-        b.classList.add('text-slate-400');
-      });
-      this.classList.add('active', 'bg-nebula-500/15', 'border-nebula-500/25', 'text-white');
-      this.classList.remove('text-slate-400');
-
-      // 切换面板
-      document.querySelectorAll('.wb-route-panel').forEach(function(p) {
-        p.classList.add('hidden');
-      });
-      var target = document.getElementById('route-' + route);
-      if (target) target.classList.remove('hidden');
-    });
-  });
-
-  // ============ 意图解析 ============
-  window.parseIntent = function() {
-    var input = document.getElementById('intent-input');
-    var placeholder = document.getElementById('intent-placeholder');
-    var result = document.getElementById('intent-result');
-    var parsedText = document.getElementById('parsed-intent-text');
-
-    if (!input || !placeholder || !result) return;
-    var text = input.value.trim();
-    if (!text) return;
-
-    if (parsedText) parsedText.textContent = text;
-    placeholder.classList.add('hidden');
-    result.classList.remove('hidden');
+  // ============ A2A 生态区视图 ============
+  window.showA2AView = function() {
+    document.getElementById('homepageView').classList.remove('active');
+    document.getElementById('mindflowView').classList.remove('active');
+    var a2aView = document.getElementById('workbenchView');
+    if (a2aView) a2aView.classList.add('active');
+    window.scrollTo(0, 0);
+    // 默认加载控制台数据
+    loadDashboard();
   };
+  // 兼容旧名称
+  window.showWorkbench = window.showA2AView;
 
-  // 回车触发解析
-  var intentInput = document.getElementById('intent-input');
-  if (intentInput) {
-    intentInput.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') parseIntent();
+  // ============ 三层平台导航 ============
+  window.showLayer = function(sectionId) {
+    // 确保 homepageView 为活跃视图
+    document.getElementById('homepageView').classList.add('active');
+    document.getElementById('mindflowView').classList.remove('active');
+    document.getElementById('workbenchView').classList.remove('active');
+    // 滚动到目标区域
+    var target = document.getElementById(sectionId);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+  // 兼容旧名称
+  window.showHomepage = window.showLayer;
+
+  // ============ 控制台数据加载 ============
+  
+  function loadDashboard() {
+    loadAgentStatus();
+    loadAuditLogs();
+    loadMemoryStats();
+  }
+  
+  function loadAgentStatus() {
+    var dashTotalAgents = document.getElementById('dash-total-agents');
+    var dashTotalSkills = document.getElementById('dash-total-skills');
+    var dashAuditCount = document.getElementById('dash-audit-count');
+    var dashSystemHealth = document.getElementById('dash-system-health');
+    var dashPrivateList = document.getElementById('dash-private-list');
+    var dashPrivateCount = document.getElementById('dash-private-count');
+    
+    fetch(GATEWAY_URL + '/v1/agent/a2a/agents')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var agents = data.agents || [];
+        if (dashTotalAgents) dashTotalAgents.textContent = agents.length;
+        if (dashPrivateCount) dashPrivateCount.textContent = agents.length + ' 个';
+        if (dashPrivateList) {
+          if (agents.length === 0) {
+            dashPrivateList.innerHTML = '<div class="text-xs text-slate-500 py-2">暂无 Agent，注册后自动出现</div>';
+          } else {
+            dashPrivateList.innerHTML = agents.map(function(a) {
+              return '<div class="flex items-center gap-2 py-1">' +
+                '<span class="w-2 h-2 rounded-full bg-emerald-400"></span>' +
+                '<span class="text-sm text-white font-mono">' + (a.did || a.agent_id || 'unknown') + '</span>' +
+                '<span class="text-[10px] text-slate-400 ml-auto">' + (a.skills || []).length + ' skills</span></div>';
+            }).join('');
+          }
+        }
+      })
+      .catch(function() {
+        if (dashTotalAgents) dashTotalAgents.textContent = '!';
+      });
+    
+    fetch(GATEWAY_URL + '/v1/agent/a2a/skills')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (dashTotalSkills) dashTotalSkills.textContent = data.length || 0;
+      })
+      .catch(function() {
+        if (dashTotalSkills) dashTotalSkills.textContent = '!';
+      });
+    
+    fetch(GATEWAY_URL + '/health')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (dashSystemHealth) dashSystemHealth.textContent = data.status === 'ok' ? 'OK' : 'WARN';
+        if (dashSystemHealth) dashSystemHealth.className = 'text-2xl font-black ' + (data.status === 'ok' ? 'text-emerald-300' : 'text-amber-300');
+      })
+      .catch(function() {
+        if (dashSystemHealth) dashSystemHealth.textContent = '!';
+      });
+  }
+  
+  function loadAuditLogs() {
+    var execLogs = document.getElementById('exec-logs');
+    if (!execLogs) return;
+    
+    fetch(GATEWAY_URL + '/v1/agent/a2a/audit?limit=20')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.records && data.records.length > 0) {
+          execLogs.innerHTML = data.records.map(function(r) {
+            var time = new Date(r.timestamp || Date.now()).toLocaleTimeString();
+            var statusColor = r.success ? 'text-emerald-400' : 'text-red-400';
+            var icon = r.success ? '✓' : '✗';
+            return '<div class="flex items-start gap-2 py-1.5 border-b border-white/5 last:border-0">' +
+              '<span class="text-[10px] text-slate-500 font-mono whitespace-nowrap">' + time + '</span>' +
+              '<span class="text-xs ' + statusColor + '">' + icon + ' ' + (r.event || 'call') + '</span>' +
+              '<span class="text-xs text-slate-300">' + (r.skill || r.caller_agent_id || '') + '</span></div>';
+          }).join('');
+        } else {
+          execLogs.innerHTML = '<div class="text-center text-slate-500 py-4">暂无审计记录</div>';
+        }
+      })
+      .catch(function() {
+        execLogs.innerHTML = '<div class="text-center text-red-400 py-4">加载失败</div>';
+      });
+  }
+  
+  function loadMemoryStats() {
+    var memTotal = document.getElementById('mem-total');
+    var memPrivate = document.getElementById('mem-private');
+    var memKnowledge = document.getElementById('mem-knowledge');
+    if (!memTotal) return;
+    
+    fetch(GATEWAY_URL + '/v1/dual-chain/stats')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (memTotal) memTotal.textContent = data.total || data.count || '-';
+        if (memPrivate) memPrivate.textContent = data.private_count || '-';
+        if (memKnowledge) memKnowledge.textContent = data.knowledge_count || '-';
+      })
+      .catch(function() {
+        if (memTotal) memTotal.textContent = '-';
+      });
+  }
+  
+  // ============ A2A 网络拓扑图（D3.js 力导向图） ============
+  
+  function renderTopology() {
+    var svg = document.getElementById('topology-svg');
+    if (!svg) return;
+    
+    fetch(GATEWAY_URL + '/v1/agent/a2a/agents')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var agents = data.agents || [];
+        var statsEl = document.getElementById('topology-stats');
+        if (statsEl) statsEl.textContent = agents.length + ' 个节点';
+        
+        if (agents.length === 0) {
+          svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#64748b" font-size="14">暂无 Agent 数据</text>';
+          return;
+        }
+        
+        // D3 力导向图
+        var width = svg.clientWidth || 800;
+        var height = svg.clientHeight || 500;
+        
+        var nodes = agents.map(function(a, i) {
+          return {
+            id: a.did || a.agent_id || 'agent-' + i,
+            label: (a.did || a.agent_id || 'unknown').substring(0, 20),
+            skills: (a.skills || []).length,
+            status: a.status || 'online',
+            group: a.endpoint ? 1 : 0,
+          };
+        });
+        
+        // 构造连线（同 endpoint 域名的 Agent 互连）
+        var links = [];
+        var groups = {};
+        nodes.forEach(function(n) {
+          var g = n.group.toString();
+          if (!groups[g]) groups[g] = [];
+          groups[g].push(n.id);
+        });
+        Object.values(groups).forEach(function(members) {
+          for (var i = 0; i < members.length - 1; i++) {
+            links.push({ source: members[i], target: members[i + 1] });
+          }
+        });
+        
+        var simulation = d3.forceSimulation(nodes)
+          .force('link', d3.forceLink(links).id(function(d) { return d.id; }).distance(120))
+          .force('charge', d3.forceManyBody().strength(-300))
+          .force('center', d3.forceCenter(width / 2, height / 2))
+          .force('collision', d3.forceCollide().radius(40));
+        
+        var g = d3.select(svg).selectAll('*').remove();
+        var link = g.append('g').selectAll('line')
+          .data(links).join('line')
+          .attr('stroke', 'rgba(139,92,246,0.2)')
+          .attr('stroke-width', 1.5);
+        
+        var node = g.append('g').selectAll('circle')
+          .data(nodes).join('circle')
+          .attr('r', function(d) { return 8 + (d.skills || 0) * 2; })
+          .attr('fill', function(d) { return d.status === 'online' ? '#34d399' : '#94a3b8'; })
+          .attr('stroke', function(d) { return d.status === 'online' ? '#6ee7b7' : '#cbd5e1'; })
+          .attr('stroke-width', 2)
+          .style('cursor', 'pointer')
+          .call(d3.drag()
+            .on('start', function(event, d) { if (!event.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+            .on('drag', function(event, d) { d.fx = event.x; d.fy = event.y; })
+            .on('end', function(event, d) { if (!event.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }));
+        
+        var label = g.append('g').selectAll('text')
+          .data(nodes).join('text')
+          .text(function(d) { return d.label; })
+          .attr('font-size', 9).attr('fill', '#94a3b8').attr('dx', 12).attr('dy', 3);
+        
+        simulation.on('tick', function() {
+          link.attr('x1', function(d) { return d.source.x; }).attr('y1', function(d) { return d.source.y; })
+              .attr('x2', function(d) { return d.target.x; }).attr('y2', function(d) { return d.target.y; });
+          node.attr('cx', function(d) { return d.x; }).attr('cy', function(d) { return d.y; });
+          label.attr('x', function(d) { return d.x; }).attr('y', function(d) { return d.y; });
+        });
+        
+        node.on('click', function(event, d) {
+          var detail = document.getElementById('topology-detail');
+          detail.classList.remove('hidden');
+          document.getElementById('topology-detail-title').textContent = d.label;
+          document.getElementById('topology-detail-content').textContent = '状态: ' + d.status + ' | Skills: ' + d.skills;
+          document.getElementById('topology-detail-meta').textContent = 'ID: ' + d.id;
+        });
+      })
+      .catch(function() {
+        svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#ef4444" font-size="14">加载失败</text>';
+      });
+  }
+  
+  // 拓扑图按钮绑定
+  var topologyBtn = document.querySelector('[data-route="a2a-network"]');
+  if (topologyBtn) {
+    topologyBtn.addEventListener('click', function() {
+      setTimeout(renderTopology, 200);
     });
   }
-
+  
   // ============ Mindflow Tab 切换 ============
   window.switchMindflowTab = function(tab) {
     ['canvas', 'tasks', 'notes', 'profile'].forEach(function(t) {
@@ -728,62 +918,19 @@ document.addEventListener('DOMContentLoaded', function() {
     var target = document.getElementById('mf-' + tab + '-panel');
     if (target) target.classList.remove('hidden');
   };
-
-  // ============ 工作台统计数据 ============
-  window.loadWorkbenchStats = function() {
-    // Identity stats
-    fetch(GATEWAY_URL + '/v1/identity').then(function(r){return r.json()}).then(function(d){
-      if (d.success && d.data) {
-        var el = document.getElementById('stats-total-users');
-        if (el) el.textContent = d.data.total_users || '-';
-        var el2 = document.getElementById('stats-active-users');
-        if (el2) el2.textContent = d.data.active_users !== undefined ? d.data.active_users : '-';
-      }
-    }).catch(function(){});
-    // Memory stats
-    fetch('http://localhost:8000/api/v1/dual-chain/stats').then(function(r){return r.json()}).then(function(d){
-      var el = document.getElementById('stats-memories');
-      if (el) el.textContent = (d.private_count || 0) + (d.knowledge_count || 0);
-      // Also update memory panel
-      var mt = document.getElementById('mem-total');
-      if (mt) mt.textContent = (d.private_count || 0) + (d.knowledge_count || 0);
-      var mp = document.getElementById('mem-private');
-      if (mp) mp.textContent = d.private_count || 0;
-      var mk = document.getElementById('mem-knowledge');
-      if (mk) mk.textContent = d.knowledge_count || 0;
-    }).catch(function(){});
-    // System health
-    fetch(GATEWAY_URL + '/health').then(function(r){return r.json()}).then(function(d){
-      var el = document.getElementById('stats-health');
-      if (el) el.textContent = d.data && d.data.alphaid === 'ok' ? '🟢' : '🔴';
-      // Generate log entries from health data
-      var logsEl = document.getElementById('exec-logs');
-      if (logsEl && d.data) {
-        var now = new Date();
-        var ts = now.toISOString().slice(0,19).replace('T',' ');
-        var entries = [
-          {icon: d.data.alphaid === 'ok' ? '🟢' : '🔴', ts: ts, service: 'alphaid', msg: d.data.alphaid === 'ok' ? '服务正常' : '异常' },
-          {icon: d.data.gateway === 'ok' ? '🟢' : '🔴', ts: ts, service: 'gateway', msg: d.data.gateway === 'ok' ? '运行中' : '异常' },
-          {icon: d.data.obsidian === 'ok' ? '📄' : '❌', ts: ts, service: 'obsidian', msg: d.data.obsidian === 'ok' ? '知识库已关联' : '未连接' },
-        ];
-        logsEl.innerHTML = entries.map(function(e){
-          return '<div class="p-3 rounded-lg bg-white/5 border border-white/10 flex items-center gap-3">' +
-            '<span>' + e.icon + '</span>' +
-            '<span class="text-slate-400">' + e.ts + '</span>' +
-            '<span class="text-white">' + e.service + '</span>' +
-            '<span class="text-slate-500">→ ' + e.msg + '</span></div>';
-        }).join('');
-      }
-    }).catch(function(){});
-  };
-
+  
   // 切换到工作台时加载统计数据
   window.showWorkbench = function() {
     document.getElementById('homepageView').classList.remove('active');
     document.getElementById('mindflowView').classList.remove('active');
     document.getElementById('workbenchView').classList.add('active');
     window.scrollTo(0, 0);
-    setTimeout(loadWorkbenchStats, 100);
+    // 动态设置 iframe 地址
+    var iframe = document.getElementById('doubao-iframe-src');
+    if (iframe && !iframe.src) {
+      iframe.src = CONFIG.gateway + '/v1/doubao';
+    }
+    setTimeout(loadDashboard, 100);
   };
 
   // ============ 💬 豆包记忆桥 ============
@@ -794,7 +941,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
     window.updateStatus = function() {
     // Gateway health
-    fetch('http://localhost:18080/health').then(function(r){return r.json()}).then(function(h){
+    fetch(CONFIG.gateway + '/health').then(function(r){return r.json()}).then(function(h){
       if (h.success) {
         var gwOk = h.data && h.data.gateway === 'ok';
         document.getElementById('doubao-status').innerHTML = gwOk ? '🟢 连接正常' : '🟡 部分异常';
@@ -802,9 +949,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }).catch(function(){
       document.getElementById('doubao-status').innerHTML = '🔴 Gateway 未连';
     });
-    
+
     // Nebula (Feishu bot) health - check via orchestrator
-    fetch('http://localhost:19090/health').then(function(r){return r.json()}).then(function(d){
+    fetch(CONFIG.orchestrator + '/health').then(function(r){return r.json()}).then(function(d){
       document.getElementById('doubao-nebula').innerHTML = '🟢 连接中';
     }).catch(function(){
       document.getElementById('doubao-nebula').innerHTML = '🟡 Orchestrator 未启动';
@@ -813,7 +960,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Obsidian vault - check directory exists with recent files
     var obsEl = document.getElementById('doubao-obsidian');
     // Can't check local filesystem from browser, but we can check via gateway
-    fetch('http://localhost:18080/health').then(function(r){return r.json()}).then(function(h){
+    fetch(CONFIG.gateway + '/health').then(function(r){return r.json()}).then(function(h){
       var hasObsidian = h.data && h.data.obsidian === 'ok';
       obsEl.innerHTML = hasObsidian ? '📄 已关联' : '📄 未连接';
     }).catch(function(){
@@ -827,7 +974,7 @@ document.addEventListener('DOMContentLoaded', function() {
     list.innerHTML = '<div class="text-center text-slate-500 py-8 text-sm">加载中...</div>';
     
     // Direct Obsidian vault search - zero token cost
-    fetch('http://localhost:18080/v1/memory/search?limit=10')
+    fetch(CONFIG.gateway + '/v1/memory/search?limit=10')
     .then(function(r){return r.json()})
     .then(function(res){
       if (res.success && res.data && res.data.results && res.data.results.length > 0) {
@@ -862,7 +1009,7 @@ document.addEventListener('DOMContentLoaded', function() {
     list.innerHTML = '<div class="text-center text-slate-500 py-8 text-sm">搜索中...</div>';
     
     // Search via Obsidian vault (zero token cost)
-    fetch('http://localhost:18080/v1/memory/search?keyword=' + encodeURIComponent(q) + '&limit=20')
+    fetch(CONFIG.gateway + '/v1/memory/search?keyword=' + encodeURIComponent(q) + '&limit=20')
     .then(function(r){return r.json()})
     .then(function(res){
       if (res.success && res.data && res.data.results && res.data.results.length > 0) {
@@ -905,7 +1052,7 @@ document.addEventListener('DOMContentLoaded', function() {
   };
   
   function renderGraph() {
-    fetch('http://localhost:18080/v1/memory/graph').then(function(r){return r.json()}).then(function(resp){
+    fetch(CONFIG.gateway + '/v1/memory/graph').then(function(r){return r.json()}).then(function(resp){
       if (!resp.success || !resp.data) return;
       var data = resp.data;
       document.getElementById('graph-stats').textContent = data.nodes.length + ' 节点·' + data.edges.length + ' 连线';
@@ -964,6 +1111,24 @@ document.addEventListener('DOMContentLoaded', function() {
     graphBtn.addEventListener('click', function() {
       setTimeout(loadGraph, 200);
     });
+  }
+  
+  // Auto-load agents on workbench entry if already logged in
+  var authToken = localStorage.getItem('aid_access_token') || localStorage.getItem('access_token');
+  if (authToken) {
+    // Pre-fetch agent status when workbench is active
+    var workbenchObserver = new MutationObserver(function(mutations) {
+      mutations.forEach(function(m) {
+        if (m.target.id === 'workbenchView' && m.target.classList.contains('active')) {
+          loadAgentStatus();
+          loadAuditLogs();
+        }
+      });
+    });
+    var wbView = document.getElementById('workbenchView');
+    if (wbView) {
+      workbenchObserver.observe(wbView, { attributes: true, attributeFilter: ['class'] });
+    }
   }
   
 });

@@ -1,17 +1,31 @@
 @echo off
 chcp 65001 >nul
-title AID 桌面精灵
+title NURO Ghost — Ghost Platform 桌面精灵
 
-:: 切换到项目根目录
 cd /d "%~dp0.."
 
-:: 参数透传
-python src\aid_daemon.py %*
-
-:: 如果出错就暂停
-if %ERRORLEVEL% neq 0 (
-    echo.
-    echo 退出码: %ERRORLEVEL%
-    echo 如果报缺少依赖，运行 scripts\install_fairy.bat
-    pause
+set "PYHOME=%LOCALAPPDATA%\Python"
+if exist "%PYHOME%\python.exe" (
+    "%PYHOME%\python.exe" "%~dp0..\src\aid_daemon.py" %*
+    goto :end
 )
+
+python "%~dp0..\src\aid_daemon.py" %*
+if %ERRORLEVEL% neq 9009 goto :end
+
+py -3 "%~dp0..\src\aid_daemon.py" %*
+if %ERRORLEVEL% neq 9009 goto :end
+
+echo.
+echo === NURO Ghost — Ghost Platform 桌面精灵 ===
+echo.
+echo Python not found.
+echo Please install Python 3.10+ with "Add to PATH" checked.
+echo.
+pause
+exit /b 1
+
+:end
+echo.
+echo NURO Ghost exited (code %ERRORLEVEL%)
+pause

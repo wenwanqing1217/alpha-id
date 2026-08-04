@@ -111,6 +111,7 @@ class AidNuro:
         self._chat_visible = False
         self._chat_win: Optional[tk.Toplevel] = None
         self._messages: list = []
+        self._floating = False  # 悬浮模式：窗口隐藏但进程存活
 
         # ── 1. 身份初始化 ──
         self._identity: Optional[FairyIdentity] = None
@@ -309,10 +310,11 @@ class AidNuro:
     # ═══════════════════════════════════════════════════════
 
     def _center_ball(self):
-        """定位角色窗口（屏幕右上角）"""
+        """定位角色窗口（左下角，可拖拽移动）"""
         sw = self.ball.winfo_screenwidth()
-        x = sw - self.BALL_SIZE - 30
-        y = 60
+        sh = self.ball.winfo_screenheight()
+        x = 30
+        y = sh - self.BALL_SIZE - 60  # 底部偏上，避开任务栏
         self.ball.geometry(f"{self.BALL_SIZE}x{self.BALL_SIZE}+{x}+{y}")
 
     def _apply_ball_acrylic(self):
@@ -402,6 +404,8 @@ class AidNuro:
         self._menu.add_command(label="📸 看屏幕", command=lambda: self._quick_action("看看屏幕上有什么"))
         self._menu.add_command(label="🎤 语音输入", command=self._menu_voice_input)
         self._menu.add_separator()
+        self._menu.add_command(label="📌 悬浮模式", command=self._toggle_floating)
+        self._menu.add_separator()
 
         # 眼瞎耳聋模式切换
         blind_label = "🔓 退出隐私模式" if self._blind else "🔒 隐私模式（眼瞎耳聋）"
@@ -409,7 +413,7 @@ class AidNuro:
 
         self._menu.add_command(label="📋 今日总结", command=self._show_daily_summary)
         self._menu.add_separator()
-        self._menu.add_command(label="ℹ️ 关于 NURO", command=self._show_about)
+        self._menu.add_command(label="ℹ️ 关于 NURO Ghost", command=self._show_about)
         self._menu.add_command(label="退出", command=self._quit)
 
     def _show_menu(self, event):
@@ -967,6 +971,106 @@ class AidNuro:
         self._create_menu()
 
     # ═══════════════════════════════════════════════════════
+    #  悬浮模式
+    # ═══════════════════════════════════════════════════════
+
+    def _toggle_floating(self):
+        """切换悬浮模式：隐藏主窗口，显示小圆点"""
+        if self._floating:
+            # 退出悬浮 → 恢复主窗口
+            self._floating = False
+            if self._float_dot:
+                try:
+                    self._float_dot.destroy()
+                except Exception:
+                    pass
+                self._float_dot = None
+            self.ball.deiconify()
+            self.ball.attributes("-topmost", True)
+            self._center_ball()
+            self._apply_ball_acrylic()
+            if self._popup:
+                self._popup.toast("NURO", "已退出悬浮模式 📌")
+        else:
+            # 进入悬浮 → 隐藏主窗口，显示小圆点
+            self._floating = True
+            self.ball.withdraw()
+            self._create_float_dot()
+            if self._popup:
+                self._popup.toast("NURO", "已进入悬浮模式，点击小圆点恢复")
+
+    def _create_float_dot(self):
+        """创建悬浮小幽灵（替代主窗口）"""
+        dot_size = 48
+        dot = tk.Toplevel(self.ball)
+        dot.overrideredirect(True)
+        dot.attributes("-topmost", True)
+        dot.configure(bg=Palette.BG_DARK)
+        bx = self.ball.winfo_x() + self.BALL_SIZE // 2 - dot_size // 2
+        by = self.ball.winfo_y() + self.BALL_SIZE // 2 - dot_size // 2
+        dot.geometry(f"{dot_size}x{dot_size}+{bx}+{by}")
+
+        canvas = tk.Canvas(dot, width=dot_size, height=dot_size,
+                           bg=Palette.BG_DARK, highlightthickness=0)
+        canvas.pack()
+
+        cx, cy = dot_size // 2, dot_size // 2 + 2
+        r = 16
+
+        # 紫色光晕
+        canvas.create_oval(cx - r - 4, cy - r - 4, cx + r + 4, cy + r + 4,
+                           fill="", outline=Palette.ACCENT, width=2)
+
+        # 幽灵头部（白色圆角）
+        canvas.create_oval(cx - r, cy - r + 4, cx + r, cy + r - 4,
+                           fill="white", outline="", width=0)
+
+        # 幽灵底部波浪
+        wave_y = cy + r - 6
+        for i, x_off in enumerate([-r, -r//2, 0, r//2, r]):
+            wy = wave_y + (2 if i % 2 == 0 else -2)
+            canvas.create_oval(cx + x_off - 4, wy - 4, cx + x_off + 4, wy + 4,
+                               fill="white", outline="", width=0)
+
+        # 左眼
+        eye_r = 4
+        le_x, le_y = cx - 6, cy - 3
+        canvas.create_oval(le_x - eye_r, le_y - eye_r, le_x + eye_r, le_y + eye_r,
+                           fill=Palette.BG_DARK, outline="")
+        canvas.create_oval(le_x - eye_r + 1, le_y - eye_r + 1, le_x + eye_r - 2, le_y + eye_r - 2,
+                           fill="white", outline="")
+
+        # 右眼
+        re_x, re_y = cx + 6, cy - 3
+        canvas.create_oval(re_x - eye_r, re_y - eye_r, re_x + eye_r, re_y + eye_r,
+                           fill=Palette.BG_DARK, outline="")
+        canvas.create_oval(re_x - eye_r + 1, re_y - eye_r + 1, re_x + eye_r - 2, re_y + eye_r - 2,
+                           fill="white", outline="")
+
+        # 点击恢复
+        canvas.bind("<Button-1>", lambda e: self._toggle_floating())
+        canvas.bind("<Button-3>", self._show_float_menu)
+
+        self._float_dot = dot
+        self._float_dot._restore_cb = lambda e: self._toggle_floating()
+
+    def _show_float_menu(self, event):
+        """悬浮小圆点的右键菜单"""
+        menu = tk.Menu(
+            self._float_dot, tearoff=0,
+            bg=Palette.BG_DARK, fg=Palette.TEXT_PRIMARY,
+            activebackground=Palette.ACCENT, activeforeground="white",
+            font=("Microsoft YaHei", 10),
+        )
+        menu.add_command(label="📌 恢复窗口", command=self._toggle_floating)
+        menu.add_separator()
+        menu.add_command(label="❌ 彻底退出", command=self._quit)
+        try:
+            menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            menu.grab_release()
+
+    # ═══════════════════════════════════════════════════════
     #  每日总结
     # ═══════════════════════════════════════════════════════
 
@@ -1093,6 +1197,11 @@ class AidNuro:
             try:
                 self._mcp_process.terminate()
                 self._mcp_process.wait(timeout=3)
+            except Exception:
+                pass
+        if self._float_dot:
+            try:
+                self._float_dot.destroy()
             except Exception:
                 pass
         try:

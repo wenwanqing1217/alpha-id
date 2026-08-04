@@ -1,0 +1,144 @@
+"""Tests for critical bugfixes applied during E2E debugging.
+
+Run with:  pytest tests/test_critical_bugfixes.py -v
+"""
+
+import asyncio
+import pytest
+from unittest.mock import MagicMock, patch
+
+from core.storage_postgres import PostgresStorage
+from auth.csrf import CSRFMiddleware
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 1. storage_postgres: JSONB deserialization
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestStoragePostgresJSONB:
+    """psycopg3 returns JSONB as native Python types, not strings."""
+
+    def test_deserialize_string(self):
+        """Normal JSON string still works."""
+        assert PostgresStorage._deserialize('{"key": "val"}') == {"key": "val"}
+
+    def test_deserialize_dict_passthrough(self):
+        """psycopg3 returns dict directly for JSONB."""
+        raw = {"key": "val"}
+        assert PostgresStorage._deserialize(raw) == raw
+
+    def test_deserialize_int_passthrough(self):
+        """Bug: old code called json.loads(int) -> TypeError."""
+        raw = 42
+        assert PostgresStorage._deserialize(raw) == raw
+
+    def test_deserialize_list_passthrough(self):
+        raw = [1, 2, 3]
+        assert PostgresStorage._deserialize(raw) == raw
+
+    def test_deserialize_none_returns_none(self):
+        assert PostgresStorage._deserialize(None) is None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 2. CSRF: exempt internal paths
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestCSRFExemptPaths:
+    """Gateway -> Alpha-ID internal calls must bypass CSRF."""
+
+    @pytest.fixture
+    def middleware(self):
+        return CSRFMiddleware(
+            app=MagicMock(),
+            allowed_origins={"http://localhost:18080"},
+            exempt_paths={"/api/v1/identity/quick-register", "/api/v1/dual-chain/save"},
+        )
+
+    def test_quick_register_exempt(self, middleware):
+        request = MagicMock()
+        request.method = "POST"
+        request.url.path = "/api/v1/identity/quick-register"
+        request.headers = {}
+        result = middleware.dispatch(request, MagicMock())
+        assert result is not None
+
+    def test_dual_chain_save_exempt(self, middleware):
+        request = MagicMock()
+        request.method = "POST"
+        request.url.path = "/api/v1/dual-chain/save"
+        request.headers = {}
+        result = middleware.dispatch(request, MagicMock())
+        assert result is not None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 3. A2A graph endpoint logic
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestA2AGraphLogic:
+    """to_payload() returns {'agents': list} — graph must iterate list."""
+
+    def test_graph_nodes_from_list_payload(self):
+        """Nodes are built from list-based agents payload."""
+        from api.a2a import a2a_agent_graph
+
+        mock_registry = MagicMock()
+        mock_registry.to_payload.return_value = {
+            "agents": [
+                {"did": "did:ghost:1", "alpha_id": "Agent-A", "skill_list": ["ping"]},
+                {"did": "did:ghost:2", "alpha_id": "Agent-B", "skill_list": ["echo"]},
+            ]
+        }
+        mock_audit = MagicMock()
+        mock_audit.list_records.return_value = []
+
+        mock_state = {"registry": mock_registry, "audit": mock_audit}
+        mock_request = MagicMock()
+        mock_request.app.state.a2a_state = mock_state
+
+        with patch("api.a2a._get_a2a_state", return_value=mock_state):
+            with patch("api.a2a._get_registry", return_value=mock_registry):
+                with patch("api.a2a._get_audit", return_value=mock_audit):
+                    result = asyncio.get_event_loop().run_until_complete(
+                        a2a_agent_graph(mock_request)
+                    )
+
+        assert "nodes" in result
+        assert "edges" in result
+        assert len(result["nodes"]) == 2
+        assert result["nodes"][0]["id"] == "did:ghost:1"
+        assert result["nodes"][0]["label"] == "Agent-A"
+        assert result["nodes"][1]["id"] == "did:ghost:2"
+
+    def test_graph_edges_from_audit_records(self):
+        """Edges are derived from audit log A2A call records."""
+        from api.a2a import a2a_agent_graph
+
+        mock_registry = MagicMock()
+        mock_registry.to_payload.return_value = {"agents": []}
+        mock_audit = MagicMock()
+        mock_audit.list_records.return_value = [
+            {
+                "caller_agent_id": "did:ghost:1",
+                "target_agent_id": "did:ghost:2",
+                "skill": "ping",
+                "timestamp": "2024-01-01T00:00:00Z",
+            },
+        ]
+
+        mock_state = {"registry": mock_registry, "audit": mock_audit}
+        mock_request = MagicMock()
+        mock_request.app.state.a2a_state = mock_state
+
+        with patch("api.a2a._get_a2a_state", return_value=mock_state):
+            with patch("api.a2a._get_registry", return_value=mock_registry):
+                with patch("api.a2a._get_audit", return_value=mock_audit):
+                    result = asyncio.get_event_loop().run_until_complete(
+                        a2a_agent_graph(mock_request)
+                    )
+
+        assert len(result["edges"]) == 1
+        assert result["edges"][0]["from"] == "did:ghost:1"
+        assert result["edges"][0]["to"] == "did:ghost:2"
+        assert result["edges"][0]["skill"] == "ping"

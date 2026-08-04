@@ -10,8 +10,9 @@ Alpha-ID 统一配置管理 — 基于 pydantic-settings
 
 import os
 import threading
+import time
 from pathlib import Path
-from typing import ClassVar, List, Optional
+from typing import Callable, ClassVar, Dict, List, Optional
 
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -139,6 +140,13 @@ class Settings(BaseSettings):
     alipay_demo_mode: str = Field(default="false", validation_alias=AliasChoices("ALIPAY_DEMO_MODE"))
     baidu_map_auth_token: str = Field(default="", validation_alias=AliasChoices("BAIDU_MAP_AUTH_TOKEN"))
 
+    # ── 飞书集成 ──
+    feishu_app_id: str = Field(default="", validation_alias=AliasChoices("FEISHU_APP_ID"))
+    feishu_app_secret: str = Field(default="", validation_alias=AliasChoices("FEISHU_APP_SECRET"))
+    feishu_verification_token: str = Field(default="", validation_alias=AliasChoices("FEISHU_VERIFICATION_TOKEN"))
+    feishu_encrypt_key: str = Field(default="", validation_alias=AliasChoices("FEISHU_ENCRYPT_KEY"))
+    feishu_webhook_enabled: bool = Field(default=True, validation_alias=AliasChoices("FEISHU_WEBHOOK_ENABLED"))
+
     # ── A2A 协议 ──
     a2a_enabled: bool = Field(default=True, validation_alias=AliasChoices("A2A_ENABLED"))
     a2a_port: int = Field(default=9001, validation_alias=AliasChoices("A2A_PORT"))
@@ -158,6 +166,7 @@ class Settings(BaseSettings):
 
     @field_validator("auth_master_key", "llm_api_key", "alibaba_access_key_secret",
                     "alipay_private_key", "deepseek_api_key", "database_url", "baidu_map_auth_token",
+                    "feishu_app_secret", "feishu_encrypt_key",
                     mode="after")
     @classmethod
     def _decrypt_sensitive(cls, v):
@@ -190,6 +199,71 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# ── 文件监听：.env 变更自动触发 reload ──
+
+_watcher_thread: Optional[threading.Thread] = None
+_watcher_stop = threading.Event()
+_env_mtime_cache: Dict[str, float] = {}
+
+
+def _watch_env_file(interval: float = 2.0) -> None:
+    """后台线程：定期检查 .env 文件 mtime，变更时自动 reload"""
+    global settings
+    while not _watcher_stop.is_set():
+        try:
+            mtime = _ENV_FILE.stat().st_mtime if _ENV_FILE.exists() else 0.0
+            cached = _env_mtime_cache.get("env", 0.0)
+            if mtime > 0 and mtime != cached:
+                _env_mtime_cache["env"] = mtime
+                changed_fields = reload_settings_internal()
+                if changed_fields:
+                    import logging
+                    logging.getLogger(__name__).info(
+                        "[settings] .env changed, reloaded: %s", changed_fields
+                    )
+        except Exception:
+            pass
+        _watcher_stop.wait(interval)
+
+
+def start_file_watcher(interval: float = 2.0) -> None:
+    """启动配置文件监听（后台线程，守护模式）"""
+    global _watcher_thread
+    if _watcher_thread and _watcher_thread.is_alive():
+        return
+    _watcher_stop.clear()
+    _env_mtime_cache["env"] = _ENV_FILE.stat().st_mtime if _ENV_FILE.exists() else 0.0
+    _watcher_thread = threading.Thread(target=_watch_env_file, args=(interval,), daemon=True)
+    _watcher_thread.start()
+
+
+def stop_file_watcher() -> None:
+    """停止配置文件监听"""
+    _watcher_stop.set()
+
+
+def reload_settings_internal() -> list[str]:
+    """内部 reload（无锁，由调用方保证线程安全）"""
+    global settings
+    changed: list[str] = []
+    new = Settings()
+    for field_name in Settings.model_fields:
+        try:
+            old_val = getattr(settings, field_name)
+            new_val = getattr(new, field_name)
+            object.__setattr__(settings, field_name, new_val)
+            if old_val != new_val:
+                changed.append(field_name)
+        except Exception:
+            pass
+    if changed and settings._callbacks:
+        for cb in list(settings._callbacks):
+            try:
+                cb(changed)
+            except Exception:
+                pass
+    return changed
 
 
 def reload_settings() -> Settings:

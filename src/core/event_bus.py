@@ -1,3 +1,7 @@
+# TERM: EventBus — Redis Streams 跨服务事件总线（替代旧 blinker 实现）
+# TERM: EventType — 事件类型常量枚举
+# TERM: Event — 事件数据结构（event_id, event_type, data, timestamp, source）
+
 """
 Event Bus — 基于 Redis Streams（跨服务）+ 本地处理器（进程内）
 
@@ -148,7 +152,7 @@ class EventBus:
             if event_type in self._local_handlers:
                 self._local_handlers[event_type] = [
                     h for h in self._local_handlers[event_type]
-                    if h.__wrapped__ if hasattr(h, '__wrapped__') else h != callback
+                    if (h.__wrapped__ if hasattr(h, '__wrapped__') else h) != callback
                 ]
         else:
             self._local_handlers.pop(event_type, None)

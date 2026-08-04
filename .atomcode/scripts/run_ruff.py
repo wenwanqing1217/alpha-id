@@ -4,7 +4,7 @@ PostToolUse: 编辑后自动 ruff 格式化 + lint 检查
 import subprocess
 import sys
 
-PROJECT = r"D:\Software\AID\projects"
+PROJECT = r"D:\MW\alphaid\projects"
 
 def main():
     # ruff format

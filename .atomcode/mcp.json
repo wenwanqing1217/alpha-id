@@ -18,7 +18,7 @@
     "filesystem": {
       "description": "安全的文件系统访问 — 替代直接 bash 读写",
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "D:\\AID\\projects"]
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "D:\\MW\\alphaid\\projects"]
     }
   }
 }

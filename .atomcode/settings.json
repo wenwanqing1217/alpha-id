@@ -1,18 +1,18 @@
 {
   "hooks": {
     "PostToolUse_Ruff": {
-      "command": "python D:\\AID\\projects\\.atomcode\\scripts\\run_ruff.py",
+      "command": "python D:\\MW\\alphaid\\projects\\.atomcode\\scripts\\run_ruff.py",
       "description": "每次编辑后自动 ruff 格式化和 lint 检查",
       "run": "always"
     },
     "PostToolUse_ProfileTests": {
-      "command": "cd /d D:\\AID\\projects && python -m pytest tests/ -q --tb=short -x -k profile tests/test_user_stories.py",
+      "command": "cd /d D:\\MW\\alphaid\\projects && python -m pytest tests/ -q --tb=short -x -k profile tests/test_user_stories.py",
       "description": "编辑 profile 或采集器代码后自动跑关联测试",
       "patterns": ["**/profile_*.py", "**/profile_*.json", "**/collectors/*.py", "**/test_user_stories.py"],
       "run": "on_match"
     },
     "PreToolUse_P0Guard": {
-      "command": "python D:\\AID\\projects\\.atomcode\\scripts\\p0-guard.py",
+      "command": "python D:\\MW\\alphaid\\projects\\.atomcode\\scripts\\p0-guard.py",
       "description": "Phase 范围守卫：修改 Phase 2+ 领域前弹窗提醒",
       "run": "always"
     }

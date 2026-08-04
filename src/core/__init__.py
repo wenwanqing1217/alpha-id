@@ -10,7 +10,7 @@ from core.twin_brain import BrainRegistry, BrainSettings, BrainState, TwinBrain,
 from core.event_bus import EventBus, EventType, Event, get_event_bus, emit, on  # noqa: F401
 from core.tenant import TenantManager, TenantPlan, PLANS, TenantContext, get_tenant_manager  # noqa: F401
 from core.a2a import (  # noqa: F401
-    A2AServer, A2AClient, A2ASigner, A2ASkillRegistry,
+    A2AServer, A2ASigner, A2ASkillRegistry,
     A2ACallRequest, A2ACallResponse, A2AAgentInfo,
 )
 from core.orchestrator import (  # noqa: F401

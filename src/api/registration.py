@@ -142,13 +142,13 @@ async def send_sms(request: Request,
                 "channel": "error",
             }
 
-    # 演示模式：不返回验证码（防止客户端绕过验证）
-    # 开发/测试时可通过服务端日志或测试专用端点获取验证码
+    # 演示模式：返回验证码供前端自动填入（仅开发/测试环境）
     if demo_mode:
         return {
             "success": True,
             "message": "验证码已发送（演示模式）",
             "channel": "demo",
+            "demo": code,
         }
 
     # 无配置且非演示模式 — 返回错误而非静默泄露

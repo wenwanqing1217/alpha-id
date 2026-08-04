@@ -61,6 +61,12 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         if any(path.startswith(prefix) for prefix in self._exempt_prefixes):
             return await call_next(request)
 
+        # 内部服务调用豁免（Gateway → Alpha-ID 代理）
+        # Gateway 已做 Tenant Auth + Rate Limit，此处跳过 CSRF 避免重复验证
+        internal_paths = {"/api/v1/identity/quick-register", "/api/v1/dual-chain/save"}
+        if path in internal_paths:
+            return await call_next(request)
+
         # 自定义头检查 — 浏览器跨域 fetch 无法设置自定义头
         if self._enforce_custom_header:
             requested_with = request.headers.get(_CSRF_CUSTOM_HEADER, "")

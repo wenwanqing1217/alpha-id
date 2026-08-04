@@ -1,8 +1,7 @@
 """
-NURO 2D 角色 — 猫娘桌面宠物
+NURO Ghost — Ghost Platform 幽灵角色（替换原猫娘）
 
-萌系猫娘：猫耳、大眼睛、胡须、尾巴、腮红
-状态驱动颜色变化 + 呼吸动画
+与前端 GhostSprite 保持一致：白色幽灵 + 紫色光晕。
 """
 
 import logging
@@ -14,33 +13,40 @@ logger = logging.getLogger(__name__)
 
 
 class FairyState(Enum):
-    """角色状态"""
-    IDLE = "idle"           # 待机
-    OBSERVING = "observing" # 观察中
-    SPEAKING = "speaking"   # 说话中
-    THINKING = "thinking"   # 思考中
-    SLEEPING = "sleeping"   # 睡眠（眼瞎耳聋模式）
+    """角色状态（保持 FairyState 名称兼容旧代码）"""
+    IDLE = "idle"
+    OBSERVING = "observing"
+    SPEAK = "speak"
+    THINK = "think"
+    LISTEN = "listen"
+    HAPPY = "happy"
+    WARN = "warn"
+    BLIND = "blind"
+    SLEEPING = "sleeping"
 
 
 class FairyCharacter:
     """
-    猫娘 2D 角色（Tkinter Canvas）
+    Ghost Platform 幽灵角色（Tkinter Canvas）
 
-    部件：
-    - 猫耳（三角，内侧粉色）
-    - 圆脸 + 大眼睛（高光）
-    - 小胡须（6根）
-    - 腮红（椭圆粉团）
-    - 嘴巴（小三角/弯月）
-    - 身体（椭圆，带尾巴）
+    设计：
+    - 白色幽灵身体（圆顶 + 波浪底边）
+    - 紫色光晕（nebula #8b5cf6）
+    - 大眼睛（带高光）
+    - 状态驱动颜色和动画
+    - 呼吸浮动 + 眨眼
     """
 
     COLORS = {
-        FairyState.IDLE:      {"bg": "#ffe4e6", "fg": "#f472b6", "glow": "#ec4899", "cheek": "#fda4af"},
-        FairyState.OBSERVING: {"bg": "#dbeafe", "fg": "#60a5fa", "glow": "#3b82f6", "cheek": "#93c5fd"},
-        FairyState.SPEAKING:  {"bg": "#d1fae5", "fg": "#34d399", "glow": "#10b981", "cheek": "#6ee7b7"},
-        FairyState.THINKING:  {"bg": "#fef3c7", "fg": "#fbbf24", "glow": "#f59e0b", "cheek": "#fcd34d"},
-        FairyState.SLEEPING:  {"bg": "#e5e7eb", "fg": "#9ca3af", "glow": "#6b7280", "cheek": "#d1d5db"},
+        FairyState.IDLE:      {"body": "#ffffff", "glow": "#8b5cf6", "eye": "#1e1b4b", "cheek": "#c4b5fd"},
+        FairyState.OBSERVING: {"body": "#ffffff", "glow": "#38bdf8", "eye": "#0c4a6e", "cheek": "#7dd3fc"},
+        FairyState.SPEAK:     {"body": "#ffffff", "glow": "#10b981", "eye": "#064e3b", "cheek": "#6ee7b7"},
+        FairyState.THINK:     {"body": "#f5f3ff", "glow": "#f59e0b", "eye": "#78350f", "cheek": "#fcd34d"},
+        FairyState.LISTEN:    {"body": "#ffffff", "glow": "#3b82f6", "eye": "#1e3a5f", "cheek": "#93c5fd"},
+        FairyState.HAPPY:     {"body": "#ffffff", "glow": "#10b981", "eye": "#064e3b", "cheek": "#6ee7b7"},
+        FairyState.WARN:      {"body": "#fef3c7", "glow": "#ef4444", "eye": "#7f1d1d", "cheek": "#fca5a5"},
+        FairyState.BLIND:     {"body": "#e5e7eb", "glow": "#6b7280", "eye": "#9ca3af", "cheek": "#d1d5db"},
+        FairyState.SLEEPING:  {"body": "#e5e7eb", "glow": "#6b7280", "eye": "#9ca3af", "cheek": "#d1d5db"},
     }
 
     def __init__(self, canvas: tk.Canvas, x: int = 200, y: int = 200, size: int = 80):
@@ -52,187 +58,200 @@ class FairyCharacter:
         self._animation_id = None
         self._breath_phase = 0.0
         self._blink_counter = 0
+        self._mouth_phase = 0
 
         self._draw()
         self._start_breath_animation()
 
     def _draw(self):
-        """绘制猫娘"""
+        """绘制 Ghost 幽灵"""
         self.canvas.delete("fairy")
         colors = self.COLORS[self.state]
-        s = self.size  # 基准尺寸
+        s = self.size
+        cx, cy = self.x, self.y
 
-        # ── 尾巴（身体后面，先画）──
-        tail_x = self.x - s * 0.7
-        tail_y = self.y + s * 0.3
-        self.canvas.create_line(
-            tail_x, tail_y,
-            tail_x - s * 0.4, tail_y - s * 0.5,
-            tail_x - s * 0.2, tail_y - s * 0.8,
-            fill=colors["glow"], width=max(2, s // 15),
-            smooth=True, capstyle="round", tags="fairy"
-        )
-
-        # ── 身体（椭圆）──
-        body_rx = s * 0.45
-        body_ry = s * 0.35
-        body_y = self.y + s * 0.35
+        # ── 光晕 ──
+        glow_r = s * 0.8
         self.canvas.create_oval(
-            self.x - body_rx, body_y - body_ry,
-            self.x + body_rx, body_y + body_ry,
-            fill=colors["bg"], outline=colors["glow"], width=2, tags="fairy"
+            cx - glow_r, cy - glow_r, cx + glow_r, cy + glow_r,
+            fill="", outline=colors["glow"], width=1, tags="fairy"
         )
-
-        # ── 猫耳（三角）──
-        ear_size = s * 0.3
-        ear_base_y = self.y - s * 0.35
-        for dx in [-s * 0.35, s * 0.35]:
-            # 外耳
-            self.canvas.create_polygon(
-                dx - ear_size * 0.6, ear_base_y + ear_size * 0.5,
-                dx + ear_size * 0.6, ear_base_y + ear_size * 0.5,
-                dx, ear_base_y - ear_size * 0.8,
-                fill=colors["fg"], outline=colors["glow"], width=1, tags="fairy"
-            )
-            # 内耳（粉色）
-            inner_scale = 0.5
-            self.canvas.create_polygon(
-                dx - ear_size * 0.6 * inner_scale, ear_base_y + ear_size * 0.5 * inner_scale + 3,
-                dx + ear_size * 0.6 * inner_scale, ear_base_y + ear_size * 0.5 * inner_scale + 3,
-                dx, ear_base_y - ear_size * 0.4 + 3,
-                fill="#fce7f3", outline="", tags="fairy"
-            )
-
-        # ── 脸（大圆）──
-        face_rx = s * 0.55
-        face_ry = s * 0.5
+        glow_r2 = s * 1.1
         self.canvas.create_oval(
-            self.x - face_rx, self.y - face_ry,
-            self.x + face_rx, self.y + face_ry,
-            fill=colors["bg"], outline=colors["glow"], width=2, tags="fairy"
+            cx - glow_r2, cy - glow_r2, cx + glow_r2, cy + glow_r2,
+            fill="", outline=colors["glow"], width=0.5, tags="fairy"
         )
 
-        # ── 腮红 ──
-        cheek_r = s * 0.12
-        for dx in [-s * 0.38, s * 0.38]:
-            self.canvas.create_oval(
-                dx - cheek_r, self.y + s * 0.05 - cheek_r // 2,
-                dx + cheek_r, self.y + s * 0.05 + cheek_r // 2,
-                fill=colors["cheek"], outline="", tags="fairy"
-            )
+        # ── 身体（圆顶 + 波浪底边）──
+        body_top = cy - s * 0.55
+        body_bottom = cy + s * 0.5
+        body_width = s * 0.55
+        wave_w = body_width * 2 / 3
+        wave_h = s * 0.1
+
+        body_coords = [
+            cx - body_width, cy + s * 0.1,
+            cx - body_width * 0.7, body_top,
+            cx, body_top - s * 0.05,
+            cx + body_width * 0.7, body_top,
+            cx + body_width, cy + s * 0.1,
+            cx + body_width, body_bottom,
+            cx + body_width - wave_w * 0.3, body_bottom - wave_h,
+            cx + body_width - wave_w * 0.6, body_bottom + wave_h * 0.5,
+            cx + body_width - wave_w, body_bottom - wave_h * 0.8,
+            cx + body_width - wave_w * 1.3, body_bottom + wave_h * 0.3,
+            cx - body_width, body_bottom,
+        ]
+        self.canvas.create_polygon(
+            body_coords,
+            fill=colors["body"], outline=colors["glow"], width=2, tags="fairy"
+        )
 
         # ── 眼睛 ──
-        eye_r = s * 0.14
-        eye_y = self.y - s * 0.1
-        for dx in [-s * 0.22, s * 0.22]:
-            if self.state == FairyState.SLEEPING:
-                # 闭线
+        eye_r = s * 0.12
+        eye_y = cy - s * 0.1
+        eye_spacing = s * 0.2
+
+        if self.state in (FairyState.SLEEPING, FairyState.BLIND):
+            for dx in [-eye_spacing, eye_spacing]:
                 self.canvas.create_arc(
-                    dx - eye_r, eye_y - eye_r // 2,
-                    dx + eye_r, eye_y + eye_r // 2,
+                    cx + dx - eye_r, eye_y - eye_r * 0.5,
+                    cx + dx + eye_r, eye_y + eye_r * 0.5,
                     start=0, extent=180, style="arc",
-                    outline=colors["fg"], width=2, tags="fairy"
+                    outline=colors["eye"], width=2, tags="fairy"
                 )
-            else:
-                # 大眼（外圈 + 瞳孔 + 高光）
-                blink = self._should_blink()
-                if blink:
-                    # 眨眼：横线
+        elif self.state == FairyState.THINK:
+            for dx in [-eye_spacing, eye_spacing]:
+                self.canvas.create_oval(
+                    cx + dx - eye_r, eye_y - eye_r,
+                    cx + dx + eye_r, eye_y + eye_r,
+                    fill=colors["eye"], outline="", tags="fairy"
+                )
+                hr = eye_r * 0.3
+                self.canvas.create_oval(
+                    cx + dx + eye_r * 0.2 - hr, eye_y - eye_r * 0.3 - hr,
+                    cx + dx + eye_r * 0.2 + hr, eye_y - eye_r * 0.3 + hr,
+                    fill="white", outline="", tags="fairy"
+                )
+        else:
+            for dx in [-eye_spacing, eye_spacing]:
+                if self._should_blink():
                     self.canvas.create_line(
-                        dx - eye_r, eye_y, dx + eye_r, eye_y,
-                        fill=colors["fg"], width=2, tags="fairy"
+                        cx + dx - eye_r, eye_y, cx + dx + eye_r, eye_y,
+                        fill=colors["eye"], width=2, tags="fairy"
                     )
                 else:
-                    # 白底
                     self.canvas.create_oval(
-                        dx - eye_r, eye_y - eye_r * 1.2,
-                        dx + eye_r, eye_y + eye_r * 1.2,
-                        fill="white", outline=colors["fg"], width=1, tags="fairy"
+                        cx + dx - eye_r, eye_y - eye_r * 1.3,
+                        cx + dx + eye_r, eye_y + eye_r * 1.3,
+                        fill="white", outline=colors["eye"], width=1, tags="fairy"
                     )
-                    # 瞳孔（大）
-                    pr = eye_r * 0.65
+                    pr = eye_r * 0.7
                     self.canvas.create_oval(
-                        dx - pr, eye_y - pr * 1.2,
-                        dx + pr, eye_y + pr * 1.2,
-                        fill=colors["fg"], outline="", tags="fairy"
+                        cx + dx - pr, eye_y - pr * 1.2,
+                        cx + dx + pr, eye_y + pr * 1.2,
+                        fill=colors["eye"], outline="", tags="fairy"
                     )
-                    # 高光（小白点）
-                    hr = eye_r * 0.22
+                    hr = eye_r * 0.25
                     self.canvas.create_oval(
-                        dx + pr * 0.3 - hr, eye_y - pr * 0.6 - hr,
-                        dx + pr * 0.3 + hr, eye_y - pr * 0.6 + hr,
+                        cx + dx + pr * 0.3 - hr, eye_y - pr * 0.5 - hr,
+                        cx + dx + pr * 0.3 + hr, eye_y - pr * 0.5 + hr,
                         fill="white", outline="", tags="fairy"
                     )
 
-        # ── 胡须 ──
-        whisker_len = s * 0.4
-        whisker_y = self.y + s * 0.08
-        whisker_dy = s * 0.08
-        for dx_sign in [-1, 1]:
-            base_x = self.x + dx_sign * s * 0.25
-            for dy_offset in [-whisker_dy, 0, whisker_dy]:
-                self.canvas.create_line(
-                    base_x, whisker_y + dy_offset,
-                    base_x + dx_sign * whisker_len, whisker_y + dy_offset + (2 if dy_offset == 0 else dy_offset * 0.3),
-                    fill=colors["fg"], width=max(1, s // 40), tags="fairy"
-                )
-
         # ── 嘴巴 ──
-        mouth_y = self.y + s * 0.2
-        if self.state == FairyState.SLEEPING:
-            # Z z z
-            self.canvas.create_text(
-                self.x + s * 0.5, self.y - s * 0.5,
-                text="Z z z", fill=colors["fg"],
-                font=("微软雅黑", max(6, s // 10)), tags="fairy"
-            )
-        elif self.state == FairyState.SPEAKING:
-            # 张开的小圆嘴
+        mouth_y = cy + s * 0.15
+        if self.state in (FairyState.SLEEPING, FairyState.BLIND):
             self.canvas.create_oval(
-                self.x - s * 0.08, mouth_y - s * 0.04,
-                self.x + s * 0.08, mouth_y + s * 0.1,
-                fill="#ff6b6b", outline="#e11d48", width=1, tags="fairy"
+                cx - s * 0.04, mouth_y - s * 0.03,
+                cx + s * 0.04, mouth_y + s * 0.03,
+                fill=colors["cheek"], outline="", tags="fairy"
+            )
+        elif self.state == FairyState.SPEAK:
+            mouth_open = s * 0.04 + math.sin(self._mouth_phase) * s * 0.03
+            self.canvas.create_oval(
+                cx - s * 0.08, mouth_y - mouth_open,
+                cx + s * 0.08, mouth_y + mouth_open,
+                fill=colors["cheek"], outline=colors["glow"], width=1, tags="fairy"
+            )
+        elif self.state == FairyState.HAPPY:
+            self.canvas.create_arc(
+                cx - s * 0.1, mouth_y - s * 0.03,
+                cx + s * 0.1, mouth_y + s * 0.08,
+                start=0, extent=180, style="chord",
+                fill=colors["cheek"], outline=colors["glow"], width=1, tags="fairy"
+            )
+        elif self.state == FairyState.WARN:
+            self.canvas.create_line(
+                cx - s * 0.08, mouth_y,
+                cx - s * 0.03, mouth_y + s * 0.05,
+                cx + s * 0.03, mouth_y - s * 0.05,
+                cx + s * 0.08, mouth_y,
+                fill=colors["eye"], width=2, tags="fairy"
             )
         else:
-            # 小三角嘴（猫嘴）
-            self.canvas.create_polygon(
-                self.x, mouth_y - s * 0.03,
-                self.x - s * 0.06, mouth_y + s * 0.04,
-                self.x + s * 0.06, mouth_y + s * 0.04,
-                fill="#fda4af", outline=colors["fg"], width=1, tags="fairy"
+            self.canvas.create_arc(
+                cx - s * 0.1, mouth_y - s * 0.05,
+                cx + s * 0.1, mouth_y + s * 0.08,
+                start=0, extent=180, style="arc",
+                outline=colors["eye"], width=1.5, tags="fairy"
             )
 
+        # ── 腮红 ──
+        cheek_r = s * 0.08
+        for dx in [-s * 0.3, s * 0.3]:
+            self.canvas.create_oval(
+                cx + dx - cheek_r, cy + s * 0.02 - cheek_r,
+                cx + dx + cheek_r, cy + s * 0.02 + cheek_r,
+                fill=colors["cheek"], outline="", tags="fairy"
+            )
+
+        # ── 小星星装饰 ──
+        star_r = s * 0.03
+        for angle in [0, 90, 180, 270]:
+            rad = math.radians(angle)
+            sx = cx + math.cos(rad) * s * 0.65
+            sy = cy - s * 0.1 + math.sin(rad) * s * 0.65
+            pts = []
+            for i in range(4):
+                a = math.radians(i * 90 + 45)
+                pts.extend([sx + star_r * math.cos(a), sy + star_r * math.sin(a)])
+            if len(pts) == 8:
+                self.canvas.create_polygon(
+                    pts, fill=colors["glow"], outline="", tags="fairy"
+                )
+
     def _should_blink(self) -> bool:
-        """眨眼逻辑"""
         self._blink_counter += 1
-        if self._blink_counter > 120:  # ~6秒眨一次
+        if self._blink_counter > 80:
             self._blink_counter = 0
             return True
         return False
 
     def set_state(self, state: FairyState):
-        """切换状态"""
         if state != self.state:
             self.state = state
             self._draw()
-            logger.debug(f"角色状态: {state.value}")
+            logger.debug(f"Ghost 状态: {state.value}")
 
     def _start_breath_animation(self):
-        """呼吸动画（轻微缩放 + 浮动）"""
-        self._breath_phase += 0.04
+        self._breath_phase += 0.03
         offset_y = math.sin(self._breath_phase) * 2
         try:
-            self.canvas.move("fairy", 0, offset_y - getattr(self, '_last_offset_y', 0))
+            current_y = getattr(self, '_last_offset_y', 0)
+            self.canvas.move("fairy", 0, offset_y - current_y)
             self._last_offset_y = offset_y
         except Exception:
             pass
+        if self.state == FairyState.SPEAK:
+            self._mouth_phase += 0.3
+            self._draw()
         try:
             self._animation_id = self.canvas.after(50, self._start_breath_animation)
         except Exception:
             pass
 
     def move_to(self, x: int, y: int):
-        """移动角色"""
         dx = x - self.x
         dy = y - self.y
         self.canvas.move("fairy", dx, dy)
@@ -240,12 +259,10 @@ class FairyCharacter:
         self.y = y
 
     def contains(self, x: int, y: int) -> bool:
-        """点是否在角色范围内"""
-        r = self.size
+        r = self.size * 0.8
         return (x - self.x) ** 2 + (y - self.y) ** 2 <= r ** 2
 
     def destroy(self):
-        """清理"""
         if self._animation_id:
             try:
                 self.canvas.after_cancel(self._animation_id)

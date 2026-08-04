@@ -54,16 +54,9 @@ class UserIdentityManager:
         self._founder_alpha_id = settings.founder_alpha_id
         self._founder_code_hash = settings.founder_code_hash
 
-        # 默认使用 SQLite 存储
         if storage is None:
             from core.storage_sqlite import SqliteStorage
-
-            db_path = os.path.join(
-                str(settings.ghost_workspace),
-                "assets",
-                "alpha_id.db",
-            )
-            storage = SqliteStorage(db_path)
+            storage = SqliteStorage()
 
         self._storage = storage
 
@@ -125,14 +118,24 @@ class UserIdentityManager:
         counter = db["counter"]
         founder_registered = db["founder_registered"]
 
-        # 检查设备指纹是否已注册
+        # 检查设备指纹是否已注册 → 返回已有 alpha_id（供登录用）
         for existing_user in users.values():
             if existing_user.get("device_fingerprint") == device_fingerprint:
-                logger.warning("注册失败: 设备已注册 - %s", device_fingerprint)
-                return {"success": False, "message": "该设备已注册"}
+                logger.info("设备已注册 - %s, 返回 alpha_id=%s", device_fingerprint, existing_user.get("alpha_id"))
+                return {
+                    "success": False,
+                    "message": "该设备已注册",
+                    "alpha_id": existing_user.get("alpha_id"),
+                    "already_registered": True,
+                }
             if device_fingerprint in existing_user.get("devices", []):
-                logger.warning("注册失败: 设备已注册 - %s", device_fingerprint)
-                return {"success": False, "message": "该设备已注册"}
+                logger.info("设备已注册 - %s, 返回 alpha_id=%s", device_fingerprint, existing_user.get("alpha_id"))
+                return {
+                    "success": False,
+                    "message": "该设备已注册",
+                    "alpha_id": existing_user.get("alpha_id"),
+                    "already_registered": True,
+                }
 
         # 创始人注册逻辑
         if is_founder:
@@ -159,7 +162,13 @@ class UserIdentityManager:
         # 检查 alpha_id 是否已被占用
         if alpha_id in users:
             logger.warning("注册失败: alpha_id 已存在 - %s", alpha_id)
-            return {"success": False, "message": "该 Alpha-ID 已被注册"}
+            return {
+                "success": False,
+                "message": "该 Alpha-ID 已被注册",
+                "already_registered": True,
+                "alpha_id": alpha_id,
+                "user_id": users[alpha_id].get("user_id", ""),
+            }
 
         # 使用 UUID4 避免时间戳冲突（秒级并发注册会产生相同 ID）
         user_id = f"user_{uuid.uuid4().hex[:12]}_{alpha_id.replace('-', '')}"

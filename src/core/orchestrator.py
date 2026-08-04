@@ -54,7 +54,7 @@ class MasterOrchestrator:
             ops_interval=ops_interval,
         )
 
-        # 保留子模块引用（兼容旧代码）
+        self._running = False
         self._brain: Optional[Any] = None
         self._channels: Dict[str, ChannelAdapter] = {}
         self._threads: List[threading.Thread] = []

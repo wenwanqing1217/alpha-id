@@ -1,0 +1,297 @@
+# Alpha-ID GPU 部署配置
+# 部署到支持 GPU 的 K8s 集群
+#
+# 前置条件：
+# 1. 集群已安装 NVIDIA GPU Operator
+# 2. 节点已正确配置 nvidia.com/gpu 资源
+#
+# 部署命令：
+#   kubectl apply -f k8s/
+#
+# 验证：
+#   kubectl get pods -n alpha-id
+#   kubectl logs -n alpha-id -l app=alpha-id
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: alpha-id
+
+---
+# ── ConfigMap：应用配置 ──
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alpha-id-config
+  namespace: alpha-id
+data:
+  DATABASE_URL: "postgresql://alphaid:secret@postgres:5432/alpha_id"
+  REDIS_URL: "redis://redis:6379/0"
+  SCHEDULER_STRATEGY: "priority"
+  LOG_LEVEL: "info"
+  ENABLE_GPU_SCHEDULER: "true"
+
+---
+# ── Secret：敏感配置 ──
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alpha-id-secret
+  namespace: alpha-id
+type: Opaque
+data:
+  JWT_SECRET: Y2hhbmdlLW1lLXByb2R1Y3Rpb24=    # base64: change-me-production
+  DEEPSEEK_API_KEY: ""                        # 填入你的 API Key
+
+---
+# ── 主应用 Deployment ──
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alpha-id
+  namespace: alpha-id
+  labels:
+    app: alpha-id
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: alpha-id
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: alpha-id
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      # GPU 节点亲和性：优先调度到有 GPU 的节点
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: nvidia.com/gpu.present
+                operator: In
+                values: ["true"]
+      containers:
+      - name: alpha-id
+        image: alpha-id:latest
+        ports:
+        - containerPort: 8000
+          name: http
+        envFrom:
+        - configMapRef:
+            name: alpha-id-config
+        - secretRef:
+            name: alpha-id-secret
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+            nvidia.com/gpu: 1             # ← 申请 1 张 GPU（推理用）
+          limits:
+            cpu: "2000m"
+            memory: "2Gi"
+            nvidia.com/gpu: 1             # ← GPU 不能超过 limits
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 3
+        volumeMounts:
+        - name: data
+          mountPath: /app/data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: alpha-id-data
+      # 容忍 GPU 节点污点
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+
+---
+# ── GPU Worker（执行 GPU 任务）──
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alpha-id-gpu-worker
+  namespace: alpha-id
+  labels:
+    app: alpha-id-gpu-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alpha-id-gpu-worker
+  template:
+    metadata:
+      labels:
+        app: alpha-id-gpu-worker
+    spec:
+      # 必须调度到 GPU 节点
+      nodeSelector:
+        accelerator: nvidia-a100           # 选择 A100 节点
+      containers:
+      - name: gpu-worker
+        image: alpha-id:latest
+        command: ["python", "-m", "src.alpha_id.gpu_worker"]
+        envFrom:
+        - configMapRef:
+            name: alpha-id-config
+        resources:
+          requests:
+            cpu: "2000m"
+            memory: "8Gi"
+            nvidia.com/gpu: 2             # ← 申请 2 张 GPU
+          limits:
+            cpu: "4000m"
+            memory: "16Gi"
+            nvidia.com/gpu: 2
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+
+---
+# ── Service ──
+apiVersion: v1
+kind: Service
+metadata:
+  name: alpha-id
+  namespace: alpha-id
+spec:
+  type: ClusterIP
+  selector:
+    app: alpha-id
+  ports:
+  - port: 80
+    targetPort: 8000
+    name: http
+
+---
+# ── Ingress ──
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: alpha-id
+  namespace: alpha-id
+  annotations:
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+spec:
+  rules:
+  - host: alpha-id.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: alpha-id
+            port:
+              number: 80
+
+---
+# ── HPA 自动扩缩容 ──
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: alpha-id-hpa
+  namespace: alpha-id
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: alpha-id
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Pods
+    pods:
+      metric:
+        name: gpu_utilization
+      target:
+        type: AverageValue
+        averageValue: "80"                # GPU 利用率超 80% 扩容
+
+---
+# ── PVC 持久化存储 ──
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: alpha-id-data
+  namespace: alpha-id
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+# ── ResourceQuota（多租户配额）──
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: alpha-id-quota
+  namespace: alpha-id
+spec:
+  hard:
+    requests.nvidia.com/gpu: "4"          # 最多申请 4 张 GPU
+    requests.cpu: "10"
+    requests.memory: "20Gi"
+    limits.nvidia.com/gpu: "4"
+    limits.cpu: "20"
+    limits.memory: "40Gi"
+
+---
+# ── NetworkPolicy（网络隔离）──
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: alpha-id-netpol
+  namespace: alpha-id
+spec:
+  podSelector:
+    matchLabels:
+      app: alpha-id
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx              # 只允许 Ingress 访问
+    ports:
+    - port: 8000
+  egress:
+  - to:                                  # 允许访问外部（API 调用）
+    ports:
+    - port: 443
+    - port: 5432                          # PostgreSQL
+    - port: 6379                          # Redis

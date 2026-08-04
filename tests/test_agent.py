@@ -8,18 +8,26 @@ from unittest.mock import MagicMock, patch
 from core.agent import AgentLoop, Tool, _make_tools, _parse_tool_call
 
 
+def _fn_ok():
+    return "ok"
+
+
+def _fn_echo(x):
+    return str(x)
+
+
 class TestTool:
     """Tool 数据模型测试"""
 
     def test_tool_basic(self):
-        fn = lambda: "ok"
+        fn = _fn_ok
         t = Tool(name="test", description="测试工具", parameters={}, fn=fn)
         assert t.name == "test"
         assert t.description == "测试工具"
         assert t.parameters == {}
 
     def test_tool_to_schema(self):
-        fn = lambda x: str(x)
+        fn = _fn_echo
         t = Tool(
             name="echo",
             description="回声",
@@ -165,7 +173,7 @@ class TestAgentLoop:
         loop = AgentLoop("Alpha-Loop-001")
         assert loop.alpha_id == "Alpha-Loop-001"
         assert loop.model == "deepseek-v4-flash"
-        assert loop.max_turns == 3
+        assert loop.max_turns == 6
         assert len(loop.tools) > 0
         assert loop.history == []
 

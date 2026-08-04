@@ -26,7 +26,7 @@ from dataclasses import asdict
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
@@ -443,6 +443,57 @@ async def a2a_list_agents(request: Request):
     return registry.to_payload()
 
 
+@router.get("/graph")
+async def a2a_agent_graph(request: Request):
+    """A2A Agent 网络拓扑图（nodes + edges）
+
+    从注册表拿 Agent 节点，从审计日志拿调用边，
+    返回前端 d3.js / vis-network 可直接渲染的结构。
+    """
+    state = _get_a2a_state(request)
+    registry = _get_registry(state)
+    audit = _get_audit(state)
+
+    # ── 节点：所有已注册 Agent ──
+    agents_payload = registry.to_payload()
+    nodes = []
+    for info in agents_payload.get("agents", []):
+        did = info.get("did", "")
+        nodes.append({
+            "id": did,
+            "label": info.get("alpha_id", did),
+            "endpoint": info.get("endpoint", ""),
+            "skills": info.get("skill_list", []),
+            "group": "agent",
+        })
+
+    # ── 边：审计日志中的 A2A 调用记录 ──
+    edges = []
+    seen = set()
+    try:
+        records = audit.list_records()
+        for rec in records:
+            caller = rec.get("caller_agent_id", "")
+            target = rec.get("target_agent_id", "")
+            skill = rec.get("skill", "")
+            if not caller or not target:
+                continue
+            key = (caller, target, skill)
+            if key in seen:
+                continue
+            seen.add(key)
+            edges.append({
+                "from": caller,
+                "to": target,
+                "skill": skill,
+                "timestamp": rec.get("timestamp", ""),
+            })
+    except Exception:
+        pass
+
+    return {"nodes": nodes, "edges": edges}
+
+
 @router.get("/skills")
 async def a2a_list_skills(request: Request):
     """列出所有可用技能"""
@@ -452,7 +503,16 @@ async def a2a_list_skills(request: Request):
 
 
 @router.get("/audit")
-async def a2a_list_audit(request: Request, query: A2AAuditQuery = ...):
+async def a2a_list_audit(
+    request: Request,
+    caller_agent_id: str = Query("", description="按调用方过滤"),
+    target_agent_id: str = Query("", description="按目标过滤"),
+    skill: str = Query("", description="按技能名过滤"),
+    start_time: str = Query("", description="起始时间 (ISO 格式)"),
+    end_time: str = Query("", description="结束时间 (ISO 格式)"),
+    limit: int = Query(100, ge=1, le=1000, description="每页条数"),
+    offset: int = Query(0, ge=0, description="偏移量"),
+):
     """查询 A2A 审计日志（支持持久化存储筛选 + 分页）"""
     state = _get_a2a_state(request)
     audit = _get_audit(state)
@@ -460,27 +520,27 @@ async def a2a_list_audit(request: Request, query: A2AAuditQuery = ...):
     # 优先使用持久化存储的分页查询（支持时间范围筛选）
     if hasattr(audit, "list_records") and "start_time" in str(audit.list_records.__code__.co_varnames):
         records = audit.list_records(
-            caller_agent_id=query.caller_agent_id,
-            start_time=query.start_time or None,
-            end_time=query.end_time or None,
-            limit=query.limit,
-            offset=query.offset,
+            caller_agent_id=caller_agent_id,
+            start_time=start_time or None,
+            end_time=end_time or None,
+            limit=limit,
+            offset=offset,
         )
         total = audit.count(
-            caller_agent_id=query.caller_agent_id,
-            start_time=query.start_time or None,
-            end_time=query.end_time or None,
+            caller_agent_id=caller_agent_id,
+            start_time=start_time or None,
+            end_time=end_time or None,
         )
     else:
         # 降级：内存查询（仅支持 caller_agent_id 过滤）
-        records = audit.list_records(caller_agent_id=query.caller_agent_id)
+        records = audit.list_records(caller_agent_id=caller_agent_id)
         total = len(records)
 
     # 客户端侧过滤（target_agent_id, skill）
-    if query.target_agent_id:
-        records = [r for r in records if r.get("target_agent_id") == query.target_agent_id]
-    if query.skill:
-        records = [r for r in records if r.get("skill") == query.skill]
+    if target_agent_id:
+        records = [r for r in records if r.get("target_agent_id") == target_agent_id]
+    if skill:
+        records = [r for r in records if r.get("skill") == skill]
 
     return {"records": records, "total": total}
 

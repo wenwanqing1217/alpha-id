@@ -9,11 +9,9 @@ Alpha-ID API 集成测试
 """
 
 import hashlib
-import json
+import os
 
 import pytest
-
-import os
 
 # 修复：pydantic_core 依赖 api-ms-win-crt-*.dll，系统缺失时手动添加搜索路径
 _crt_search_path = r"D:\QQNT"
@@ -275,7 +273,7 @@ class TestIdentityAPI:
         assert data["is_founder"] is True
 
     def test_register_duplicate(self, client):
-        """同一设备重复注册应失败"""
+        """同一设备重复注册应返回已有账号（幂等设计）"""
         fp = "fp-duplicate"
         first = register_user(client, fp)
         assert first["success"] is True
@@ -285,8 +283,11 @@ class TestIdentityAPI:
                 "device_fingerprint": fp,
             },
         )
-        assert resp.status_code == 400
-        assert "已注册" in resp.json()["detail"]
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["success"] is True
+        assert data["already_registered"] is True
+        assert "alpha_id" in data
 
     def test_get_profile(self, client):
         user_data = register_and_login(client, "fp-profile")

@@ -5,7 +5,9 @@
     或安装后：aid-api
 """
 
+import asyncio
 import logging
+from collections import deque
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncGenerator
@@ -130,6 +132,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
 
             # 构建技能注册表
             skills = A2ASkillRegistry()
+
+            # 初始化 A2A 签名器（无密钥 = 签名功能关闭，但对象可用）
+            did = settings.app_name or ""
+            signer = A2ASigner()
 
             # 注册示例技能
             @skills.skill("ping", description="健康检查")

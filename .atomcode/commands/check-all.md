@@ -2,7 +2,7 @@
 
 一键执行：
 ```
-cd /d D:\Software\AID\projects && python -m ruff format src/ tests/ --check --quiet && python -m ruff check src/ --quiet && python -m pyright src/ && python -m pytest tests/ -q --tb=short
+cd /d D:\MW\alphaid\projects && python -m ruff format src/ tests/ --check --quiet && python -m ruff check src/ --quiet && python -m pyright src/ && python -m pytest tests/ -q --tb=short
 ```
 
 分步执行：

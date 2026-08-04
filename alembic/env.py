@@ -1,4 +1,9 @@
-"""Alembic 迁移环境配置"""
+"""Alembic migration environment config
+
+NOTE: This project uses raw sqlite3 (not SQLAlchemy ORM models) for data access.
+Therefore `alembic revision --autogenerate` will NOT detect schema changes.
+All future migrations must be hand-written in alembic/versions/.
+"""
 
 from logging.config import fileConfig
 import os
@@ -6,32 +11,24 @@ import sys
 from pathlib import Path
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import engine_from_config, MetaData, pool
 
-# 将 src 加入路径
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from core.settings import settings
 
 config = context.config
 
-# 从 settings 动态设置数据库 URL
 if settings.database_url:
     config.set_main_option("sqlalchemy.url", settings.database_url)
 else:
-    db_path = os.path.join(str(settings.ghost_workspace), "assets", "alpha_id.db")
+    db_path = os.path.join(str(settings.alpha_id_path), "alpha_id.db")
     config.set_main_option("sqlalchemy.url", f"sqlite:///{db_path}")
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# 导入所有模型，确保 Alembic 能自动检测变更
-try:
-    from core.storage_sqlite import SqliteStorage  # noqa: F401
-    # 这里导入所有需要迁移的模型
-    target_metadata = None  # 使用 autogenerate 时需要设置
-except ImportError:
-    target_metadata = None
+target_metadata = MetaData()
 
 
 def run_migrations_offline() -> None:
