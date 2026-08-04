@@ -1,3 +1,4 @@
+# TERM: AlphaID — 身份服务（注册/登录/JWT/设备绑定，DID 体系核心）
 """用户身份 API 路由"""
 
 import secrets

@@ -1,3 +1,4 @@
+# TERM: RiskAssessmentEngine — 风控引擎（设备指纹 + 行为指纹 + 声纹验证）
 """风控引擎 API 路由"""
 
 from fastapi import APIRouter, Depends

@@ -1,3 +1,4 @@
+# TERM: SocialManager — 社交管理器 CLI（好友请求/响应/消息，AID CLI 入口）
 """
 AID CLI — 社交子命令
 

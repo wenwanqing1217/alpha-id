@@ -1,3 +1,4 @@
+# TERM: DualChain — 双链记忆隔离（私有链加密 + 知识链公开，shim 复用 fairy.fairy_memory）
 """
 NURO Ghost — Ghost Platform 双链记忆模块（shim）
 

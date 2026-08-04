@@ -1,3 +1,4 @@
+# TERM: AlphaID — 身份/AI 服务（JWT 认证依赖注入）
 """FastAPI 认证中间件——依赖注入"""
 
 from typing import Optional

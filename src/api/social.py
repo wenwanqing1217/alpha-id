@@ -1,3 +1,4 @@
+# TERM: AlphaSocialManager — 社交管理器（好友请求 + 消息 + EventBus 发布）
 """社交网络 API 路由"""
 
 from fastapi import APIRouter, Depends, HTTPException, Query
