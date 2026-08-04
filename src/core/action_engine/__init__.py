@@ -30,5 +30,5 @@ __all__ = [
     # 适配器
     "PlatformAdapter",
     "ConsoleAdapter",
-    # WeChatAdapter: 暂不导出，待实现后启用（当前为占位 stub）
+    "WeChatAdapter",
 ]

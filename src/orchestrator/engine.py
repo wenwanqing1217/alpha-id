@@ -305,6 +305,7 @@ class OrchestratorEngine:
         self._event_bus.on(EventType.MEMORY_WRITTEN, self._on_memory_written)
         self._event_bus.on(EventType.AGENT_THOUGHT, self._on_agent_thought)
         self._event_bus.on(EventType.SYSTEM_ERROR, self._on_system_error)
+        self._event_bus.on(EventType.SOCIAL_MESSAGE, self._on_social_message)
 
     def _on_memory_written(self, data):
         """记忆写入事件"""
@@ -317,6 +318,13 @@ class OrchestratorEngine:
     def _on_system_error(self, data):
         """系统错误事件"""
         self._stats["errors"] = self._stats.get("errors", 0) + 1
+
+    def _on_social_message(self, data):
+        """社交消息事件（WeChat/飞书/Telegram 等渠道消息）"""
+        logger.info("[SOCIAL_MESSAGE] platform=%s intent=%s source=%s",
+                     data.get("platform"), data.get("intent"), data.get("source_alpha_id"))
+        # 社交消息统计
+        self._stats["social_messages"] = self._stats.get("social_messages", 0) + 1
 
     # ── 生命周期 ──
 
