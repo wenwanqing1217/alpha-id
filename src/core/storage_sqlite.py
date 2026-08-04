@@ -195,12 +195,25 @@ class SqliteStorage(StorageBackend):
             raise
 
     def list(self, collection: str, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
-        """列出集合中的记录，支持按字段过滤"""
-        # 加载整个集合做过滤（对于小规模数据够用）
+        """列出集合中的记录，支持按字段过滤
+
+        兼容两种存储模式：
+          - 旧模式：load(collection) 返回 dict of records（由 save() 写入）
+          - 新模式：put() 写入单条记录，通过 collection_item_<id> 查询
+        """
+        # 旧模式：尝试加载集合文档
         data = self.load(collection)
-        if data is None:
-            return []
-        items = list(data.values())
+        if data is not None:
+            items = list(data.values())
+        else:
+            # 新模式：逐条查询
+            with self._tx() as conn:
+                rows = conn.execute(
+                    "SELECT data FROM collections WHERE collection_name LIKE ?",
+                    (f"{collection}_item_%",),
+                ).fetchall()
+                items = [json.loads(row["data"]) for row in rows]
+
         if filters:
             items = [item for item in items if all(item.get(k) == v for k, v in filters.items())]
         return items

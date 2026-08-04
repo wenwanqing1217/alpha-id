@@ -125,8 +125,12 @@ class PostgresStorage(StorageBackend):
         return json.dumps(record, ensure_ascii=False)
 
     @staticmethod
-    def _deserialize(raw: str) -> Dict[str, Any]:
-        return json.loads(raw)
+    def _deserialize(raw):
+        # psycopg v3 JSONB columns return native Python types (dict, list, int, etc.)
+        # Only parse JSON if the value is still a string/bytes
+        if isinstance(raw, (str, bytes)):
+            return json.loads(raw)
+        return raw
 
     # ── StorageBackend 接口实现 ──
 

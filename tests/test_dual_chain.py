@@ -132,24 +132,24 @@ class TestDualChainManager(unittest.TestCase):
     def test_private_content_encrypted_at_rest(self):
         """私有链内容在存储中加密"""
         self.mgr.save("绝密：我的私钥是abc123", sensitivity=95, category="secret")
-        # 直接读取存储文件，确认内容已加密
-        priv_data = self.mgr._private_storage.load(self.mgr._chain_key_private)
-        memories = priv_data.get("memories", {})
-        self.assertTrue(len(memories) > 0)
-        for mem in memories.values():
-            self.assertTrue(mem.get("encrypted"))
-            self.assertIn("nonce", mem)
-            # 密文不包含明文
-            self.assertNotIn("绝密", mem["content"])
+        # 通过 list_chain 读取记录级存储
+        records = self.mgr.list_chain("private")
+        self.assertEqual(len(records), 1)
+        mem = records[0]
+        self.assertTrue(mem.get("encrypted"))
+        self.assertIn("nonce", mem)
+        # 密文不包含明文
+        self.assertNotIn("绝密", mem["content"])
 
     def test_knowledge_content_plain(self):
         """知识链内容明文存储"""
         self.mgr.save("公开知识：Python 3.12发布了", sensitivity=10, category="knowledge")
-        know_data = self.mgr._knowledge_storage.load(self.mgr._chain_key_knowledge)
-        memories = know_data.get("memories", {})
-        for mem in memories.values():
-            self.assertFalse(mem.get("encrypted", False))
-            self.assertIn("Python", mem["content"])
+        # 通过 list_chain 读取记录级存储
+        records = self.mgr.list_chain("knowledge")
+        self.assertEqual(len(records), 1)
+        mem = records[0]
+        self.assertFalse(mem.get("encrypted", False))
+        self.assertIn("Python", mem["content"])
 
     # ── 读取测试 ──
 

@@ -814,13 +814,13 @@ def _call_llm(messages: List[Dict[str, str]], tools_schema: List[Dict[str, Any]]
     api_key = settings.llm_api_key
     base_url = settings.llm_base_url
 
+    if not api_key:
+        return {"content": "[LLM 未配置：请设置 OPENAI_API_KEY 环境变量]", "tool_calls": None, "raw_message": None}
+
     try:
         base_url = _validate_llm_base_url(base_url)
     except ValueError as exc:
         return {"content": f"[LLM 配置错误] {exc}", "tool_calls": None, "raw_message": None}
-
-    if not api_key:
-        return {"content": "[LLM 未配置：请设置 OPENAI_API_KEY 环境变量]", "tool_calls": None, "raw_message": None}
 
     if not model:
         model = settings.llm_model

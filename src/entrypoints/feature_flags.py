@@ -158,6 +158,18 @@ except ImportError:
     pass
 
 
+# ── 向后兼容别名（daemon.py re-export shim 使用 Fairy* 命名）──
+FairyBrain = GhostBrain
+FairyCharacter = GhostCharacter
+FairyDaily = GhostDaily
+FairyIdentity = GhostIdentity
+FairyMemory = GhostMemory
+FairyObserver = GhostObserver
+FairyPopup = GhostPopup
+FairyState = GhostState
+FairyVoice = GhostVoice
+
+
 def capability_report() -> dict:
     """返回所有能力标志的快照，用于环境检测与日志"""
     return {
