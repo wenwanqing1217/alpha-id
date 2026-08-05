@@ -167,6 +167,15 @@ class MasterOrchestrator:
             llm_enricher=self._enricher,
         )
 
+    def _init_growth_tracker(self):
+        """初始化成长追踪器（订阅 GROWTH_EVENT，累计成长值）"""
+        from alpha_id.growth_tracker import GrowthTracker
+        self._growth = GrowthTracker(
+            event_bus=self._event_bus,
+            memory_store=self._brain.memory if self._brain else None,
+        )
+        self._growth.start()
+
     def _wire_event_bus(self):
         self._event_bus.on(EventType.MEMORY_WRITTEN, self._on_memory_written)
         self._event_bus.on(EventType.AGENT_THOUGHT, self._on_agent_thought)
@@ -371,10 +380,37 @@ class MasterOrchestrator:
                 reminder = self._nuro.proactive_check()
                 if reminder:
                     logger.info("NURO: %s", reminder)
+                    # 通过 Gateway 推送到本地 NURO 桌宠（修复"提醒只打日志"断点）
+                    self._push_to_nuro(reminder)
             except Exception as e:
                 logger.error("NURO 循环异常: %s", e)
                 self._stats["errors"] += 1
             self._engine._stop_event.wait(self.config.nuro_proactive_interval)
+
+    def _push_to_nuro(self, reminder: str, alpha_id: str = "") -> None:
+        """通过 Gateway /v1/nuro/push 推送提醒到本地 NURO 桌宠
+
+        修复"云端→本地反向通道不存在"的核心断点。
+        失败静默（Gateway 不可达或 NURO 未连接时不影响主流程）。
+        """
+        try:
+            import httpx
+            from core.settings import settings
+            gateway_url = settings.gateway_url.rstrip("/")
+            target_alpha = alpha_id or self._engine._brain.alpha_id if self._engine._brain else "default"
+            with httpx.Client(timeout=5) as client:
+                client.post(
+                    f"{gateway_url}/v1/nuro/push",
+                    json={
+                        "alpha_id": target_alpha,
+                        "type": "reminder",
+                        "title": "NURO 提醒",
+                        "body": reminder,
+                        "data": {"source": "proactive_check"},
+                    },
+                )
+        except Exception as e:
+            logger.debug("NURO push 失败（本地桌宠可能未连接）: %s", e)
 
     def _loop_feishu(self):
         if not self._feishu:
@@ -412,6 +448,9 @@ class MasterOrchestrator:
             self._init_nuro()
         if self.config.enable_self_evolution:
             self._init_evolution()
+
+        # 初始化成长追踪器（始终启用，不依赖 self_evolution 开关）
+        self._init_growth_tracker()
 
         # 连接 EventBus
         self._wire_event_bus()

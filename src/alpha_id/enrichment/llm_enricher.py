@@ -11,7 +11,7 @@ Alpha-ID LLM Enricher — 核心理解引擎
 
 使用方式：
   enricher = LLMEnricher()
-  profile_data = enricher.analyze(conversation_text, source="doubao")
+  profile_data = enricher.analyze(conversation_text, source="chat")
   # profile_data 是结构化 dict，可直接存 SQLite / 合并到 AID 画像
 """
 
@@ -123,7 +123,7 @@ class LLMEnricher:
         
         Args:
             conversation: 原始对话文本
-            source: 数据来源标识（doubao / chatgpt / cursor / manual）
+            source: 数据来源标识（chatgpt / cursor / manual）
             
         Returns:
             结构化画像 dict
@@ -156,7 +156,7 @@ class LLMEnricher:
         批量分析多条对话，合并结果。
         
         Args:
-            conversations: [{"text": "...", "source": "doubao", "timestamp": "..."}]
+            conversations: [{"text": "...", "source": "chat", "timestamp": "..."}]
             
         Returns:
             合并后的结构化画像

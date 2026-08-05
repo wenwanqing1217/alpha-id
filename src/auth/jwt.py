@@ -124,6 +124,24 @@ def verify_token(token: str, expected_type: str = "access") -> str:
     return payload["sub"]
 
 
+def parse_jwt_or_none(request) -> Optional[dict]:
+    """尽力从 FastAPI Request 的 Authorization 头解析 JWT，失败返回 None（不抛异常）。
+
+    用于"宽松"身份识别场景（如多租户面板所有者校验 _owner_or_403）：
+    未携带或无效令牌时返回 None，由调用方决定是否放行。
+    """
+    authorization = request.headers.get("authorization", "")
+    if not authorization:
+        return None
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not token:
+        return None
+    try:
+        return decode_token(token)
+    except Exception:
+        return None
+
+
 def get_current_alpha_id(authorization: Optional[str] = None) -> str:
     if not authorization:
         raise ValueError("缺少 Authorization header")

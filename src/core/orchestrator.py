@@ -16,11 +16,12 @@ import logging
 import threading
 import time
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 from core.settings import settings
 
-from orchestrator.engine import OrchestratorEngine, ChannelAdapter, LoopPhase
+if TYPE_CHECKING:
+    from orchestrator.engine import OrchestratorEngine, ChannelAdapter, LoopPhase
 
 logger = logging.getLogger(__name__)
 
@@ -40,19 +41,16 @@ class MasterOrchestrator:
         memory_interval: int = 300,
         ops_interval: int = 1800,
     ):
-        self.alpha_id = alpha_id
-        self._storage = storage
-        self._loops_enabled = loops_enabled
-        self._memory_interval = memory_interval
-        self._ops_interval = ops_interval
-
-        # 委托到 OrchestratorEngine
+        # TERM: OrchestratorEngine — 统一后台循环管理
+        # Runtime import to avoid circular dependency (core.orchestrator → orchestrator.engine → core.event_bus → core.orchestrator)
+        from orchestrator.engine import OrchestratorEngine
         self._engine = OrchestratorEngine(
             alpha_id=alpha_id,
             loops_enabled=loops_enabled,
             memory_interval=memory_interval,
             ops_interval=ops_interval,
         )
+        self.alpha_id = alpha_id
 
         self._running = False
         self._brain: Optional[Any] = None
@@ -166,3 +164,16 @@ def get_orchestrator(alpha_id: str = None, **kwargs) -> MasterOrchestrator:
             alpha_id = settings.ghost_alpha_id
         _orchestrator = MasterOrchestrator(alpha_id=alpha_id, **kwargs)
     return _orchestrator
+
+
+# ── Lazy re-exports (avoid circular import) ──
+# core/__init__.py imports ChannelAdapter, LoopPhase, get_orchestrator
+# from this module, but they live in orchestrator.engine.
+# We defer the import to runtime to break the cycle:
+#   core.orchestrator → orchestrator.engine → core.event_bus → core.orchestrator
+
+def __getattr__(name: str):
+    if name in ("ChannelAdapter", "LoopPhase"):
+        from orchestrator.engine import ChannelAdapter, LoopPhase
+        return {"ChannelAdapter": ChannelAdapter, "LoopPhase": LoopPhase}[name]
+    raise AttributeError(f"module 'core.orchestrator' has no attribute {name}")

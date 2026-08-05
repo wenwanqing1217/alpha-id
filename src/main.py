@@ -38,16 +38,19 @@ from core.settings import settings  # noqa: E402
 
 from .api.agent import router as agent_router  # noqa: E402
 from .api.a2a import router as a2a_router  # noqa: E402
+from .api.credits import router as credits_router  # noqa: E402
 from .api.dual_chain import router as dual_chain_router  # noqa: E402
 from .api.gdpr import router as gdpr_router  # noqa: E402
 
 # 路由导入（项目始终以 python -m src.main 方式运行）
 from .api.identity import router as identity_router  # noqa: E402
 from .api.mindflow import router as mindflow_router  # noqa: E402
+from .api.agent_dispatch import router as agent_dispatch_router  # noqa: E402
 from .api.observability import router as observability_router  # noqa: E402
 from .api.registration import router as registration_router  # noqa: E402
 from .api.risk import router as risk_router  # noqa: E402
 from .api.social import router as social_router  # noqa: E402
+from .api.tenant_panel import router as tenant_panel_router  # noqa: E402
 from .api.voice import router as voice_router  # noqa: E402
 
 
@@ -426,13 +429,16 @@ app.include_router(identity_router)
 app.include_router(social_router)
 app.include_router(risk_router)
 app.include_router(dual_chain_router)
-app.include_router(registration_router)
 app.include_router(observability_router)
+app.include_router(registration_router)
 app.include_router(agent_router)
 app.include_router(a2a_router)
+app.include_router(credits_router)
 app.include_router(gdpr_router)
 app.include_router(voice_router)
 app.include_router(mindflow_router)
+app.include_router(agent_dispatch_router)
+app.include_router(tenant_panel_router)
 
 
 @app.post("/webhook/feishu")

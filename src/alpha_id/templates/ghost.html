@@ -280,7 +280,7 @@
         <div class="space-y-1.5">
           <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-cosmic-400"></span>Ghost DS 看板</div>
           <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-cosmic-400"></span>商品 / 订单管理</div>
-          <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-cosmic-400"></span>豆包记忆桥</div>
+          <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-cosmic-400"></span>记忆图谱</div>
           <div class="flex items-center gap-2 text-xs text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-cosmic-400"></span>Agent 工作流</div>
         </div>
       </a>
@@ -2053,9 +2053,6 @@
       <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="memory">
         <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-amber-500/20 flex items-center justify-center text-xs">🧠</span>记忆</span>
       </button>
-      <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="doubao">
-        <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-sky-500/20 flex items-center justify-center text-xs">💬</span>豆包记忆桥</span>
-      </button>
       <div class="mt-6 text-[10px] text-slate-500 font-mono tracking-wider mb-3 px-3">系统</div>
       <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition router-nav-btn" data-route="logs">
         <span class="inline-flex items-center gap-2"><span class="w-5 h-5 rounded bg-slate-500/20 flex items-center justify-center text-xs">📋</span>执行日志</span>
@@ -2208,72 +2205,6 @@
           <div class="text-xs text-slate-500">知识链</div>
         </div>
       </div>
-    </div>
-
-    <div id="route-doubao" class="wb-route-panel hidden">
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h2 class="text-2xl font-bold text-white">💬 豆包记忆桥</h2>
-          <p class="text-slate-400 text-sm">豆包对话自动同步到 Ghost 知识链 + Obsidian + Nebula 飞书机器人</p>
-        </div>
-        <div class="flex gap-2">
-          <button onclick="window.open('https://www.doubao.com','_blank')" class="px-4 py-2 bg-sky-500/20 text-sky-300 rounded-lg text-sm hover:bg-sky-500/30 transition border border-sky-500/30">└─ 豆包</button>
-          <button onclick="window.open(CONFIG.nebula,'_blank')" class="px-4 py-2 bg-purple-500/20 text-purple-300 rounded-lg text-sm hover:bg-purple-500/30 transition border border-purple-500/30">🤖 Nebula</button>
-        </div>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="router-node p-4">
-          <div class="text-2xl font-bold text-sky-300" id="doubao-msg-count">-</div>
-          <div class="text-xs text-slate-500 mt-1">已同步对话</div>
-        </div>
-        <div class="router-node p-4">
-          <div class="text-2xl font-bold text-emerald-300" id="doubao-status">🟢 运行中</div>
-          <div class="text-xs text-slate-500 mt-1">桌面端监听</div>
-        </div>
-        <div class="router-node p-4">
-          <div class="text-2xl font-bold text-amber-300" id="doubao-obsidian">📄 已关联</div>
-          <div class="text-xs text-slate-500 mt-1">Obsidian</div>
-        </div>
-        <div class="router-node p-4">
-          <div class="text-2xl font-bold text-purple-300" id="doubao-nebula">🟢 在线</div>
-          <div class="text-xs text-slate-500 mt-1">Nebula 飞书</div>
-        </div>
-      </div>
-      <div class="router-node mb-4">
-        <div class="flex gap-3">
-          <input id="doubao-search-input" type="text" placeholder="🔍 搜索豆包对话记忆..." class="flex-1 px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500/50 focus:bg-white/10 transition">
-          <button onclick="searchDoubao()" class="px-4 py-2.5 bg-sky-500/20 text-sky-300 rounded-lg text-sm hover:bg-sky-500/30 transition border border-sky-500/30">🔍 搜索</button>
-        </div>
-      </div>
-      <div class="router-node">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-medium text-white">💬 最近同步对话</h3>
-          <div class="flex gap-2 items-center">
-            <span class="text-xs text-slate-500" id="doubao-refresh-time"></span>
-            <button onclick="loadDoubao()" class="text-xs text-sky-400 hover:text-sky-300 transition">🔄 刷新</button>
-          </div>
-        </div>
-        <div id="doubao-conv-list" class="space-y-2 max-h-96 overflow-y-auto">
-          <div class="text-center text-slate-600 py-8">加载中...</div>
-        </div>
-      </div>
-    </div>
-      <!-- Ghost embedded Doubao workspace -->
-      <div class="router-node mt-6">
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="text-sm font-medium text-white flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-sky-400"></span>
-            Ghost 豆包工作台
-          </h3>
-          <button onclick="var f=document.getElementById('doubao-iframe');f.classList.toggle('hidden');this.textContent=f.classList.contains('hidden')?'显示工作台':'隐藏工作台'" class="px-3 py-1 text-xs bg-sky-500/20 text-sky-300 rounded hover:bg-sky-500/30 transition border border-sky-500/30">
-            显示工作台
-          </button>
-        </div>
-        <div id="doubao-iframe" class="hidden rounded-lg overflow-hidden border border-white/10 bg-white/5">
-          <iframe src="" id="doubao-iframe-src" width="100%" height="500" frameborder="0" class="rounded-lg"></iframe>
-        </div>
-      </div>
-
     </div>
 
     <div id="route-graph" class="wb-route-panel hidden">
@@ -2515,13 +2446,13 @@
 
       <a href="http://localhost:3000/memory" target="_blank" rel="noopener" class="glass rounded-3xl p-6 node group hover:border-cosmic-500/30 transition block">
         <div class="flex items-center gap-3 mb-4">
-          <div class="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-lg">💬</div>
+          <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-lg">🧠</div>
           <div>
-            <div class="text-sm font-bold text-white group-hover:text-sky-300 transition">豆包记忆桥</div>
+            <div class="text-sm font-bold text-white group-hover:text-amber-300 transition">记忆图谱</div>
             <div class="text-[10px] text-slate-500 font-mono">MEMORY</div>
           </div>
         </div>
-        <p class="text-xs text-slate-400">豆包对话自动同步到 Ghost 知识链，跨平台记忆互通。</p>
+        <p class="text-xs text-slate-400">知识图谱可视化 — 点击节点查看记忆详情，连线表示共享标签。</p>
       </a>
 
       <a href="http://localhost:3000/settings" target="_blank" rel="noopener" class="glass rounded-3xl p-6 node group hover:border-cosmic-500/30 transition block">

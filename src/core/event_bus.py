@@ -65,6 +65,7 @@ class EventType:
     A2A_RESPONSE = "a2a.response"
     SYSTEM_ERROR = "system.error"
     SYSTEM_HEALTH = "system.health"
+    GROWTH_EVENT = "growth.event"  # 成长事件：任务成功执行 → 累计成长值
 
 
 @dataclass

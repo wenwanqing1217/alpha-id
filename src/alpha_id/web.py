@@ -359,10 +359,10 @@ async def memory_store(req: Request):
     {
         "alpha_id": "Alpha-001",
         "content": "memory content",
-        "category": "doubao_chat",
+        "category": "chat",
         "sensitivity": 10,
-        "source": "doubao",
-        "tags": ["doubao", "chat"],
+        "source": "generic",
+        "tags": ["chat"],
         "metadata": {}  // optional, stored as tags
     }
 
@@ -412,10 +412,10 @@ async def memory_store(req: Request):
         meta_content = _json.dumps(metadata, ensure_ascii=False)
         memory.save(
             content=f"[raw] {meta_content}",
-            category="doubao_chat_raw",
+            category="chat_raw",
             sensitivity=80,
-            source="doubao_metadata",
-            tags=["doubao", "raw", alpha_id],
+            source="metadata",
+            tags=["raw", alpha_id],
         )
 
     return {"success": True, "memory_id": result.get("memory_id", ""), "message": "Memory stored"}
@@ -720,6 +720,88 @@ async def network_topology():
         "edges": edges,
         "stats": {"peers": len(peers), "chains": chains_found},
     }
+
+
+# ── 成长系统（飞书任务执行 → 成长值累计 → 精灵进化）──
+
+
+@app.post("/growth/event")
+async def growth_event(req: Request):
+    """接收成长事件并发布到 EventBus
+
+    Body:
+        {
+            "alpha_id": "user_id",
+            "tool": "channel_copy",
+            "success": true,
+            "description": "生成香薰文案",
+            "source": "feishu"
+        }
+    """
+    try:
+        body = await req.json()
+    except Exception:
+        return JSONResponse(status_code=400, content={"error": "body required"})
+
+    alpha_id = body.get("alpha_id", "")
+    if not alpha_id:
+        return JSONResponse(status_code=400, content={"error": "alpha_id required"})
+
+    container = _get_container()
+    event_bus = container.event_bus
+
+    # 发布到 EventBus，由 GrowthTracker 异步处理
+    event_bus.emit(
+        "growth.event",
+        {
+            "alpha_id": alpha_id,
+            "tool": body.get("tool", "unknown"),
+            "success": body.get("success", True),
+            "description": body.get("description", ""),
+            "source": body.get("source", "feishu"),
+        },
+        source="web:/growth/event",
+    )
+
+    return {"success": True, "message": "成长事件已发布"}
+
+
+@app.get("/growth/stats")
+async def growth_stats(alpha_id: str):
+    """查询用户成长统计（精灵形态 + 经验 + 技能分布）"""
+    if not alpha_id:
+        return JSONResponse(status_code=400, content={"error": "alpha_id 不能为空"})
+
+    container = _get_container()
+    memory = container.memory_store if hasattr(container, "memory_store") else None
+
+    from alpha_id.growth_tracker import GrowthTracker, STAGES
+
+    tracker = GrowthTracker(event_bus=None, memory_store=memory)
+
+    import json as _json
+    stats = None
+    if memory:
+        try:
+            records = memory.query(alpha_id=alpha_id, tags=["growth_stats"], limit=1)
+            if records:
+                stats = _json.loads(records[0].content)
+        except Exception:
+            pass
+
+    if not stats:
+        stats = tracker._default_stats()
+
+    stage_info = tracker.get_stage_info(stats.get("total_exp", 0))
+
+    return {
+        "success": True,
+        "alpha_id": alpha_id,
+        "stats": stats,
+        "stage_info": stage_info,
+        "stages": STAGES,
+    }
+
 
 
 

@@ -256,25 +256,68 @@ class ToolOrchestrator:
         """
         调用指定工具
 
-        如果配置了 TOOL_A_URL / TOOL_B_URL，调用真实服务；
-        否则返回 not_implemented（等待接入）
+        优先调用外部 ToolA/ToolB 服务（TOOL_A_URL / TOOL_B_URL）；
+        未配置时回退到平台自身的 LLM 管道（core.settings.llm_*），
+        实现真实代码生成/优化，而不是 not_implemented 桩。
         """
         url = self._tool_a_url if tool == "A" else self._tool_b_url
 
-        if not url:
+        if url:
+            try:
+                import httpx
+                resp = httpx.post(
+                    f"{url}/v1/generate",
+                    json={"prompt": prompt},
+                    timeout=120,
+                )
+                return resp.json()
+            except Exception as e:
+                return {"status": "error", "message": str(e)}
+
+        # ── 回退：平台自身 LLM 管道（真实后端） ──
+        return self._call_local_llm(tool, prompt)
+
+    def _call_local_llm(self, tool: str, prompt: str) -> Dict[str, Any]:
+        """调用平台配置的 LLM 生成/优化代码（ToolA=生成, ToolB=优化）"""
+        try:
+            from core.settings import settings
+            api_key = settings.llm_api_key
+            base_url = settings.llm_base_url
+            model = settings.llm_model
+        except Exception:
+            api_key = base_url = model = ""
+        if not api_key:
             return {
                 "status": "not_implemented",
-                f"message": f"Tool{tool} 未配置（设置 TOOL_{tool}_URL 环境变量接入）",
+                "message": f"Tool{tool} 未配置（设置 TOOL_{tool}_URL 或 LLM_API_KEY 接入）",
             }
 
+        system = (
+            "你是资深软件工程师。根据需求直接输出可运行的代码，不要多余解释，不要使用 markdown 代码块包裹。"
+            if tool == "A"
+            else "你是代码优化专家。优化下面这段代码：提高可读性、健壮性和性能。"
+                 "直接输出优化后的完整代码，不要多余解释，不要使用 markdown 代码块包裹。"
+        )
         try:
             import httpx
             resp = httpx.post(
-                f"{url}/v1/generate",
-                json={"prompt": prompt},
+                base_url.rstrip("/") + "/chat/completions",
+                json={
+                    "model": model,
+                    "messages": [
+                        {"role": "system", "content": system},
+                        {"role": "user", "content": prompt},
+                    ],
+                    "temperature": 0.3,
+                    "max_tokens": 4096,
+                },
+                headers={"Authorization": f"Bearer {api_key}"},
                 timeout=120,
             )
-            return resp.json()
+            resp.raise_for_status()
+            data = resp.json()
+            content = data["choices"][0]["message"]["content"]
+            return {"status": "success", "tool": f"Tool{tool}", "output": content}
         except Exception as e:
             return {"status": "error", "message": str(e)}
 

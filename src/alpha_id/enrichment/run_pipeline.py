@@ -4,13 +4,12 @@ Alpha-ID 一键运行管道 — 采集 → 理解 → 存储 → 报告
 把整个流程串起来，一条命令跑完。
 
 用法：
-  # 自动检测豆包数据源，分析，存储，出报告
   python -m alpha_id.enrichment.run_pipeline
 
-  # 指定方式
-  python -m alpha_id.enrichment.run_pipeline --method leveldb
+  # 指定采集方式
   python -m alpha_id.enrichment.run_pipeline --method export --path ./exports/
   python -m alpha_id.enrichment.run_pipeline --method directory --path ./texts/
+  python -m alpha_id.enrichment.run_pipeline --method manual --text '你的对话文本'
 
   # 指定模型（不指定则自动选免费额度）
   python -m alpha_id.enrichment.run_pipeline --model deepseek/deepseek-chat
@@ -30,7 +29,6 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 from alpha_id.enrichment.llm_enricher import LLMEnricher
-from alpha_id.enrichment.doubao_collector import DoubaoCollector
 from alpha_id.enrichment.profile_store import ProfileStore
 
 logging.basicConfig(
@@ -41,6 +39,73 @@ logging.basicConfig(
 logger = logging.getLogger("alpha-id-pipeline")
 
 
+def collect_from_text(text: str, source: str = "manual") -> list:
+    """从文本字符串采集对话."""
+    if not text.strip():
+        return []
+    return [{"text": text.strip(), "source": source, "timestamp": "", "session_id": "manual"}]
+
+
+def collect_from_files(file_paths: list, source: str = "export") -> list:
+    """从文件列表采集对话."""
+    conversations = []
+    for fp in file_paths:
+        path = Path(fp)
+        if not path.exists():
+            logger.warning("文件不存在: %s", fp)
+            continue
+        if path.suffix in (".txt", ".md"):
+            text = path.read_text(encoding="utf-8", errors="replace")
+            conversations.append({
+                "text": text,
+                "source": source,
+                "timestamp": "",
+                "session_id": path.name,
+            })
+        elif path.suffix == ".json":
+            import json
+            data = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(data, list):
+                for item in data:
+                    if isinstance(item, dict) and "text" in item:
+                        conversations.append(item)
+            elif isinstance(data, dict) and "text" in data:
+                conversations.append(data)
+    return conversations
+
+
+def collect_from_directory(dir_path: str, source: str = "directory") -> list:
+    """从目录采集所有文本文件."""
+    conversations = []
+    directory = Path(dir_path)
+    if not directory.is_dir():
+        logger.warning("目录不存在: %s", dir_path)
+        return conversations
+    for f in directory.rglob("*"):
+        if f.is_file() and f.suffix in (".txt", ".md", ".json"):
+            if f.suffix in (".txt", ".md"):
+                text = f.read_text(encoding="utf-8", errors="replace")
+                conversations.append({
+                    "text": text,
+                    "source": source,
+                    "timestamp": "",
+                    "session_id": f.name,
+                })
+            elif f.suffix == ".json":
+                try:
+                    import json
+                    data = json.loads(f.read_text(encoding="utf-8"))
+                    if isinstance(data, list):
+                        for item in data:
+                            if isinstance(item, dict) and "text" in item:
+                                conversations.append(item)
+                    elif isinstance(data, dict) and "text" in data:
+                        conversations.append(data)
+                except Exception:
+                    pass
+    return conversations
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Alpha-ID 数据管道 — 采集对话 → LLM 理解 → 本地画像",
@@ -48,14 +113,15 @@ def main():
         epilog="""
 示例:
   python -m alpha_id.enrichment.run_pipeline
-  python -m alpha_id.enrichment.run_pipeline --method leveldb
   python -m alpha_id.enrichment.run_pipeline --method export --path ./my_chats/
+  python -m alpha_id.enrichment.run_pipeline --method directory --path ./texts/
+  python -m alpha_id.enrichment.run_pipeline --method manual --text '你的对话文本'
   python -m alpha_id.enrichment.run_pipeline --report-only
         """,
     )
-    parser.add_argument("--method", default="auto", choices=["auto", "leveldb", "export", "manual", "directory"],
+    parser.add_argument("--method", default="auto", choices=["auto", "export", "manual", "directory"],
                         help="数据采集方式（默认 auto）")
-    parser.add_argument("--path", default="", help="导出文件/目录路径（manual 模式下直接作为文本）")
+    parser.add_argument("--path", default="", help="文件/目录路径（export 或 directory 模式）")
     parser.add_argument("--model", default="", help="LLM 模型（不指定则自动选免费额度）")
     parser.add_argument("--report-only", action="store_true", help="只生成报告，不采集")
     parser.add_argument("--dry-run", action="store_true", help="只采集不分析（看有多少数据）")
@@ -65,7 +131,7 @@ def main():
 
     print("""
 ╔══════════════════════════════════════════════════╗
-║        Alpha-ID 数据管道 v1.0                    ║
+║        Alpha-ID 数据管道 v2.0                    ║
 ║   采集 → 理解 → 存储 → 报告                       ║
 ╚══════════════════════════════════════════════════╝
     """)
@@ -80,26 +146,25 @@ def main():
         return
 
     # ─── 采集 ─────────────────────────────────────────────
-    collector = DoubaoCollector()
-    collect_kwargs = {}
-    if args.method == "manual":
-        # manual 模式：--text 或 --path 都作为文本输入
-        text = args.text or args.path
-        collect_kwargs["text"] = text
-    elif args.path:
-        if args.method == "export":
-            collect_kwargs["files"] = [Path(p) for p in args.path.split(",")]
-        elif args.method == "directory":
-            collect_kwargs["directory"] = args.path
-
-    logger.info("开始采集 — 方式: %s", args.method)
-    conversations = collector.collect(method=args.method, **collect_kwargs)
+    conversations = []
+    if args.text:
+        conversations = collect_from_text(args.text, source="manual")
+    elif args.method == "export" and args.path:
+        file_paths = [p.strip() for p in args.path.split(",")]
+        conversations = collect_from_files(file_paths, source="export")
+    elif args.method == "directory" and args.path:
+        conversations = collect_from_directory(args.path, source="directory")
+    else:
+        # auto: try directory first, then manual
+        if args.path:
+            conversations = collect_from_directory(args.path, source="directory")
+        if not conversations and args.text:
+            conversations = collect_from_text(args.text, source="manual")
 
     if not conversations:
         print("\n⚠️  未采集到任何数据。请检查：")
-        print("  1. 豆包桌面端是否运行过？")
-        print("  2. 是否有导出文件放在 Downloads/Desktop？")
-        print("  3. 或手动方式：--method manual --path '你的对话文本'")
+        print("  1. 是否有导出文件（.txt/.md/.json）？")
+        print("  2. 或手动输入：--method manual --text '你的对话文本'")
         sys.exit(1)
 
     print(f"\n✅ 采集完成: {len(conversations)} 条对话")

@@ -48,9 +48,10 @@ logger = logging.getLogger(__name__)
 
 # ── 循环间隔常量（秒） ──
 
-MEMORY_INTERVAL_SECONDS = 300    # 5 分钟
-OPS_INTERVAL_SECONDS = 1800      # 30 分钟
-THREAD_JOIN_TIMEOUT_SECONDS = 5  # 线程等待超时
+MEMORY_INTERVAL_SECONDS = 300     # 5 分钟
+OPS_INTERVAL_SECONDS = 1800       # 30 分钟
+OPTIMAL_SWAP_INTERVAL_SECONDS = 86400  # 基建最优自替换：每天巡检一次（用真实咨询数据评分，避免频繁抖动）
+THREAD_JOIN_TIMEOUT_SECONDS = 5   # 线程等待超时
 
 
 # ── ChannelAdapter（从 core/orchestrator.py 迁移） ──
@@ -116,11 +117,13 @@ class OrchestratorEngine:
         loops_enabled: bool = True,
         memory_interval: int = MEMORY_INTERVAL_SECONDS,
         ops_interval: int = OPS_INTERVAL_SECONDS,
+        optimal_swap_interval: int = OPTIMAL_SWAP_INTERVAL_SECONDS,
     ):
         self.alpha_id = alpha_id
         self._loops_enabled = loops_enabled
         self._memory_interval = memory_interval
         self._ops_interval = ops_interval
+        self._optimal_swap_interval = optimal_swap_interval
 
         # TwinBrain（惰性初始化，唯一实例）
         self._brain: Optional[Any] = None
@@ -211,17 +214,18 @@ class OrchestratorEngine:
 
     # ── 后台循环（Memory/Ops） ──
 
-    def _loop_worker(self, phase: LoopPhase, interval: int, func: Callable):
-        """循环工作线程"""
-        logger.info("循环启动: %s (每%d秒)", phase.value, interval)
+    def _loop_worker(self, phase: Any, interval: int, func: Callable):
+        """循环工作线程（兼容 LoopPhase enum 或字符串 phase 名）"""
+        phase_name = phase.value if hasattr(phase, "value") else str(phase)
+        logger.info("循环启动: %s (每%d秒)", phase_name, interval)
         while not self._stop_event.is_set():
             try:
                 func()
                 self._stats["loops_executed"] += 1
             except Exception as e:
-                logger.error("循环异常 [%s]: %s", phase.value, e)
+                logger.error("循环异常 [%s]: %s", phase_name, e)
             self._stop_event.wait(interval)
-        logger.info("循环停止: %s", phase.value)
+        logger.info("循环停止: %s", phase_name)
 
     def _memory_loop(self):
         """记忆整理循环 — 每5分钟"""
@@ -255,8 +259,57 @@ class OrchestratorEngine:
         # 当前为占位实现；实际逻辑在 _on_social_message 中处理
         pass
 
+    def _optimal_swap_loop(self):
+        """基建层最优自替换循环 — 每 N 小时巡检一次 skill，对比候选并自替换
+
+        TERM: _optimal_swap_loop — 基建层最优自替换巡检
+        核心理念：不造工具，调用现成的做对比自替换，平台保证永远用当前最优。
+        """
+        try:
+            from core.agent_graph import get_agent_graph
+            graph = get_agent_graph()
+        except Exception as e:
+            logger.warning("AgentGraph 不可用，跳过最优巡检: %s", e)
+            return
+
+        try:
+            results = graph.run_optimal_swap_pass(min_gain=5.0)
+            if not results:
+                return
+            swapped = [r for r in results if r.get("action") == "swapped"]
+            if swapped:
+                for s in swapped:
+                    logger.info(
+                        "[基建自替换] ✓ %s: %s(%s) → %s(%s) ▲+%s",
+                        s.get("skill"),
+                        s.get("prev", "") or "(空)",
+                        s.get("prev_score", 0),
+                        s.get("new"),
+                        s.get("new_score", 0),
+                        s.get("gain", 0),
+                    )
+                self._stats["optimal_swaps"] = self._stats.get("optimal_swaps", 0) + len(swapped)
+                # 通知 EventBus，让 NURO/飞书/看板都看到
+                try:
+                    self._event_bus.emit(EventType.SYSTEM_ALERT, {
+                        "level": "info",
+                        "source": "optimal_swap",
+                        "summary": f"基建层最优自替换完成：{len(swapped)} 个 skill 切换",
+                        "details": swapped,
+                    }, source="orchestrator")
+                except Exception:
+                    pass
+            # 日志摘要
+            actions = {}
+            for r in results:
+                act = r.get("action", "unknown")
+                actions[act] = actions.get(act, 0) + 1
+            logger.info("[基建最优巡检] 扫描 %d 个 skill: %s", len(results), actions)
+        except Exception as e:
+            logger.error("基建最优自替换异常: %s", e, exc_info=True)
+
     def _start_background_loops(self):
-        """启动 Memory/Ops 后台循环"""
+        """启动 Memory/Ops/OptimalSwap/Social 后台循环"""
         if not self._loops_enabled:
             return
 
@@ -264,6 +317,8 @@ class OrchestratorEngine:
             (LoopPhase.MEMORY, self._memory_interval, self._memory_loop),
             (LoopPhase.OPS, self._ops_interval, self._ops_loop),
             (LoopPhase.SOCIAL, self._ops_interval, self._social_loop),
+            # 基建层最优自替换
+            ("OPTIMAL_SWAP", self._optimal_swap_interval, self._optimal_swap_loop),
         ]
 
         for phase, interval, func in loops:

@@ -64,18 +64,34 @@ class A2ACallBody(BaseModel):
     request_id: str = Field(default_factory=lambda: uuid.uuid4().hex[:16])
     timestamp: float = Field(default_factory=time.time)
     proof: str = Field("", description="Ed25519 签名 (hex)")
+    # ── 用户 a-to-a 字段 ──
+    caller_alpha_id: str = Field("", description="调用方用户 alpha_id（用于计费 + 社交授权）")
+    api_key: str = Field("", description="调用方 API Key（简化模式代替 proof）")
 
 
 class A2ARegisterBody(BaseModel):
-    """Agent 注册请求体"""
+    """Agent 注册请求体
+
+    支持两种接入模式：
+      1. Ed25519 签名模式（高安全）：填 public_key_hex
+      2. API Key 简化模式（用户友好）：填 api_key，可不填 public_key_hex
+    """
     agent_id: str = Field("", description="Agent ID")
+    name: str = Field("", description="Agent 显示名（市场展示用）")
     did: str = Field("", description="DID")
     endpoint: str = Field("", description="Agent 端点地址")
-    public_key_hex: str = Field("", description="公钥 hex")
+    public_key_hex: str = Field("", description="公钥 hex（Ed25519 模式）")
+    api_key: str = Field("", description="API Key（简化接入模式，替代 Ed25519）")
     skill_list: List[str] = Field(default_factory=list, description="技能列表")
     permission_scope: List[str] = Field(default_factory=list)
     call_constraint: Dict[str, Any] = Field(default_factory=dict)
     memory_policy: str = Field("write_summary")
+    # ── 用户 a-to-a 字段 ──
+    owner_alpha_id: str = Field("", description="归属用户 alpha_id（空=平台基建）")
+    category: str = Field("", description="市场分类（视频/文案/资讯/翻译...）")
+    price_credits: int = Field(0, ge=0, description="调用一次的积分价格（0=免费）")
+    description: str = Field("", description="Agent 描述（市场展示）")
+    auto_submit: bool = Field(True, description="是否自动提交审核（默认 True）")
 
 
 class A2AAuditQuery(BaseModel):
@@ -273,6 +289,88 @@ async def a2a_call(
             status_code=403,
         )
 
+    # ── 用户 a-to-a 社交授权 + 预算检查 ──
+    # 仅当调用方提供了 caller_alpha_id 时启用计费链路（机器调用走传统路径）
+    billing_info: Dict[str, Any] = {"charged": False, "price": 0, "reason": "no_billing"}
+    target_node = None
+    if body.caller_alpha_id:
+        try:
+            from core.agent_graph import get_agent_graph
+            graph = get_agent_graph()
+            target_node = graph.get_agent(call_req.target)
+        except Exception as e:
+            logger.warning("AgentGraph 查询失败: %s", e)
+
+        if target_node:
+            # 状态可见性检查：非 approved 状态的 agent 只允许 owner 自己调用
+            if target_node.status != "approved":
+                if target_node.owner_alpha_id != body.caller_alpha_id:
+                    audit.record(
+                        event="social_denied",
+                        caller_agent_id=call_req.caller,
+                        target_agent_id=call_req.target,
+                        skill=call_req.skill,
+                        request_id=call_req.request_id,
+                        error=f"target status={target_node.status} 非 owner 不可调用",
+                    )
+                    return JSONResponse(
+                        A2ACallResponse(
+                            success=False,
+                            error=f"Agent {call_req.target} 当前状态 {target_node.status}，不可调用",
+                            request_id=call_req.request_id,
+                        ).to_dict(),
+                        status_code=403,
+                    )
+
+            # 判断社交关系 + 预算
+            owner_alpha_id = target_node.owner_alpha_id
+            price = target_node.price_credits
+
+            # 决定是否需要付费
+            is_friend = False
+            if owner_alpha_id and owner_alpha_id != body.caller_alpha_id and price > 0:
+                # 陌生人调用，需要付费 → 检查余额
+                try:
+                    social_mgr = container.social
+                    is_friend = owner_alpha_id in social_mgr.get_friends(body.caller_alpha_id)
+                except Exception as e:
+                    logger.warning("好友关系查询失败: %s", e)
+                    is_friend = False
+
+                if not is_friend:
+                    # 陌生人付费 → 余额预检
+                    try:
+                        credits_mgr = container.credits
+                        balance = credits_mgr.balance(body.caller_alpha_id)
+                        if balance < price:
+                            audit.record(
+                                event="insufficient_balance",
+                                caller_agent_id=call_req.caller,
+                                target_agent_id=call_req.target,
+                                skill=call_req.skill,
+                                request_id=call_req.request_id,
+                                error=f"balance={balance} < price={price}",
+                            )
+                            return JSONResponse(
+                                A2ACallResponse(
+                                    success=False,
+                                    error=f"积分不足：需要 {price}，当前余额 {balance}",
+                                    request_id=call_req.request_id,
+                                ).to_dict(),
+                                status_code=402,  # Payment Required
+                            )
+                    except Exception as e:
+                        logger.warning("余额检查失败: %s", e)
+
+            billing_info = {
+                "charged": False,  # 执行成功后才扣，先标记
+                "price": price,
+                "reason": "pending",
+                "owner_alpha_id": owner_alpha_id,
+                "is_friend": is_friend,
+                "caller_alpha_id": body.caller_alpha_id,
+            }
+
     # ── 技能执行 ──
     try:
         result = await skills.execute_async(call_req.skill, call_req.params)
@@ -295,6 +393,58 @@ async def a2a_call(
         )
         registry.record_agent_call(did, success=True)
 
+        # 记录 AgentGraph 调用边 + 统计
+        if target_node is not None:
+            try:
+                from core.agent_graph import get_agent_graph
+                get_agent_graph().record_call(
+                    caller=call_req.caller,
+                    target=call_req.target,
+                    skill=call_req.skill,
+                    success=True,
+                    latency_ms=elapsed,
+                )
+                target_node.total_calls += 1
+            except Exception as e:
+                logger.warning("AgentGraph 记录调用失败: %s", e)
+
+        # ── 用户 a-to-a 计费结算（执行成功才扣分） ──
+        if body.caller_alpha_id and target_node is not None:
+            try:
+                credits_mgr = container.credits
+                settlement = credits_mgr.settle_call(
+                    caller_alpha_id=body.caller_alpha_id,
+                    owner_alpha_id=target_node.owner_alpha_id,
+                    price_credits=target_node.price_credits,
+                    agent_id=call_req.target,
+                    skill=call_req.skill,
+                    request_id=call_req.request_id,
+                    is_friend=billing_info.get("is_friend"),
+                )
+                billing_info = settlement
+                audit.record(
+                    event="billing_settled",
+                    caller_agent_id=call_req.caller,
+                    target_agent_id=call_req.target,
+                    skill=call_req.skill,
+                    request_id=call_req.request_id,
+                    success=True,
+                    error=str(settlement),
+                )
+            except Exception as e:
+                # 计费失败不应回滚已成功的调用，但需审计记录
+                logger.error("计费结算失败: %s", e, exc_info=True)
+                audit.record(
+                    event="billing_failed",
+                    caller_agent_id=call_req.caller,
+                    target_agent_id=call_req.target,
+                    skill=call_req.skill,
+                    request_id=call_req.request_id,
+                    success=False,
+                    error=str(e),
+                )
+                billing_info = {"charged": False, "price": 0, "reason": f"billing_error: {e}"}
+
         # ── 回写双链记忆（使用缓存的管理器，避免每次调用都 PBKDF2） ──
         dual_chain_cache = state.get("dual_chain_cache", {})
         _write_a2a_memory(
@@ -316,7 +466,7 @@ async def a2a_call(
             duration=duration,
         )
 
-        return A2ACallResponse(
+        response = A2ACallResponse(
             success=True,
             result=result,
             request_id=call_req.request_id,
@@ -324,6 +474,9 @@ async def a2a_call(
             proof=proof,
             execution_time_ms=elapsed,
         ).to_dict()
+        # 附带计费信息给调用方
+        response["billing"] = billing_info
+        return response
 
     except Exception as e:
         elapsed = (time.perf_counter() - start_time) * 1000
@@ -337,6 +490,20 @@ async def a2a_call(
             error=str(e),
         )
         registry.record_agent_call(did, success=False)
+
+        # 失败也记录调用边（不计费）
+        if target_node is not None:
+            try:
+                from core.agent_graph import get_agent_graph
+                get_agent_graph().record_call(
+                    caller=call_req.caller,
+                    target=call_req.target,
+                    skill=call_req.skill,
+                    success=False,
+                    latency_ms=elapsed,
+                )
+            except Exception:
+                pass
 
         # 失败也回写记忆
         dual_chain_cache = state.get("dual_chain_cache", {})
@@ -370,7 +537,17 @@ async def a2a_register(
     body: A2ARegisterBody,
     request: Request,
 ):
-    """Agent 注册 — 将远程 Agent 加入治理注册表"""
+    """Agent 注册 — 将 Agent 加入治理注册表 + AgentGraph
+
+    支持两种接入模式：
+      1. Ed25519 模式：填 public_key_hex（高安全，机器对机器）
+      2. API Key 模式：填 api_key（简化，用户 DIY 接入）
+
+    状态机：
+      - 平台基建 agent（owner_alpha_id 空）→ approved（直接上架）
+      - 用户 agent（owner_alpha_id 非空）+ auto_submit=True → submitted（待审核）
+      - 用户 agent + auto_submit=False → pending（草稿）
+    """
     start_time = time.perf_counter()
     state = _get_a2a_state(request)
     registry = _get_registry(state)
@@ -379,6 +556,13 @@ async def a2a_register(
     agent_id = body.agent_id or body.did
     if not agent_id:
         raise HTTPException(status_code=400, detail="agent_id 或 did 必填")
+
+    # 至少要有一种认证方式
+    if not body.public_key_hex and not body.api_key:
+        raise HTTPException(
+            status_code=400,
+            detail="必须提供 public_key_hex 或 api_key 之一",
+        )
 
     info = A2AAgentInfo(
         did=agent_id,
@@ -390,10 +574,65 @@ async def a2a_register(
             "permission_scope": body.permission_scope,
             "call_constraint": body.call_constraint,
             "memory_policy": body.memory_policy,
+            # 用户 a-to-a 扩展字段
+            "owner_alpha_id": body.owner_alpha_id,
+            "category": body.category,
+            "price_credits": body.price_credits,
+            "api_key": body.api_key,  # 简化接入模式
+            "auth_mode": "api_key" if body.api_key and not body.public_key_hex else "ed25519",
         },
     )
     registry.register_agent(info)
     audit.record(event="register", agent_id=agent_id)
+
+    # 同步注册到 AgentGraph（让总助能发现并调用）
+    # 状态机决策：
+    #   - 平台基建（owner 空）→ approved
+    #   - 用户 agent + auto_submit → submitted（等审核）
+    #   - 用户 agent + 不 auto_submit → pending（草稿，仅自己可见）
+    if not body.owner_alpha_id:
+        initial_status = "approved"
+    elif body.auto_submit:
+        initial_status = "submitted"
+    else:
+        initial_status = "pending"
+
+    try:
+        from core.agent_graph import get_agent_graph, AgentNode
+        graph = get_agent_graph()
+        graph.register_agent(AgentNode(
+            agent_id=agent_id,
+            name=body.name or body.agent_id or agent_id,
+            agent_type="external",  # 用户 DIY 接入标记为 external
+            endpoint=body.endpoint,
+            skills=body.skill_list or [],
+            is_free=(body.price_credits == 0),
+            description=body.description or f"DIY agent by {body.owner_alpha_id or agent_id}",
+            owner_alpha_id=body.owner_alpha_id,
+            status=initial_status,
+            price_credits=body.price_credits,
+            api_key=body.api_key,
+            category=body.category,
+            metadata={
+                "public_key": body.public_key_hex,
+                "permission_scope": body.permission_scope,
+                "auth_mode": "api_key" if body.api_key and not body.public_key_hex else "ed25519",
+            },
+        ))
+        audit.record(
+            event="agent_graph_register",
+            agent_id=agent_id,
+            success=True,
+            error=str({"status": initial_status, "owner": body.owner_alpha_id}),
+        )
+    except Exception as e:
+        logger.warning("AgentGraph 注册失败: %s", e)
+        audit.record(
+            event="agent_graph_register",
+            agent_id=agent_id,
+            success=False,
+            error=str(e),
+        )
 
     duration = time.perf_counter() - start_time
     record_http_request(
@@ -406,8 +645,251 @@ async def a2a_register(
     return A2ARegisterResponse(
         success=True,
         agent_id=agent_id,
-        message="registered",
+        message=f"registered (status={initial_status})",
     ).to_dict()
+
+
+# ── 上架审核状态机 ──────────────────────────────────────────────
+# pending（草稿）→ submitted（待审核）→ approved（已上架）
+#                                          ↓
+#                                       delisted（已下架）
+#                                          ↓
+#                                       approved（重新上架）
+
+
+def _check_admin(authorization: Optional[str]) -> bool:
+    """简易管理员校验（实际项目可对接 JWT role）
+
+    通过环境变量 ADMIN_ALPHA_IDS（逗号分隔）配置管理员列表。
+    """
+    import os
+    admin_ids = {x.strip() for x in os.getenv("ADMIN_ALPHA_IDS", "").split(",") if x.strip()}
+    if not admin_ids:
+        return True  # 未配置管理员时允许（开发模式），生产应配置
+    try:
+        from auth.jwt import get_current_alpha_id
+        alpha_id = get_current_alpha_id(authorization)
+        return alpha_id in admin_ids
+    except Exception:
+        return False
+
+
+@router.post("/agents/{agent_id}/submit")
+async def a2a_submit_for_review(
+    agent_id: str,
+    request: Request,
+    authorization: Optional[str] = None,
+):
+    """提交审核：pending → submitted（用户提交自己的 agent 进入审核）"""
+    from core.agent_graph import get_agent_graph
+    graph = get_agent_graph()
+    node = graph.get_agent(agent_id)
+    if not node:
+        raise HTTPException(status_code=404, detail="Agent 不存在")
+
+    if node.status not in ("pending", "delisted", "submitted"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"当前状态 {node.status} 不允许提交审核",
+        )
+
+    node.status = "submitted"
+    audit = _get_audit(_get_a2a_state(request))
+    audit.record(event="agent_submit", agent_id=agent_id, success=True)
+    return {"success": True, "agent_id": agent_id, "status": "submitted"}
+
+
+@router.post("/agents/{agent_id}/approve")
+async def a2a_approve_agent(
+    agent_id: str,
+    request: Request,
+    authorization: Optional[str] = None,
+):
+    """管理员通过审核：submitted → approved（agent 上架到市场）"""
+    if not _check_admin(authorization):
+        raise HTTPException(status_code=403, detail="需要管理员权限")
+
+    from core.agent_graph import get_agent_graph
+    graph = get_agent_graph()
+    node = graph.get_agent(agent_id)
+    if not node:
+        raise HTTPException(status_code=404, detail="Agent 不存在")
+
+    if node.status != "submitted":
+        raise HTTPException(
+            status_code=400,
+            detail=f"当前状态 {node.status} 不允许通过审核（需先 submit）",
+        )
+
+    node.status = "approved"
+    audit = _get_audit(_get_a2a_state(request))
+    audit.record(event="agent_approve", agent_id=agent_id, success=True)
+    return {"success": True, "agent_id": agent_id, "status": "approved"}
+
+
+@router.post("/agents/{agent_id}/delist")
+async def a2a_delist_agent(
+    agent_id: str,
+    request: Request,
+    authorization: Optional[str] = None,
+):
+    """下架：approved → delisted（owner 自愿下架 / 管理员强制下架）"""
+    from core.agent_graph import get_agent_graph
+    graph = get_agent_graph()
+    node = graph.get_agent(agent_id)
+    if not node:
+        raise HTTPException(status_code=404, detail="Agent 不存在")
+
+    if node.status != "approved":
+        raise HTTPException(
+            status_code=400,
+            detail=f"当前状态 {node.status} 不允许下架（必须为 approved）",
+        )
+
+    node.status = "delisted"
+    audit = _get_audit(_get_a2a_state(request))
+    audit.record(event="agent_delist", agent_id=agent_id, success=True)
+    return {"success": True, "agent_id": agent_id, "status": "delisted"}
+
+
+@router.post("/agents/{agent_id}/relist")
+async def a2a_relist_agent(
+    agent_id: str,
+    request: Request,
+    authorization: Optional[str] = None,
+):
+    """重新上架：delisted → approved（owner 重新上架已下架的 agent）"""
+    from core.agent_graph import get_agent_graph
+    graph = get_agent_graph()
+    node = graph.get_agent(agent_id)
+    if not node:
+        raise HTTPException(status_code=404, detail="Agent 不存在")
+
+    if node.status != "delisted":
+        raise HTTPException(
+            status_code=400,
+            detail=f"当前状态 {node.status} 不允许重新上架（必须为 delisted）",
+        )
+
+    node.status = "approved"
+    audit = _get_audit(_get_a2a_state(request))
+    audit.record(event="agent_relist", agent_id=agent_id, success=True)
+    return {"success": True, "agent_id": agent_id, "status": "approved"}
+
+
+@router.get("/agents/{agent_id}")
+async def a2a_get_agent_detail(
+    agent_id: str,
+    request: Request,
+):
+    """获取单个 agent 详情（含状态、价格、统计）"""
+    from core.agent_graph import get_agent_graph
+    graph = get_agent_graph()
+    node = graph.get_agent(agent_id)
+    if not node:
+        raise HTTPException(status_code=404, detail="Agent 不存在")
+
+    # 脱敏：不返回 api_key 和 public_key
+    safe = {
+        "agent_id": node.agent_id,
+        "name": node.name,
+        "type": node.agent_type,
+        "endpoint": node.endpoint,
+        "skills": node.skills,
+        "is_free": node.is_free,
+        "is_online": node.is_online,
+        "description": node.description,
+        "owner_alpha_id": node.owner_alpha_id,
+        "status": node.status,
+        "price_credits": node.price_credits,
+        "category": node.category,
+        "rating": node.rating,
+        "total_calls": node.total_calls,
+        "registered_at": node.registered_at,
+        "last_heartbeat": node.last_heartbeat,
+        "stats": graph.get_agent_stats(node.agent_id),
+    }
+    return safe
+
+
+def _node_to_safe_dict(node, stats: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """脱敏 agent 节点 → dict（市场列表用）"""
+    return {
+        "agent_id": node.agent_id,
+        "name": node.name,
+        "type": node.agent_type,
+        "endpoint": node.endpoint,
+        "skills": node.skills,
+        "is_free": node.is_free,
+        "is_online": node.is_online,
+        "description": node.description,
+        "owner_alpha_id": node.owner_alpha_id,
+        "status": node.status,
+        "price_credits": node.price_credits,
+        "category": node.category,
+        "rating": node.rating,
+        "total_calls": node.total_calls,
+        "registered_at": node.registered_at,
+        "last_heartbeat": node.last_heartbeat,
+        "stats": stats or {},
+    }
+
+
+@router.get("/market")
+async def a2a_agent_market(
+    request: Request,
+    q: str = Query("", description="搜索关键词"),
+    category: str = Query("", description="分类过滤"),
+    owner: str = Query("", description="仅看某 owner 的 agent"),
+    status: str = Query("", description="状态过滤（默认只看 approved）"),
+    limit: int = Query(50, ge=1, le=200),
+):
+    """Agent 市场 — 列出/搜索已上架的 agent
+
+    默认只返回 approved 状态（已审核通过）。
+    通过 owner 参数可查看自己的 agent（含未上架的）。
+    """
+    from core.agent_graph import get_agent_graph
+    graph = get_agent_graph()
+
+    # 如果指定 owner，使用 list_agents（含未上架）
+    if owner:
+        nodes = graph.list_agents(
+            owner_alpha_id=owner,
+            category=category or None,
+            include_unlisted=True,  # owner 看自己的全部
+            viewer_alpha_id=owner,
+        )
+    else:
+        # 公共市场：只看 approved
+        nodes = graph.search_agents(
+            query=q,
+            category=category or None,
+            viewer_alpha_id="",
+            include_unlisted=False,
+            limit=limit,
+        )
+
+    items = [_node_to_safe_dict(n, graph.get_agent_stats(n.agent_id)) for n in nodes]
+    return {
+        "items": items,
+        "count": len(items),
+        "filters": {"q": q, "category": category, "owner": owner, "status": status},
+    }
+
+
+@router.get("/categories")
+async def a2a_list_categories(request: Request):
+    """列出所有 agent 分类（市场筛选用）"""
+    from core.agent_graph import get_agent_graph
+    graph = get_agent_graph()
+    categories: Dict[str, int] = {}
+    for node in graph.list_agents():
+        if node.status != "approved":
+            continue
+        cat = node.category or "未分类"
+        categories[cat] = categories.get(cat, 0) + 1
+    return {"categories": categories}
 
 
 @router.get("/discover")
@@ -447,14 +929,26 @@ async def a2a_list_agents(request: Request):
 async def a2a_agent_graph(request: Request):
     """A2A Agent 网络拓扑图（nodes + edges）
 
-    从注册表拿 Agent 节点，从审计日志拿调用边，
-    返回前端 d3.js / vis-network 可直接渲染的结构。
+    优先使用 AgentGraph（含内部 agent + 统计 + findskill），
+    回退到旧逻辑（registry + audit log 现算）。
     """
+    try:
+        from core.agent_graph import get_agent_graph
+        graph = get_agent_graph()
+        topology = graph.get_topology()
+        # 兼容旧格式（from/to 字段名）
+        for edge in topology["edges"]:
+            edge["from"] = edge.get("source", "")
+            edge["to"] = edge.get("target", "")
+        return topology
+    except Exception:
+        pass
+
+    # 回退：旧逻辑
     state = _get_a2a_state(request)
     registry = _get_registry(state)
     audit = _get_audit(state)
 
-    # ── 节点：所有已注册 Agent ──
     agents_payload = registry.to_payload()
     nodes = []
     for info in agents_payload.get("agents", []):
@@ -467,7 +961,6 @@ async def a2a_agent_graph(request: Request):
             "group": "agent",
         })
 
-    # ── 边：审计日志中的 A2A 调用记录 ──
     edges = []
     seen = set()
     try:
@@ -492,6 +985,55 @@ async def a2a_agent_graph(request: Request):
         pass
 
     return {"nodes": nodes, "edges": edges}
+
+
+@router.get("/findskill")
+async def a2a_find_skill(
+    request: Request,
+    skill: str,
+    prefer: str = "free",
+):
+    """findskill — 查找提供指定 skill 的最优 agent
+
+    这是 AgentGraph 的核心能力：总助通过这个端点找到该调用哪个 agent。
+
+    Query params:
+        skill:  skill 名称（如 video_generate / channel_copy / feed_github）
+        prefer: 选路策略 free / fast / reliable / any
+    """
+    try:
+        from core.agent_graph import get_agent_graph
+        graph = get_agent_graph()
+
+        candidates = graph.find_skill(skill)
+        best = graph.find_best_agent(skill, prefer=prefer)
+
+        return {
+            "success": True,
+            "skill": skill,
+            "prefer": prefer,
+            "best_agent": {
+                "agent_id": best.agent_id,
+                "name": best.name,
+                "type": best.agent_type,
+                "endpoint": best.endpoint,
+                "is_free": best.is_free,
+                "description": best.description,
+            } if best else None,
+            "candidates": [
+                {
+                    "agent_id": c.agent_id,
+                    "name": c.name,
+                    "type": c.agent_type,
+                    "is_free": c.is_free,
+                    "is_online": c.is_online,
+                    "stats": graph.get_agent_stats(c.agent_id),
+                }
+                for c in candidates
+            ],
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 
 @router.get("/skills")

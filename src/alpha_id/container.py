@@ -69,6 +69,7 @@ class Container:
         self._social: Optional[AlphaSocialManager] = None
         self._risk: Optional[RiskAssessmentEngine] = None
         self._memory: Optional[MemoryStore] = None
+        self._credits: Optional[Any] = None  # CreditsManager（a-to-a 经济模型）
         # 新增模块（Phase 3）
         self._enricher: Optional[Any] = None
         self._feed: Optional[Any] = None
@@ -147,6 +148,13 @@ class Container:
                 storage=self.storage,
                 user_exists_fn=identity.user_exists,
             )
+            # 如果已经初始化了 feishu bridge（set_feishu_credentials 被调用过），直接注入
+            if self._feishu is not None:
+                self._social.set_feishu_bridge(self._feishu)
+        else:
+            # 延迟注入：feishu 在 social 之后才初始化的情况
+            if self._feishu is not None and self._social._feishu_bridge is None:
+                self._social.set_feishu_bridge(self._feishu)
         return self._social
 
     @property
@@ -166,6 +174,21 @@ class Container:
                 first_id = "Alpha-001"
             self._memory = MemoryStore(first_id, storage=self.storage)
         return self._memory
+
+    @property
+    def credits(self):
+        """积分钱包管理器（a-to-a 经济模型基础）
+
+        复用 storage 后端 + social_manager（用于好友免费判断）。
+        TERM: Credits — 积分系统（社交免费 + 陌生人付费）
+        """
+        if self._credits is None:
+            from core.credits import CreditsManager
+            self._credits = CreditsManager(
+                storage=self.storage,
+                social_manager=self.social,
+            )
+        return self._credits
 
     # ── 新增模块（Phase 3）──
 
@@ -217,7 +240,7 @@ class Container:
 
     def set_feishu_credentials(self, app_id: str, app_secret: str,
                                 verification_token: str = "", encrypt_key: str = ""):
-        """设置飞书凭证并初始化桥接"""
+        """设置飞书凭证并初始化桥接；自动注入到已创建的 AlphaSocialManager"""
         from alpha_id.feishu_bridge import FeishuBridge
         self._feishu = FeishuBridge(
             app_id=app_id,
@@ -225,6 +248,9 @@ class Container:
             verification_token=verification_token,
             encrypt_key=encrypt_key,
         )
+        # 如果 social 已经创建了，同步注入 bridge（否则 social 的 getter 会在下一次访问时注入）
+        if self._social is not None:
+            self._social.set_feishu_bridge(self._feishu)
         return self._feishu
 
     @property
