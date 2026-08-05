@@ -43,6 +43,7 @@ from .api.gdpr import router as gdpr_router  # noqa: E402
 
 # 路由导入（项目始终以 python -m src.main 方式运行）
 from .api.identity import router as identity_router  # noqa: E402
+from .api.mindflow import router as mindflow_router  # noqa: E402
 from .api.observability import router as observability_router  # noqa: E402
 from .api.registration import router as registration_router  # noqa: E402
 from .api.risk import router as risk_router  # noqa: E402
@@ -414,6 +415,7 @@ app.add_middleware(
         "/api/v1/brain/",
         "/api/v1/voice/",
         "/api/v1/risk/",
+        "/api/v1/mindflow/",
     },
     enforce_custom_header=True,
 )
@@ -430,6 +432,7 @@ app.include_router(agent_router)
 app.include_router(a2a_router)
 app.include_router(gdpr_router)
 app.include_router(voice_router)
+app.include_router(mindflow_router)
 
 
 @app.post("/webhook/feishu")

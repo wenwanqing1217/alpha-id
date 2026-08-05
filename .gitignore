@@ -41,6 +41,8 @@ chi_sim.traineddata
 _build/
 *.bak
 _*.py
+# __init__.py 是 Python 包必需的入口文件，不应被忽略
+!__init__.py
 .vue_app_script.txt
 test_output.html
 

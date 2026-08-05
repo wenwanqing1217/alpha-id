@@ -132,3 +132,51 @@ class IntentClassifier:
                 )
         return None
 
+    def _llm_classify(self, text: str) -> Optional[IntentResult]:
+        """LLM 意图分类（占位实现）。
+
+        关键词匹配已达 0.85+ 置信度时不会调用此方法。
+        未配置 LLM 客户端时返回 None，让 classify() 降级到关键词结果或默认 chat。
+        """
+        if not _LLM_ENABLED:
+            return None
+        try:
+            import httpx
+            prompt = _LLM_SYSTEM_PROMPT.format(intent_list="\n".join(
+                f"- {k}: {v}" for k, v in _INTENT_DEFINITIONS.items()
+            ))
+            resp = httpx.post(
+                f"{_LLM_BASE_URL}/chat/completions",
+                headers={"Authorization": f"Bearer {_LLM_API_KEY}"},
+                json={
+                    "model": _LLM_MODEL,
+                    "messages": [
+                        {"role": "system", "content": prompt},
+                        {"role": "user", "content": text},
+                    ],
+                    "temperature": 0.1,
+                    "max_tokens": 100,
+                },
+                timeout=5.0,
+            )
+            if resp.status_code != 200:
+                logger.warning("LLM 意图分类 HTTP %s", resp.status_code)
+                return None
+            import json
+            content = resp.json()["choices"][0]["message"]["content"].strip()
+            # 兼容 ```json ... ``` 包裹
+            if content.startswith("```"):
+                content = content.strip("`").lstrip("json").strip()
+            data = json.loads(content)
+            intent = data.get("intent", "chat")
+            confidence = float(data.get("confidence", 0.0))
+            tools = _INTENT_TOOLS.get(intent, [])
+            return IntentResult(
+                intent=intent,
+                confidence=confidence,
+                tools_needed=tools,
+            )
+        except Exception as e:
+            logger.warning("LLM 意图分类异常: %s", e)
+            return None
+
