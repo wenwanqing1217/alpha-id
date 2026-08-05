@@ -129,9 +129,16 @@ class TestSchemaConsistency:
                         assert route.path is not None
 
     def test_observability_routes_exist(self):
-        """可观测性路由存在"""
+        """可观测性路由存在（实际请求验证）
+
+        FastAPI >= 0.140 对 include_router 采用懒加载（_IncludedRouter），
+        app.routes 中只含占位对象，hasattr(r, "path") 无法看到展开后的路径，
+        因此改为通过 TestClient 实际请求三个端点断言可达。
+        """
+        from fastapi.testclient import TestClient
+
         from src.main import app
-        paths = [r.path for r in app.routes if hasattr(r, "path")]
-        assert "/health" in paths
-        assert "/ready" in paths
-        assert "/metrics" in paths
+        client = TestClient(app)
+        for path in ("/health", "/ready", "/metrics"):
+            resp = client.get(path)
+            assert resp.status_code == 200, f"{path} 不可达: {resp.status_code}"

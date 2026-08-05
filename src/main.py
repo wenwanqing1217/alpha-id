@@ -26,7 +26,7 @@ load_dotenv()
 
 from fastapi import Depends, FastAPI, Request  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
-from fastapi.responses import HTMLResponse  # noqa: E402
+from fastapi.responses import HTMLResponse, JSONResponse  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 
 from alpha_id.container import Container, get_container  # noqa: E402
@@ -531,4 +531,19 @@ def health(container: Container = Depends(get_container)):
         checks["a2a"] = f"error: {e}"
         checks["status"] = "degraded"
 
+    return checks
+
+
+@app.get("/ready")
+def ready(container: Container = Depends(get_container)):
+    """就绪探针：仅当核心依赖可达时返回 200（用于编排层滚动/健康判定）"""
+    checks = {"status": "ready", "checks": {}}
+    try:
+        store = container.storage
+        store.load("__readiness__")
+        checks["checks"]["database"] = "ok"
+    except Exception as e:
+        checks["checks"]["database"] = f"error: {e}"
+        checks["status"] = "not_ready"
+        return JSONResponse(status_code=503, content=checks)
     return checks

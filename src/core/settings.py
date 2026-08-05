@@ -172,6 +172,17 @@ class Settings(BaseSettings):
         """自动解密 ENC[...] 格式的敏感字段"""
         return decrypt_if_needed(v)
 
+    @field_validator("llm_api_key", "deepseek_api_key", mode="after")
+    @classmethod
+    def _blank_key_placeholders(cls, v):
+        """把 .env.example 占位 key 视为未配置，避免带着假 key 打真实 LLM 导致 500"""
+        if v and v.strip().lower() in {
+            "your_api_key", "your_api_key_here", "your-key-here",
+            "sk-xxx", "sk-your-key", "your_openai_api_key", "your_key",
+        }:
+            return ""
+        return v
+
     @property
     def ghost_workspace(self) -> Path:
         return Path(self.ghost_workspace_path)
