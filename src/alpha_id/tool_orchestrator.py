@@ -339,7 +339,7 @@ def create_app() -> Any:
 
     @app.post("/v1/task/{task_id}/execute")
     async def execute_task(task_id: str):
-        if not orch.execute(task):
+        if not orch.execute(task_id):
             return JSONResponse({"error": "task not found or already running"}, 400)
         return {"success": True, "task_id": task_id, "status": "running"}
 

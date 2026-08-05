@@ -249,6 +249,12 @@ class OrchestratorEngine:
             self._stats["loops_executed"],
         )
 
+    def _social_loop(self):
+        """社交关系循环 — 处理渠道消息分发与社交图谱更新"""
+        # TERM: _social_loop — 社交渠道消息分发与社交图谱维护
+        # 当前为占位实现；实际逻辑在 _on_social_message 中处理
+        pass
+
     def _start_background_loops(self):
         """启动 Memory/Ops 后台循环"""
         if not self._loops_enabled:
@@ -257,6 +263,7 @@ class OrchestratorEngine:
         loops = [
             (LoopPhase.MEMORY, self._memory_interval, self._memory_loop),
             (LoopPhase.OPS, self._ops_interval, self._ops_loop),
+            (LoopPhase.SOCIAL, self._ops_interval, self._social_loop),
         ]
 
         for phase, interval, func in loops:
@@ -428,16 +435,51 @@ class OrchestratorEngine:
         return None  # 由数据循环处理
 
     def write_note(self, title: str, content: str, **kwargs) -> str:
-        """写入 Obsidian 笔记"""
-        return ""
+        """写入 Obsidian 笔记 — 通过 EventBus 发布 MEMORY_WRITTEN 事件，由 ObsidianBridge 消费"""
+        import uuid
+        note_id = f"note-{uuid.uuid4().hex[:8]}"
+        try:
+            self._event_bus.emit(
+                EventType.MEMORY_WRITTEN,
+                data={
+                    "note_id": note_id,
+                    "title": title,
+                    "content": content,
+                    "alpha_id": self.alpha_id,
+                    "tags": kwargs.get("tags", []),
+                    "source": kwargs.get("source", "orchestrator"),
+                },
+                source=f"orchestrator:{self.alpha_id}",
+            )
+            logger.info("[write_note] 已发布 MEMORY_WRITTEN 事件 note_id=%s title=%s", note_id, title[:50])
+            return note_id
+        except Exception as exc:
+            logger.error("[write_note] 发布事件失败: %s", exc)
+            return ""
 
     def learn_lesson(self, scenario: str, mistake: str, correction: str, lesson: str, **kwargs):
         """记录教训"""
         return None
 
     def send_feishu(self, chat_id: str, text: str) -> bool:
-        """发送飞书消息"""
-        return False
+        """发送飞书消息 — 通过 EventBus 发布 SOCIAL_MESSAGE 事件，由 feishu-consumer 消费"""
+        try:
+            self._event_bus.emit(
+                EventType.SOCIAL_MESSAGE,
+                data={
+                    "platform": "feishu",
+                    "chat_id": chat_id,
+                    "text": text,
+                    "alpha_id": self.alpha_id,
+                    "intent": "outbound",
+                },
+                source=f"orchestrator:{self.alpha_id}",
+            )
+            logger.info("[send_feishu] 已发布 SOCIAL_MESSAGE 事件 chat_id=%s text=%s", chat_id, text[:50])
+            return True
+        except Exception as exc:
+            logger.error("[send_feishu] 发布事件失败: %s", exc)
+            return False
 
     def handle_feishu_webhook(self, body: Dict[str, Any]) -> Dict[str, Any]:
         """处理飞书 Webhook"""
