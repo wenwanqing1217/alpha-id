@@ -3,22 +3,19 @@
 """
 
 import json
-import tempfile
 import time
-from pathlib import Path
 
+from alpha_id.signer import AIDSigner
 from alpha_id.skill_signer import (
+    AttributionRecord,
+    SkillAttributionTracker,
     SkillPackage,
     SkillRegistry,
     SkillRuntime,
-    SkillAttributionTracker,
-    AttributionRecord,
+    SkillSigningError,
     sign_skill,
     verify_skill,
-    SkillSigningError,
-    SUPPORTED_CONTENT_TYPES,
 )
-from alpha_id.signer import AIDSigner
 from core.reputation import SkillReputation
 
 

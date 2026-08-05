@@ -17,7 +17,7 @@ from contextvars import ContextVar
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
-from core.observability import HTTP_REQUESTS, HTTP_LATENCY
+from core.observability import HTTP_LATENCY, HTTP_REQUESTS
 
 logger = logging.getLogger(__name__)
 

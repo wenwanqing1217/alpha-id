@@ -8,7 +8,7 @@ Alpha-ID 统一画像存储 — 本地 SQLite + 可读 Markdown
   - 人类可读 → Markdown 摘要
   - 原始证据 → JSON（可追溯）
   - 一切本地，不归任何第三方
-  
+
 存储结构：
   alpha_id.db
     ├── profile_core      (核心画像，合并后的最终结果)
@@ -38,7 +38,7 @@ def _db_path() -> Path:
 class ProfileStore:
     """
     统一画像存储 — 本地 SQLite。
-    
+
     用法：
       store = ProfileStore()
       store.save_enrichment(result)      # 保存一次分析结果
@@ -63,21 +63,21 @@ class ProfileStore:
                     result_json TEXT NOT NULL,
                     evidence_json TEXT
                 );
-                
+
                 CREATE TABLE IF NOT EXISTS profile_core (
                     id INTEGER PRIMARY KEY CHECK (id = 1),
                     data_json TEXT NOT NULL,
                     updated_at TEXT NOT NULL,
                     version INTEGER DEFAULT 1
                 );
-                
+
                 CREATE TABLE IF NOT EXISTS data_sources (
                     name TEXT PRIMARY KEY,
                     last_collected TEXT,
                     item_count INTEGER DEFAULT 0,
                     first_collected TEXT
                 );
-                
+
                 CREATE TABLE IF NOT EXISTS conversations (
                     id TEXT PRIMARY KEY,
                     source TEXT,
@@ -86,7 +86,7 @@ class ProfileStore:
                     session_id TEXT,
                     imported_at TEXT
                 );
-                
+
                 CREATE INDEX IF NOT EXISTS idx_enrich_source ON enrich_history(source);
                 CREATE INDEX IF NOT EXISTS idx_conv_source ON conversations(source);
             """)
@@ -96,10 +96,10 @@ class ProfileStore:
     def save_enrichment(self, result: Dict[str, Any]) -> str:
         """
         保存一次 LLM 分析结果，并更新合并画像。
-        
+
         Args:
             result: LLMEnricher.analyze() 的输出
-            
+
         Returns:
             记录 ID
         """
@@ -110,7 +110,7 @@ class ProfileStore:
         with sqlite3.connect(self.db) as conn:
             # 1. 保存原始分析记录
             conn.execute(
-                """INSERT INTO enrich_history 
+                """INSERT INTO enrich_history
                    (id, analyzed_at, source, model, input_length, result_json, evidence_json)
                    VALUES (?, ?, ?, ?, ?, ?, ?)""",
                 (
@@ -149,7 +149,7 @@ class ProfileStore:
     def save_conversation(self, conv: Dict[str, str]) -> str:
         """
         保存原始对话（可选，用于追溯）。
-        
+
         Args:
             conv: {"text": "...", "source": "...", "timestamp": "...", "session_id": "..."}
         """
@@ -203,28 +203,28 @@ class ProfileStore:
     def export_markdown(self, output_path: Optional[Path] = None) -> Path:
         """
         导出人类可读的 Markdown 摘要。
-        
+
         Returns:
             输出文件路径
         """
         profile = self.get_merged_profile()
         sources = self.get_data_sources()
-        
+
         lines = [
-            f"# Alpha-ID 画像报告",
-            f"",
+            "# Alpha-ID 画像报告",
+            "",
             f"> 生成时间: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}",
             f"> 数据来源: {', '.join(s['name'] for s in sources)}",
-            f"",
-            f"---",
-            f"",
+            "",
+            "---",
+            "",
         ]
 
         tech = profile.get("technical", {})
         if tech:
             lines.append("## 技术能力")
             lines.append("")
-            
+
             if tech.get("languages"):
                 lines.append("### 编程语言")
                 for lang, level in tech["languages"].items():

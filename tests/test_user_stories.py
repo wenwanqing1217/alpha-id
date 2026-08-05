@@ -7,13 +7,11 @@ Alpha-ID 用户故事测试 — P0 闭环
 
 import json
 import zipfile
-from pathlib import Path
 
 import pytest
 
 from alpha_id.collectors.chatgpt import collect
 from alpha_id.profile_schema import (
-    ensure_profile_dir,
     load_profile,
     profile_exists,
     save_profile,

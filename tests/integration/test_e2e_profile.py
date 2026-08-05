@@ -1,10 +1,7 @@
 """集成测试 - 确保 test_e2e_profile 可被 pytest 发现"""
 
-from pathlib import Path
 
-from alpha_id.collectors.chatgpt import collect as chatgpt_collect
 from alpha_id.did import DIDRegistry
-from alpha_id.profile_schema import save_profile, load_profile, profile_exists, summary
 
 
 def test_e2e_did_generation():
@@ -15,7 +12,9 @@ def test_e2e_did_generation():
 
 
 def test_e2e_chatgpt_collect_via_pytest(tmp_path):
-    import json, zipfile
+    import json
+    import zipfile
+
     from alpha_id.collectors.chatgpt import collect as cg_collect
 
     z = tmp_path / "test.zip"

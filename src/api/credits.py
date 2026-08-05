@@ -12,14 +12,14 @@ from __future__ import annotations
 
 import logging
 from dataclasses import asdict
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from alpha_id.container import Container, get_container
 from auth.middleware import require_user
-from core.credits import CreditsManager, InsufficientBalanceError
+from core.credits import CreditsManager
 
 logger = logging.getLogger(__name__)
 

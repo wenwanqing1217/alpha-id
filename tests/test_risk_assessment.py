@@ -1,11 +1,11 @@
 """风险评分引擎单元测试"""
 
 import pytest
+
 from core.risk_engine import (
-    RiskAssessmentEngine,
-    DeviceFingerprint,
     BehaviorFingerprint,
-    RiskAssessmentResult,
+    DeviceFingerprint,
+    RiskAssessmentEngine,
 )
 
 

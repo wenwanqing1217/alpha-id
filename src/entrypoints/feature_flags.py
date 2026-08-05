@@ -9,20 +9,14 @@ NURO 桌面精灵 — 功能标志与可选模块导入
 每个 try/except 块只负责一个能力域，失败时静默降级。
 """
 
-from tools.screen_capture import (
-    capture_full_screen,
-    capture_application_window,
-    capture_region,
-)
-
 # ── 版本 ──
 try:
-    from fairy import __version__ as NURO_VERSION
+    from fairy import __version__ as NURO_VERSION  # noqa: N812
 except ImportError:
     NURO_VERSION = "3.0.0"
 
 try:
-    from alpha_id import __version__ as AID_VERSION
+    from alpha_id import __version__ as AID_VERSION  # noqa: N812
 except ImportError:
     AID_VERSION = "0.2.0"
 
@@ -38,14 +32,13 @@ except ImportError:
 
 # ── 语音 ──
 _HAS_VOICE = False
-GhostVoice = None
-WakeupListener = None
 try:
-    from alpha_id.ghost_voice import GhostVoice, WakeupListener  # noqa: F811
+    from alpha_id.ghost_voice import GhostVoice, WakeupListener
 
     _HAS_VOICE = True
 except ImportError:
-    pass
+    GhostVoice = None
+    WakeupListener = None
 
 # ── 角色 ──
 _HAS_CHARACTER = False
@@ -110,19 +103,18 @@ except ImportError:
 
 # ── 截图工具 ──
 _HAS_SCREEN = False
-capture_full_screen = None  # type: ignore[assignment]
-capture_application_window = None  # type: ignore[assignment]
-capture_region = None  # type: ignore[assignment]
 try:
-    from tools.screen_capture import (  # noqa: F811
-        capture_full_screen,
+    from tools.screen_capture import (
         capture_application_window,
+        capture_full_screen,
         capture_region,
     )
 
     _HAS_SCREEN = True
 except ImportError:
-    pass
+    capture_full_screen = None
+    capture_application_window = None
+    capture_region = None
 
 # ── 窗口枚举 ──
 _HAS_LIST_WINDOWS = False
@@ -137,25 +129,24 @@ except ImportError:
 
 # ── 窗口控制工具 ──
 _HAS_WINDOW = False
-get_mouse_position = None  # type: ignore[assignment]
-focus_application_window = None  # type: ignore[assignment]
-click_on_screen = None  # type: ignore[assignment]
-type_text = None  # type: ignore[assignment]
-press_key = None  # type: ignore[assignment]
-scroll_mouse = None  # type: ignore[assignment]
 try:
-    from tools.window_control import (  # noqa: F811
-        get_mouse_position,
-        focus_application_window,
+    from tools.window_control import (
         click_on_screen,
-        type_text,
+        focus_application_window,
+        get_mouse_position,
         press_key,
         scroll_mouse,
+        type_text,
     )
 
     _HAS_WINDOW = True
 except ImportError:
-    pass
+    get_mouse_position = None
+    focus_application_window = None
+    click_on_screen = None
+    type_text = None
+    press_key = None
+    scroll_mouse = None
 
 
 # ── 向后兼容别名（daemon.py re-export shim 使用 Fairy* 命名）──

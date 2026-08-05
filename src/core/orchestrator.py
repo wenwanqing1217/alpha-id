@@ -15,13 +15,12 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from enum import Enum
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 from core.settings import settings
 
 if TYPE_CHECKING:
-    from orchestrator.engine import OrchestratorEngine, ChannelAdapter, LoopPhase
+    from orchestrator.engine import ChannelAdapter, LoopPhase
 
 logger = logging.getLogger(__name__)
 

@@ -1,6 +1,5 @@
 """Tests for core/storage_sqlite.py — SqliteStorage backend."""
 
-import json
 import os
 import tempfile
 

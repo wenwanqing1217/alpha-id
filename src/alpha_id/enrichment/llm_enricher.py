@@ -18,7 +18,6 @@ Alpha-ID LLM Enricher — 核心理解引擎
 import json
 import logging
 import os
-import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
@@ -75,7 +74,7 @@ ANALYSIS_PROMPT = """你是一个专业的用户画像分析引擎。请分析�
 class LLMEnricher:
     """
     LLM 理解引擎 — 把原始文本变成结构化画像。
-    
+
     路由策略（免费优先）：
       1. Gemini (google/gemini-2.0-flash) — 免费额度
       2. DeepSeek (deepseek/deepseek-chat) — ¥1/M tokens
@@ -92,7 +91,7 @@ class LLMEnricher:
     def __init__(self, model: Optional[str] = None, api_key: Optional[str] = None):
         """
         初始化 Enricher。
-        
+
         Args:
             model: 指定模型，不指定则按优先级自动选
             api_key: API key，不指定则从环境变量读取
@@ -120,11 +119,11 @@ class LLMEnricher:
     def analyze(self, conversation: str, source: str = "unknown") -> Dict[str, Any]:
         """
         分析对话内容，返回结构化画像数据。
-        
+
         Args:
             conversation: 原始对话文本
             source: 数据来源标识（chatgpt / cursor / manual）
-            
+
         Returns:
             结构化画像 dict
         """
@@ -154,10 +153,10 @@ class LLMEnricher:
     def analyze_batch(self, conversations: List[Dict[str, str]]) -> Dict[str, Any]:
         """
         批量分析多条对话，合并结果。
-        
+
         Args:
             conversations: [{"text": "...", "source": "chat", "timestamp": "..."}]
-            
+
         Returns:
             合并后的结构化画像
         """
@@ -219,7 +218,7 @@ class LLMEnricher:
         if text.startswith("```"):
             lines = text.split("\n")
             text = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
-        
+
         try:
             return json.loads(text)
         except json.JSONDecodeError:

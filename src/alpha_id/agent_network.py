@@ -22,11 +22,11 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from alpha_id.did_resolver import DIDResolver
-
-logger = logging.getLogger(__name__)
 from alpha_id.poe import PoEClient, PoEStore
 from alpha_id.signer import AIDSigner
 from alpha_id.skill_signer import SkillRegistry, SkillRuntime
+
+logger = logging.getLogger(__name__)
 
 # ── 数据模型 ──
 

@@ -1,6 +1,7 @@
 """Test Web display module"""
 
-import os, uuid
+import os
+import uuid
 
 import pytest
 from fastapi.testclient import TestClient
@@ -110,7 +111,6 @@ class TestWebChat:
 
     def test_chat_basic(self, client):
         """Without API key returns unconfigured prompt"""
-        import os
 
         # Save and clear API keys to ensure _call_llm hits the no-key branch
         old_key = os.environ.pop("OPENAI_API_KEY", None)

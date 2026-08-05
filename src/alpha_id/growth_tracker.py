@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Dict, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 if TYPE_CHECKING:
     from core.event_bus import EventBus
@@ -195,6 +195,7 @@ class GrowthTracker:
             return
         try:
             import json
+
             from core.memory_store import AlphaMemory
             mem = AlphaMemory(
                 memory_id=f"{self.STATS_KEY_PREFIX}:{alpha_id}",

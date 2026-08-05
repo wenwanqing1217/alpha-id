@@ -9,6 +9,7 @@ Tracing — Agent 链路追踪
 """
 
 import logging
+import threading
 import time
 from contextlib import contextmanager
 from typing import Any, Dict, Generator, List, Optional
@@ -103,8 +104,6 @@ class TraceCollector:
 
 
 # ── 全局收集器（线程安全用 thread-local） ──
-import threading
-
 _collector_local = threading.local()
 
 

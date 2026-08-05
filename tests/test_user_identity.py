@@ -1,9 +1,7 @@
 """Alpha-ID 用户身份管理单元测试"""
 
 import hashlib
-import json
 import os
-import sys
 
 import pytest
 
@@ -12,7 +10,7 @@ os.environ["GHOST_WORKSPACE_PATH"] = str(os.path.join(os.path.dirname(__file__),
 # FOUNDER_CODE_HASH 是类变量，必须在 import 前设置
 os.environ["FOUNDER_CODE_HASH"] = hashlib.sha256(b"Alpha-1-zx").hexdigest()
 
-from core.user_identity import UserIdentityManager, UserProfile
+from core.user_identity import UserIdentityManager
 
 
 class TestUserIdentityManager:

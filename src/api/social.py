@@ -1,7 +1,7 @@
 # TERM: AlphaSocialManager — 社交管理器（好友请求 + 消息 + EventBus 发布 + 飞书通讯录同步）
 """社交网络 API 路由"""
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field

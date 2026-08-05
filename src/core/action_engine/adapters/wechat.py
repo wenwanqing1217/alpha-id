@@ -2,7 +2,8 @@
 import logging
 from typing import Any, Dict
 
-from core.event_bus import emit, EventType
+from core.event_bus import EventType, emit
+
 from . import PlatformAdapter
 
 logger = logging.getLogger(__name__)

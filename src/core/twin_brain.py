@@ -316,7 +316,7 @@ class TwinBrain:
         聊天消息走异步 LLM 调用（AsyncLLMClient，不阻塞事件循环）。
         其他消息类型回退到同步实现。
         """
-        from core.message import MessageType, Response
+        from core.message import MessageType
 
         # 状态检查（复用同步版本的逻辑）
         state_response = self._check_state_for_message(message)

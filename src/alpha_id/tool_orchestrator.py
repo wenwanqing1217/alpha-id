@@ -29,7 +29,7 @@ import threading
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
@@ -356,7 +356,7 @@ class ToolOrchestrator:
 def create_app() -> Any:
     """创建 FastAPI 应用"""
     try:
-        from fastapi import FastAPI, Request, HTTPException
+        from fastapi import FastAPI, Request
         from fastapi.responses import JSONResponse
     except ImportError:
         logger.warning("FastAPI 未安装，无法创建 HTTP 服务")

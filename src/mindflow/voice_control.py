@@ -140,7 +140,7 @@ def build_music_command(song: str = "", action: str = "play") -> Dict:
 def route_voice_command(text: str, user_profile=None) -> Dict:
     """
     将用户的语音文字转为手机控制指令
-    
+
     返回格式：
       { "action": "command", "command": { ... } }  → 执行指令
       { "action": "chat", "text": "..." }          → 普通对话

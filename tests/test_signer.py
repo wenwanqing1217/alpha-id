@@ -3,6 +3,7 @@ AIDSigner SDK 单元测试
 """
 
 import pytest
+
 from alpha_id import AIDSigner
 
 

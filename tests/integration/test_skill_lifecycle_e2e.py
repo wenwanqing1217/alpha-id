@@ -1,23 +1,19 @@
 """End-to-end Skill lifecycle integration tests"""
 
-import json
-import time
-from pathlib import Path
 
+import pytest
+
+from alpha_id.poe import PoEClient, PoEStore
 from alpha_id.signer import AIDSigner
 from alpha_id.skill_signer import (
-    SkillPackage,
+    SkillAttributionTracker,
     SkillRegistry,
     SkillRuntime,
-    SkillAttributionTracker,
-    AttributionRecord,
+    SkillSigningError,
     sign_skill,
     verify_skill,
-    SkillSigningError,
 )
-from alpha_id.poe import PoEStore, PoEClient
 from core.reputation import SkillReputation
-import pytest
 
 
 class TestSkillLifecycleE2E:

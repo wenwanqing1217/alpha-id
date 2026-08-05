@@ -1,6 +1,7 @@
 """测试 Cursor 采集器 - 边界情况"""
 
-import json, zipfile, pytest
+import json
+import zipfile
 from pathlib import Path
 
 from alpha_id.collectors.cursor import collect

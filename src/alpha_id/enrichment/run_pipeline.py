@@ -28,8 +28,8 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[3]
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
-from alpha_id.enrichment.llm_enricher import LLMEnricher
-from alpha_id.enrichment.profile_store import ProfileStore
+from alpha_id.enrichment.llm_enricher import LLMEnricher  # noqa: E402
+from alpha_id.enrichment.profile_store import ProfileStore  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -204,8 +204,8 @@ def main():
 
     # ─── 输出结果 ──────────────────────────────────────────
     _show_report(store)
-    
-    print(f"\n📊 管道统计:")
+
+    print("\n📊 管道统计:")
     print(f"  分析调用: {enricher.stats['call_count']} 次")
     print(f"  数据来源: {len(store.get_data_sources())} 个")
     print(f"  数据库: {store.db}")
@@ -223,7 +223,7 @@ def _show_report(store: ProfileStore):
     tech = profile.get("technical", {})
     if tech:
         if tech.get("languages"):
-            print(f"\n🔧 技术栈:")
+            print("\n🔧 技术栈:")
             for lang, level in tech["languages"].items():
                 bar = "█" * {"beginner": 1, "intermediate": 2, "advanced": 3, "expert": 4}.get(str(level).lower(), 0)
                 print(f"    {lang}: {level} {bar}")
@@ -235,7 +235,7 @@ def _show_report(store: ProfileStore):
         if tech.get("domains"):
             print(f"🎯 领域: {', '.join(tech['domains'])}")
         if tech.get("current_projects"):
-            print(f"🚀 当前项目:")
+            print("🚀 当前项目:")
             for p in tech["current_projects"]:
                 print(f"    • {p}")
         if tech.get("learning"):
@@ -243,7 +243,7 @@ def _show_report(store: ProfileStore):
 
     comm = profile.get("communication", {})
     if any(comm.values()):
-        print(f"\n💬 沟通风格:")
+        print("\n💬 沟通风格:")
         if comm.get("tone"):
             print(f"    语气: {comm['tone']}")
         if comm.get("style"):
@@ -251,7 +251,7 @@ def _show_report(store: ProfileStore):
 
     work = profile.get("work_pattern", {})
     if any(v for v in work.values() if v):
-        print(f"\n⏰ 工作模式:")
+        print("\n⏰ 工作模式:")
         if work.get("rhythm"):
             print(f"    节奏: {'夜猫子' if work['rhythm'] == 'night_owl' else '日间型'}")
         if work.get("peak_hours"):
@@ -260,7 +260,7 @@ def _show_report(store: ProfileStore):
             print(f"    焦点: {work['recent_focus']}")
 
     if sources:
-        print(f"\n📊 数据来源:")
+        print("\n📊 数据来源:")
         for s in sources:
             print(f"    {s['name']}: {s['item_count']} 条（最近: {s['last_collected'][:10]}）")
 

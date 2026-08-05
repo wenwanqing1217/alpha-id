@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
@@ -90,7 +90,6 @@ async def dispatch(req: Request):
         )
 
     # ── 2. 调用 agent ──
-    import httpx
     start = time.perf_counter()
     success = False
     result_data: Dict[str, Any] = {}
@@ -195,9 +194,8 @@ async def _call_internal_alpha_id(skill: str, params: Dict) -> Dict:
         # 走 TwinBrain 闲聊
         return {"success": True, "reply": "(内部闲聊暂未接入 dispatch)"}
     elif skill == "growth_stats":
-        from alpha_id.growth_tracker import GrowthTracker, STAGES
+        from alpha_id.growth_tracker import STAGES, GrowthTracker
         tracker = GrowthTracker()
-        alpha_id = params.get("alpha_id", "default")
         return {
             "success": True,
             "stages": STAGES,

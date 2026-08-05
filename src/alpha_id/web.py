@@ -1,30 +1,30 @@
 """Alpha-ID 演示 Web 应用"""
 
 import ipaddress
+import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
-from core.settings import settings
-
+from dotenv import load_dotenv
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-import logging
-from dotenv import load_dotenv
-
 from pydantic import BaseModel
 
-load_dotenv()
-
-logger = logging.getLogger(__name__)
-
-from alpha_id.container import Container, get_container
+from alpha_id.container import Container
 from alpha_id.poe import PoEStore
 from alpha_id.signer import AIDSigner
 from alpha_id.skill_signer import SkillRegistry
 from core.message import Message
+from core.settings import settings
+from core.settings import settings as _settings
 from core.twin_brain import BrainRegistry
+
+load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Alpha-ID Ghost Layer")
 
@@ -170,8 +170,6 @@ _templates_dir = Path(__file__).parent / "templates"
 app = FastAPI(title="Alpha-ID Web Demo")
 
 # CORS：显式允许列表（禁止 wildcard + credentials 组合）
-from fastapi.middleware.cors import CORSMiddleware
-from core.settings import settings as _settings
 _origins = _settings.cors_origins
 app.add_middleware(
     CORSMiddleware,
@@ -775,7 +773,7 @@ async def growth_stats(alpha_id: str):
     container = _get_container()
     memory = container.memory_store if hasattr(container, "memory_store") else None
 
-    from alpha_id.growth_tracker import GrowthTracker, STAGES
+    from alpha_id.growth_tracker import STAGES, GrowthTracker
 
     tracker = GrowthTracker(event_bus=None, memory_store=memory)
 

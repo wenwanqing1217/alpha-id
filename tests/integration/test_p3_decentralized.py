@@ -1,22 +1,18 @@
 """Tests for DIDResolver and SkillRepository (P3-2 Decentralized Protocol)"""
 
-import json
-import tempfile
 from pathlib import Path
 
+import pytest
+
 from alpha_id.did_resolver import DIDResolver
+from alpha_id.signer import AIDSigner
 from alpha_id.skill_repository import (
-    SkillRepository,
-    RepositoryMeta,
-    RepositorySkill,
     REPOSITORY_META_FILE,
     SKILLS_DIR,
-    SKILL_FILE,
-    PACKAGE_FILE,
+    RepositoryMeta,
+    SkillRepository,
 )
-from alpha_id.signer import AIDSigner
-from alpha_id.skill_signer import SkillRegistry, SkillRuntime, SkillAttributionTracker
-import pytest
+from alpha_id.skill_signer import SkillRegistry, SkillRuntime
 
 
 class TestDIDResolver:

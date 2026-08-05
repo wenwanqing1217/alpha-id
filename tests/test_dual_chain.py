@@ -16,7 +16,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from core.dual_chain import DualChainManager, _derive_key, _encrypt, _decrypt, PRIVACY_THRESHOLD
+from core.dual_chain import PRIVACY_THRESHOLD, DualChainManager, _decrypt, _derive_key, _encrypt
 
 
 class TestKeyDerivation(unittest.TestCase):

@@ -36,8 +36,9 @@ from core.middleware import CorrelationIDMiddleware  # noqa: E402
 from core.rate_limit import RateLimitMiddleware  # noqa: E402
 from core.settings import settings  # noqa: E402
 
-from .api.agent import router as agent_router  # noqa: E402
 from .api.a2a import router as a2a_router  # noqa: E402
+from .api.agent import router as agent_router  # noqa: E402
+from .api.agent_dispatch import router as agent_dispatch_router  # noqa: E402
 from .api.credits import router as credits_router  # noqa: E402
 from .api.dual_chain import router as dual_chain_router  # noqa: E402
 from .api.gdpr import router as gdpr_router  # noqa: E402
@@ -45,7 +46,6 @@ from .api.gdpr import router as gdpr_router  # noqa: E402
 # 路由导入（项目始终以 python -m src.main 方式运行）
 from .api.identity import router as identity_router  # noqa: E402
 from .api.mindflow import router as mindflow_router  # noqa: E402
-from .api.agent_dispatch import router as agent_dispatch_router  # noqa: E402
 from .api.observability import router as observability_router  # noqa: E402
 from .api.registration import router as registration_router  # noqa: E402
 from .api.risk import router as risk_router  # noqa: E402
@@ -133,10 +133,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     # 启动：A2A 协议（路由集成，非独立线程）
     if settings.a2a_enabled:
         try:
-            from alpha_id.did import DIDRegistry
-            from core.a2a import A2ASigner, A2ASkillRegistry, A2ARegistry, A2AAuditLog
+            from core.a2a import A2AAuditLog, A2ARegistry, A2ASigner, A2ASkillRegistry
             from core.audit_store import SqliteAuditStore
-            from core.persistent_registry import PersistentA2ARegistry, FileRegistryStore
+            from core.persistent_registry import FileRegistryStore, PersistentA2ARegistry
 
             # 构建持久化 A2A 注册表（服务重启不丢 Agent）
             base_registry = A2ARegistry()

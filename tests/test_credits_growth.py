@@ -7,13 +7,13 @@ import tempfile
 
 import pytest
 
+from core.alpha_social import AlphaSocialManager
 from core.credits import (
-    CreditsManager,
-    InsufficientBalanceError,
     DEFAULT_INITIAL_CREDITS,
     DEFAULT_PLATFORM_FEE_RATE,
+    CreditsManager,
+    InsufficientBalanceError,
 )
-from core.alpha_social import AlphaSocialManager
 from core.storage import JsonStorage
 
 

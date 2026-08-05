@@ -13,12 +13,12 @@ Alpha-ID Self-Evolution — 自进化循环
   系统不是记住更多，是理解更深。
 """
 
-import json
 import logging
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Callable, Dict, List, Optional
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -312,5 +312,5 @@ class SelfEvolution:
     def get_lessons(self, category: str = None, limit: int = 20) -> List[Lesson]:
         lessons = self._lessons
         if category:
-            lessons = [l for l in lessons if l.category == category]
+            lessons = [lesson for lesson in lessons if lesson.category == category]
         return lessons[-limit:]

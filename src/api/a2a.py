@@ -22,8 +22,6 @@ import logging
 import time
 import uuid
 from collections import deque
-from dataclasses import asdict
-from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -31,17 +29,14 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from alpha_id.container import Container, get_container
-from auth.middleware import require_user
 from core.a2a import (
     A2AAgentInfo,
-    A2AAuditFilter,
     A2AAuditLog,
     A2ACallRequest,
     A2ACallResponse,
-    A2ARegisterRequest,
-    A2ARegisterResponse,
     A2ADiscoverResponse,
     A2APermissionDenied,
+    A2ARegisterResponse,
     A2ARegistry,
     A2ASkillRegistry,
 )
@@ -598,7 +593,7 @@ async def a2a_register(
         initial_status = "pending"
 
     try:
-        from core.agent_graph import get_agent_graph, AgentNode
+        from core.agent_graph import AgentNode, get_agent_graph
         graph = get_agent_graph()
         graph.register_agent(AgentNode(
             agent_id=agent_id,
@@ -899,7 +894,6 @@ async def a2a_discover(request: Request):
     registry = _get_registry(state)
     skills = _get_skills(state)
     did = state.get("did", "")
-    alpha_id = state.get("alpha_id", "")
 
     agents = registry.list_agents()
     if agents:
@@ -909,7 +903,7 @@ async def a2a_discover(request: Request):
         success=True,
         agent=A2AAgentInfo(
             did=did,
-            endpoint=f"http://localhost:8000",
+            endpoint="http://localhost:8000",
             skills=[s["name"] for s in skills.list_skills()],
             status="online",
             last_seen=time.time(),
@@ -1096,7 +1090,6 @@ async def a2a_agent_card(request: Request):
     """
     state = _get_a2a_state(request)
     skills = _get_skills(state)
-    registry = _get_registry(state)
 
     # 构建技能列表（与 Google A2A Agent Card 格式对齐）
     skill_cards = []

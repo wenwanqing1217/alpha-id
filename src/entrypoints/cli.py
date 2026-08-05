@@ -14,8 +14,6 @@ import sys
 
 from core.http_client import request
 from entrypoints.feature_flags import (
-    AID_VERSION,
-    NURO_VERSION,
     _HAS_BRAIN,
     _HAS_CHARACTER,
     _HAS_DAILY,
@@ -26,6 +24,8 @@ from entrypoints.feature_flags import (
     _HAS_SCREEN,
     _HAS_VOICE,
     _HAS_WINDOW,
+    AID_VERSION,
+    NURO_VERSION,
 )
 
 logger = logging.getLogger(__name__)
@@ -148,7 +148,7 @@ def main():
     # ── 正常启动 ──
     _safe_print("=" * 50)
     _safe_print(f"  NURO Desktop Pet v{NURO_VERSION}")
-    _safe_print(f"  纯本地 AI 贾维斯 · MiniCPM-o-4.5 + Ollama")
+    _safe_print("  纯本地 AI 贾维斯 · MiniCPM-o-4.5 + Ollama")
     _safe_print("=" * 50)
     _safe_print()
 
@@ -166,7 +166,7 @@ def main():
 
     from core.settings import settings as _settings
 
-    if _HAS_LLM := (_settings.deepseek_api_key or _settings.llm_api_key):
+    if _HAS_LLM := (_settings.deepseek_api_key or _settings.llm_api_key):  # noqa: N806
         _safe_print("  LLM Key:  ✅ 已配置（备用）")
     if not _HAS_BRAIN and not _has_ollama and not _HAS_LLM:
         _safe_print("  TIP: 安装 Ollama + MiniCPM-o → https://ollama.com")

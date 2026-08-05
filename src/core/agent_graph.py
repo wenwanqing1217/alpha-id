@@ -32,7 +32,7 @@ import logging
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -403,7 +403,6 @@ class AgentGraph:
         if owner_alpha_id:
             try:
                 # 尝试从 container 获取 social manager；取不到就跳过
-                import threading as _t
                 _cls = None
                 for _mod in ("alpha_id.container", "core.alpha_social"):
                     try:
@@ -762,7 +761,6 @@ def _bootstrap_internal_agents(graph: AgentGraph) -> None:
       3. 内置最小默认配置（仅核心 agent，不硬编码工具）
     """
     import os
-    import json
 
     config = _load_toolpool_config()
 
@@ -812,8 +810,8 @@ def _load_toolpool_config() -> dict:
       ]
     }
     """
-    import os
     import json
+    import os
 
     # 1. 环境变量指定的配置文件
     config_path = os.getenv("TOOLPOOL_CONFIG_PATH", "")

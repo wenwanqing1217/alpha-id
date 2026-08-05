@@ -5,15 +5,15 @@ from pathlib import Path
 import pytest
 
 from alpha_id.scaffold_templates import (
-    EDITORCONFIG,
-    GITIGNORE,
-    PRE_COMMIT_CONFIG,
-    VSCODE_SETTINGS,
-    VSCODE_EXTENSIONS,
-    VSCODE_TASKS,
-    GITHUB_CI,
     CONTRIBUTING,
     DEV_SETUP_BAT,
+    EDITORCONFIG,
+    GITHUB_CI,
+    GITIGNORE,
+    PRE_COMMIT_CONFIG,
+    VSCODE_EXTENSIONS,
+    VSCODE_SETTINGS,
+    VSCODE_TASKS,
     generate_pyproject_toml,
 )
 

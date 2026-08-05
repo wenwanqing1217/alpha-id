@@ -8,7 +8,7 @@ pip install alpha-id 入口包。
     Container       — 依赖容器
     DIDRegistry     — Agent DID 注册表（身份 + 签名 + 验证）
     AIDSigner       — 签名/验签 SDK
-    
+
     # Phase 3: 新增模块
     AgentFeed       — 资讯采集（GitHub/HN/ArXiv/RSS）
     SmartCapture    — 智能采集（侦探模式：发现矛盾/卡住/偏离）
@@ -17,7 +17,7 @@ pip install alpha-id 入口包。
     NUROBridge      — 桌宠连接（本地小模型 + 云端 LLM）
     SelfEvolution   — 自进化引擎（教训/偏好审视/知识沉淀）
     MasterOrchestrator — 总调度器（串联所有模块）
-    
+
     # Phase 4: 新增模块
     ToolOrchestrator — 编程工具协同调度（串行/并行 + 线程池）
     CodexAPIServer   — Codex CLI HTTP 接口（atomcode/codex 后端）
@@ -45,61 +45,61 @@ from .skill_signer import (
 # ── Phase 3: 新增模块（延迟导入，优雅降级）──
 
 try:
-    from .feed import AgentFeed, FeedConfig, FeedItem
+    from .feed import AgentFeed, FeedConfig, FeedItem  # noqa: F401
     HAS_FEED = True
 except ImportError:
     HAS_FEED = False
 
 try:
-    from .smart_capture import SmartCapture, Observation, UserContext
+    from .smart_capture import Observation, SmartCapture, UserContext  # noqa: F401
     HAS_SMART_CAPTURE = True
 except ImportError:
     HAS_SMART_CAPTURE = False
 
 try:
-    from .obsidian_bridge import ObsidianBridge, NoteEvent
+    from .obsidian_bridge import NoteEvent, ObsidianBridge  # noqa: F401
     HAS_OBSIDIAN = True
 except ImportError:
     HAS_OBSIDIAN = False
 
 try:
-    from .feishu_bridge import FeishuBridge, FeishuMessage
+    from .feishu_bridge import FeishuBridge, FeishuMessage  # noqa: F401
     HAS_FEISHU = True
 except ImportError:
     HAS_FEISHU = False
 
 try:
-    from .nuro_bridge import NUROBridge, NUROEvent
+    from .nuro_bridge import NUROBridge, NUROEvent  # noqa: F401
     HAS_NURO = True
 except ImportError:
     HAS_NURO = False
 
 try:
-    from .self_evolution import SelfEvolution, Lesson, PreferenceAudit
+    from .self_evolution import Lesson, PreferenceAudit, SelfEvolution  # noqa: F401
     HAS_EVOLUTION = True
 except ImportError:
     HAS_EVOLUTION = False
 
 try:
-    from .orchestrator import MasterOrchestrator, OrchestratorConfig
+    from .orchestrator import MasterOrchestrator, OrchestratorConfig  # noqa: F401
     HAS_ORCHESTRATOR = True
 except ImportError:
     HAS_ORCHESTRATOR = False
 
 try:
-    from .tool_orchestrator import ToolOrchestrator, TaskConfig, Task
+    from .tool_orchestrator import Task, TaskConfig, ToolOrchestrator  # noqa: F401
     HAS_TOOL_ORCHESTRATOR = True
 except ImportError:
     HAS_TOOL_ORCHESTRATOR = False
 
 try:
-    from .codex_api import CodexAPIServer
+    from .codex_api import CodexAPIServer  # noqa: F401
     HAS_CODEX_API = True
 except ImportError:
     HAS_CODEX_API = False
 
 try:
-    from .skills.baidu_ai_map import BaiduMapClient, BaiduMapConfig
+    from .skills.baidu_ai_map import BaiduMapClient, BaiduMapConfig  # noqa: F401
     HAS_BAIDU_MAP = True
 except ImportError:
     HAS_BAIDU_MAP = False

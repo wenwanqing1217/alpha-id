@@ -1,25 +1,20 @@
 """Tests for AgentNetwork — multi-agent collaboration (P3-3)"""
 
-import json
-import time
-from pathlib import Path
 
-from alpha_id.signer import AIDSigner
-from alpha_id.poe import PoEStore, PoEClient
-from alpha_id.skill_signer import (
-    SkillRegistry,
-    SkillRuntime,
-    sign_skill,
-    SkillAttributionTracker,
-)
+import pytest
+
 from alpha_id.agent_network import (
     AgentNetwork,
-    AgentPeer,
     CallChain,
     CallChainLink,
 )
-from alpha_id.did_resolver import DIDResolver
-import pytest
+from alpha_id.poe import PoEClient, PoEStore
+from alpha_id.signer import AIDSigner
+from alpha_id.skill_signer import (
+    SkillAttributionTracker,
+    SkillRegistry,
+    sign_skill,
+)
 
 
 class TestAgentNetwork:

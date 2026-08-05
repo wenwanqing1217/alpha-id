@@ -22,14 +22,16 @@ Event Bus — 基于 Redis Streams（跨服务）+ 本地处理器（进程内�
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import threading
 import time
 import uuid
-import json
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional
+
+import redis
 
 from core.redis_client import get_redis_client
 

@@ -4,11 +4,10 @@ RecoveryEngine × TwinBrain 集成测试
 验证恢复引擎与现有系统的兼容性。
 """
 
-import os
 import time
 
+from core.recovery import RECOVERY_STATUS_EXECUTED, RecoveryEngine
 from core.storage import JsonStorage
-from core.recovery import RecoveryEngine, RECOVERY_STATUS_EXECUTED
 
 
 def test_recovery_uses_json_storage(tmp_path):

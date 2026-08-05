@@ -1,6 +1,7 @@
 """测试 A2A Agent 命令"""
 
 from typer.testing import CliRunner
+
 from alpha_id.agent_cli import app
 
 runner = CliRunner()

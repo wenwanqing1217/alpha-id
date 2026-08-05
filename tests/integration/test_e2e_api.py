@@ -11,7 +11,6 @@ Auth / 401 / 404 边界也在覆盖范围内。
 """
 
 import os
-import json
 
 import pytest
 from fastapi.testclient import TestClient
@@ -19,8 +18,8 @@ from fastapi.testclient import TestClient
 # 在导入 main/app 前设置 JWT 测试密钥
 os.environ.setdefault("AUTH_MASTER_KEY", "test-master-key-256bit-secret-for-unit-tests-only")
 
-from src.main import app
 from auth.jwt import create_access_token
+from src.main import app
 
 _fixture_counter = [0]  # mutable counter for unique device fingerprints
 

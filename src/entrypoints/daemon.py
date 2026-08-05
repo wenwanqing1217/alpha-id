@@ -34,14 +34,26 @@ VRAM 预算（RTX 5070 Ti 16GB）：
 # ── 向后兼容 re-export ──
 # 保持旧导入路径有效：
 #   from entrypoints.daemon import AidNuro, main, Palette, apply_acrylic, ...
-from entrypoints.acrylic import apply_acrylic, HAS_DWM_ACRYLIC
-from entrypoints.cli import main, _safe_print, _check_ollama, _env_check
+from entrypoints.acrylic import HAS_DWM_ACRYLIC, apply_acrylic
+from entrypoints.app import AidNuro
+from entrypoints.cli import _check_ollama, _env_check, _safe_print, main
 from entrypoints.daily_summary import (
     compute_next_summary_delay_ms,
     schedule_daily_summary,
     show_daily_summary,
 )
 from entrypoints.feature_flags import (  # noqa: F401
+    _HAS_BRAIN,
+    _HAS_CHARACTER,
+    _HAS_DAILY,
+    _HAS_IDENTITY,
+    _HAS_LIST_WINDOWS,
+    _HAS_MEMORY,
+    _HAS_OBSERVER,
+    _HAS_POPUP,
+    _HAS_SCREEN,
+    _HAS_VOICE,
+    _HAS_WINDOW,
     AID_VERSION,
     NURO_VERSION,
     FairyBrain,
@@ -54,17 +66,6 @@ from entrypoints.feature_flags import (  # noqa: F401
     FairyState,
     FairyVoice,
     WakeupListener,
-    _HAS_BRAIN,
-    _HAS_CHARACTER,
-    _HAS_DAILY,
-    _HAS_IDENTITY,
-    _HAS_LIST_WINDOWS,
-    _HAS_MEMORY,
-    _HAS_OBSERVER,
-    _HAS_POPUP,
-    _HAS_SCREEN,
-    _HAS_VOICE,
-    _HAS_WINDOW,
     capability_report,
     capture_application_window,
     capture_full_screen,
@@ -78,7 +79,6 @@ from entrypoints.feature_flags import (  # noqa: F401
     type_text,
 )
 from entrypoints.palette import Palette
-from entrypoints.app import AidNuro
 
 __all__ = [
     # 主类

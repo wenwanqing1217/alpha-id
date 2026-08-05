@@ -2,7 +2,6 @@
 """ReActEngine unit tests"""
 
 import json
-import pytest
 from unittest.mock import MagicMock, patch
 
 
@@ -156,7 +155,7 @@ class TestTwinBrainIntegration:
         assert settings.use_react is True
 
     def test_think_includes_react_result(self):
-        from core.twin_brain import TwinBrain, BrainSettings
+        from core.twin_brain import BrainSettings, TwinBrain
 
         settings = BrainSettings(use_agent_chat=True, use_react=True)
         brain = TwinBrain(alpha_id="Alpha-React-002", settings=settings)

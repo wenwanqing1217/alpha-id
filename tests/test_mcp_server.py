@@ -1,4 +1,5 @@
 import pytest
+
 pytestmark = pytest.mark.skip(reason="deleted module: aid_mcp_server")
 """
 全面测试 MCP Server 的全部 ~30 个工具。
@@ -10,9 +11,8 @@ pytestmark = pytest.mark.skip(reason="deleted module: aid_mcp_server")
 """
 
 import os
-import json
 import tempfile
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, Mock, patch
 
 try:
     import aid_mcp_server
@@ -145,6 +145,7 @@ class TestCodexTools:
     def tmp_workspace(self):
         """创建临时工作目录并切换 codex WORKSPACE"""
         from pathlib import Path
+
         import codex  # 模块级 WORKSPACE (Path 对象)
 
         with tempfile.TemporaryDirectory() as tmpdir:

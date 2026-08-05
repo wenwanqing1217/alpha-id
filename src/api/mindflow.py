@@ -9,7 +9,7 @@ Gateway 通过 /v1/human/mindflow/* 代理到此路由。
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from fastapi import APIRouter
 from pydantic import BaseModel, Field

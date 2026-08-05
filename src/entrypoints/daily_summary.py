@@ -68,7 +68,7 @@ def _auto_daily_summary(ball, daily, safe_call, on_done=None):
 
 
 def show_daily_summary(ball, daily, safe_call, add_chat_message, set_character_state,
-                       FairyState, ensure_chat_open) -> None:
+                       FairyState, ensure_chat_open) -> None:  # noqa: N803
     """手动触发每日总结
 
     在后台线程中生成，完成后通过 safe_call 更新 UI。

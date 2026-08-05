@@ -10,10 +10,11 @@ NURO 主动观察 — 主动感知用户行为（无需唤醒词）
 """
 
 import logging
+import os
 import threading
 import time
 from enum import Enum
-from typing import Optional, Callable, Dict, Any
+from typing import Any, Callable, Dict, Optional
 
 logger = logging.getLogger(__name__)
 

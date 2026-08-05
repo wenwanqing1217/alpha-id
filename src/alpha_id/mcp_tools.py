@@ -19,7 +19,6 @@ Alpha-ID MCP Tools — 新模块的 MCP 工具注册
 
 import json
 import logging
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -164,7 +163,7 @@ def register_orchestrator_tools(mcp_instance):
             return "❌ Obsidian 模块未启用或未配置路径"
         try:
             tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else []
-            link_list = [l.strip() for l in links.split(",") if l.strip()] if links else []
+            link_list = [link.strip() for link in links.split(",") if link.strip()] if links else []
             path = _orchestrator.obsidian.write_note(
                 title=title,
                 content=content,
@@ -278,7 +277,7 @@ def register_orchestrator_tools(mcp_instance):
         try:
             lessons = _orchestrator.evolution.get_lessons(category=category or None, limit=limit)
             return json.dumps(
-                [l.to_dict() for l in lessons],
+                [lesson.to_dict() for lesson in lessons],
                 ensure_ascii=False,
                 indent=2,
             )
@@ -386,7 +385,7 @@ def register_orchestrator_tools(mcp_instance):
 
         返回任务 ID。
         """
-        if not orch or not hasattr(_orchestrator, 'tool_orchestrator'):
+        if not _orchestrator or not hasattr(_orchestrator, 'tool_orchestrator'):
             return "❌ 编程调度模块未启用"
         try:
             task_id = _orchestrator.tool_orchestrator.submit(requirement, mode)
@@ -402,7 +401,7 @@ def register_orchestrator_tools(mcp_instance):
         参数:
             task_id: 任务 ID
         """
-        if not orch or not hasattr(_orchestrator, 'tool_orchestrator'):
+        if not _orchestrator or not hasattr(_orchestrator, 'tool_orchestrator'):
             return "❌ 编程调度模块未启用"
         try:
             ok = _orchestrator.tool_orchestrator.execute(task_id)
@@ -418,7 +417,7 @@ def register_orchestrator_tools(mcp_instance):
         参数:
             task_id: 任务 ID
         """
-        if not orch or not hasattr(_orchestrator, 'tool_orchestrator'):
+        if not _orchestrator or not hasattr(_orchestrator, 'tool_orchestrator'):
             return "❌ 编程调度模块未启用"
         try:
             result = _orchestrator.tool_orchestrator.get_result(task_id)
@@ -431,7 +430,7 @@ def register_orchestrator_tools(mcp_instance):
     @mcp_instance.tool()
     def tool_orch_list(limit: int = 10) -> str:
         """列出最近的编程任务"""
-        if not orch or not hasattr(_orchestrator, 'tool_orchestrator'):
+        if not _orchestrator or not hasattr(_orchestrator, 'tool_orchestrator'):
             return "❌ 编程调度模块未启用"
         try:
             tasks = _orchestrator.tool_orchestrator.list_tasks(limit)
@@ -442,7 +441,7 @@ def register_orchestrator_tools(mcp_instance):
     @mcp_instance.tool()
     def tool_orch_stats() -> str:
         """获取编程调度统计"""
-        if not orch or not hasattr(_orchestrator, 'tool_orchestrator'):
+        if not _orchestrator or not hasattr(_orchestrator, 'tool_orchestrator'):
             return "❌ 编程调度模块未启用"
         try:
             stats = _orchestrator.tool_orchestrator.stats
@@ -465,7 +464,7 @@ def register_orchestrator_tools(mcp_instance):
 
         返回执行结果。
         """
-        if not orch or not hasattr(_orchestrator, 'codex_api'):
+        if not _orchestrator or not hasattr(_orchestrator, 'codex_api'):
             return "❌ Codex API 模块未启用"
         try:
             result = _orchestrator.codex_api.ask_once(prompt, backend=backend)
@@ -486,7 +485,7 @@ def register_orchestrator_tools(mcp_instance):
             query: 用户原始需求（如"北京可带宠物的咖啡馆"）
             region: 城市或区域限制（可选）
         """
-        if not orch or not hasattr(_orchestrator, 'baidu_map'):
+        if not _orchestrator or not hasattr(_orchestrator, 'baidu_map'):
             return "❌ 百度地图模块未启用"
         try:
             result = _orchestrator.baidu_map.search_places(query, region)
@@ -504,7 +503,7 @@ def register_orchestrator_tools(mcp_instance):
             destination: 终点
             mode: 出行方式（driving / walking / riding / transit）
         """
-        if not orch or not hasattr(_orchestrator, 'baidu_map'):
+        if not _orchestrator or not hasattr(_orchestrator, 'baidu_map'):
             return "❌ 百度地图模块未启用"
         try:
             result = _orchestrator.baidu_map.plan_route(origin, destination, mode)
@@ -520,7 +519,7 @@ def register_orchestrator_tools(mcp_instance):
         参数:
             region: 城市或区域（可选，默认使用配置的区域）
         """
-        if not orch or not hasattr(_orchestrator, 'baidu_map'):
+        if not _orchestrator or not hasattr(_orchestrator, 'baidu_map'):
             return "❌ 百度地图模块未启用"
         try:
             result = _orchestrator.baidu_map.get_weather(region)
@@ -536,7 +535,7 @@ def register_orchestrator_tools(mcp_instance):
         参数:
             address: 地址
         """
-        if not orch or not hasattr(_orchestrator, 'baidu_map'):
+        if not _orchestrator or not hasattr(_orchestrator, 'baidu_map'):
             return "❌ 百度地图模块未启用"
         try:
             result = _orchestrator.baidu_map.geocode(address)
@@ -555,7 +554,7 @@ def register_orchestrator_tools(mcp_instance):
             user_request: 用户原始请求
             region: 区域限制（可选）
         """
-        if not orch or not hasattr(_orchestrator, 'baidu_map'):
+        if not _orchestrator or not hasattr(_orchestrator, 'baidu_map'):
             return "❌ 百度地图模块未启用"
         try:
             result = _orchestrator.baidu_map.assist(user_request, region)

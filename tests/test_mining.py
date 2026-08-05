@@ -1,10 +1,9 @@
 import pytest
+
 pytestmark = pytest.mark.skip(reason="deleted module: alpha_id.mining")
 """Mining 模块回归测试"""
 
 import json
-import re
-import zipfile
 from pathlib import Path
 
 try:

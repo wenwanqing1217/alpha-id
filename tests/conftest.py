@@ -47,6 +47,7 @@ os.environ["FOUNDER_CODE_HASH"] = __import__("hashlib").sha256(b"Alpha-1-zx").he
 
 # 强制重新加载 settings，确保环境变量生效
 from core.settings import reload_settings as _reload
+
 _reload()
 
 _fallback_temp = tempfile.mkdtemp(prefix="aid_pytest_temp_")

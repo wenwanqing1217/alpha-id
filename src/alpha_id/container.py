@@ -21,13 +21,12 @@
 
 import logging
 import threading
-from typing import Optional
-
-from core.settings import settings
+from typing import Any, Optional
 
 from core.alpha_social import AlphaSocialManager
 from core.memory_store import MemoryStore
 from core.risk_engine import RiskAssessmentEngine
+from core.settings import settings
 from core.storage import StorageBackend
 from core.storage_sqlite import SqliteStorage
 from core.user_identity import UserIdentityManager
@@ -354,7 +353,7 @@ class Container:
 # ── FastAPI 依赖注入 ──
 
 try:
-    from fastapi import Depends, Request
+    from fastapi import Request
 
     def get_container(request: Request) -> Container:
         """FastAPI 依赖：从 app.state 获取 Container

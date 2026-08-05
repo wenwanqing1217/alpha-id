@@ -3,21 +3,17 @@ RecoveryEngine 身份恢复单元测试
 """
 
 import time
-import json
 
 from core.recovery import (
+    RECOVERY_STATUS_CANCELLED,
+    RECOVERY_STATUS_EXPIRED,
+    RECOVERY_STATUS_PENDING,
+    RECOVERY_STATUS_READY,
     RecoveryEngine,
     RecoveryRequest,
     WitnessRecord,
-    RECOVERY_STATUS_PENDING,
-    RECOVERY_STATUS_READY,
-    RECOVERY_STATUS_EXECUTABLE,
-    RECOVERY_STATUS_EXECUTED,
-    RECOVERY_STATUS_EXPIRED,
-    RECOVERY_STATUS_CANCELLED,
 )
 from core.storage import JsonStorage
-
 
 # ── 测试用数据 ──
 

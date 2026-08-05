@@ -17,7 +17,7 @@ import logging
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set
 
 from core.storage import StorageBackend
 
@@ -429,11 +429,6 @@ class AlphaSocialManager:
             self._storage.save("messages", messages)
 
         return items
-
-    def get_friends(self, alpha_id: str) -> List[str]:
-        """获取好友列表"""
-        friends = self._storage.load("friends") or {}
-        return friends.get(alpha_id, [])
 
     def get_pending_friend_requests(self, alpha_id: str) -> List[Dict]:
         """获取待处理的好友请求"""

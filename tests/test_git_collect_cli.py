@@ -21,6 +21,8 @@ class TestCollectGit:
         (repo / ".git").mkdir()
         (repo / "main.py").write_text("print('hi')", encoding="utf-8")
         monkeypatch.chdir(repo)
+        # 隔离数据目录，避免写入用户主目录 ~/.alpha-id（CI/沙箱无权限）
+        monkeypatch.setattr(Path, "home", staticmethod(lambda: tmp_path))
 
         result = runner.invoke(collect_app, ["git", "--path", str(repo)])
         assert result.exit_code == 0, result.output

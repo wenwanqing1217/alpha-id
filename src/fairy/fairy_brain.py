@@ -8,8 +8,7 @@ Gateway 不可用时回退到本地 Ollama 推理。
 import base64
 import logging
 import os
-import time
-from typing import Optional, List
+from typing import List, Optional
 
 import httpx
 

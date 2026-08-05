@@ -7,7 +7,6 @@ Alpha-ID 用户身份核心逻辑（无外部依赖）
 
 import hashlib
 import logging
-import os
 import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime

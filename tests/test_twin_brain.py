@@ -2,19 +2,16 @@
 TwinBrain 核心单元测试 —— 状态机、消息路由、自主学习周期、BrainRegistry
 """
 
-import pytest
-import time
-from unittest.mock import MagicMock, patch
+from core.message import Message, MessageType, Response
 from core.twin_brain import (
-    TwinBrain,
-    BrainRegistry,
-    BrainState,
-    BrainSettings,
-    can_transition,
     BRAIN_TRANSITIONS,
+    BrainRegistry,
+    BrainSettings,
+    BrainState,
+    TwinBrain,
+    can_transition,
     default_registry,
 )
-from core.message import Message, Response, MessageType
 
 
 class TestBrainStateMachine:
@@ -360,7 +357,6 @@ class TestBrainRegistry:
 
     def test_default_registry_is_global(self):
         """默认注册表是单例"""
-        from core.twin_brain import default_registry
 
         assert isinstance(default_registry, BrainRegistry)
 

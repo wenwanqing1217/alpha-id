@@ -10,9 +10,8 @@ Alpha-ID 统一配置管理 — 基于 pydantic-settings
 
 import os
 import threading
-import time
 from pathlib import Path
-from typing import Callable, ClassVar, Dict, List, Optional
+from typing import ClassVar, Dict, List, Optional
 
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict

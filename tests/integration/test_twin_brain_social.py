@@ -4,9 +4,10 @@ TwinBrain + AlphaSocialManager 集成测试
 """
 
 import pytest
-from core.storage import JsonStorage
-from core.twin_brain import TwinBrain, BrainSettings
+
 from core.message import Message, MessageType
+from core.storage import JsonStorage
+from core.twin_brain import BrainSettings, TwinBrain
 
 
 @pytest.fixture

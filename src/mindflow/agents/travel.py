@@ -362,6 +362,11 @@ def _parse_clarify_result(data: dict, user_request: str) -> dict:
 # Deep Link 生成（百度地图手机App跳转）
 # ════════════════════════════════════════════════════════════════
 
+def _build_deep_link(destination: str, mode: str = "transit") -> str:
+    """生成百度地图深链（供结果里的 deep_link 字段使用）"""
+    return _build_nav_links(destination, mode=mode).get("deep", "")
+
+
 def _build_nav_links(destination: str, origin: str = "", mode: str = "transit") -> dict:
     """
     生成百度地图导航链接（深链 + HTTP 兜底）

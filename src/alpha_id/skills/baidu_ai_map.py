@@ -35,8 +35,8 @@ import json
 import logging
 import os
 import re
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from dataclasses import dataclass
+from typing import Any, Dict, Optional
 from urllib.parse import urlencode
 
 logger = logging.getLogger(__name__)
@@ -86,8 +86,8 @@ class BaiduMapClient:
         Returns:
             JSON 响应
         """
-        import urllib.request
         import urllib.error
+        import urllib.request
 
         url = f"{self._base_url}{path}"
 
@@ -309,10 +309,10 @@ def main():
         result = client.assist(args.query, args.region)
         print(json.dumps(result, ensure_ascii=False, indent=2))
     else:
-        print(f"百度地图 AI 技能客户端")
+        print("百度地图 AI 技能客户端")
         print(f"  Auth Token: {'已配置' if client.is_available else '未配置（设置 BAIDU_MAP_AUTH_TOKEN）'}")
         print(f"  默认区域: {args.region}")
-        print(f"  用法: python -m alpha_id.skills.baidu_ai_map \"找北京咖啡馆\"")
+        print("  用法: python -m alpha_id.skills.baidu_ai_map \"找北京咖啡馆\"")
 
 
 if __name__ == "__main__":

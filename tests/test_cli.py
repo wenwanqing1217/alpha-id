@@ -2,13 +2,11 @@
 CLI 集成测试 — 同进程运行，monkeypatch Path.home()
 """
 
-import json
-import os
 import sys
-import pytest
 from pathlib import Path
-from typer.testing import CliRunner
 
+import pytest
+from typer.testing import CliRunner
 
 runner = CliRunner()
 

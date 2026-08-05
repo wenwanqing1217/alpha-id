@@ -23,7 +23,6 @@ import logging
 import math
 import tkinter as tk
 from enum import Enum
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -110,26 +109,6 @@ class GhostCharacter:
         wave_w = body_width * 2 / 3
         wave_h = s * 0.1
         bottom_y = body_bottom
-
-        # 身体轮廓点
-        points = [
-            cx - body_width, bottom_y,          # 左下起点
-            cx - body_width, cy + s * 0.1,       # 左侧
-            cx - body_width * 0.7, body_top,     # 左上圆弧
-            cx, body_top - s * 0.05,             # 头顶
-            cx + body_width * 0.7, body_top,     # 右上圆弧
-            cx + body_width, cy + s * 0.1,       # 右侧
-            cx + body_width, bottom_y,           # 右下
-        ]
-        # 波浪底边
-        wave_points = [
-            cx + body_width, bottom_y,
-            cx + body_width - wave_w * 0.3, bottom_y - wave_h,
-            cx + body_width - wave_w * 0.6, bottom_y + wave_h * 0.5,
-            cx + body_width - wave_w, bottom_y - wave_h * 0.8,
-            cx + body_width - wave_w * 1.3, bottom_y + wave_h * 0.3,
-            cx - body_width, bottom_y,
-        ]
 
         # 身体填充
         body_coords = [

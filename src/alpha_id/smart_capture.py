@@ -24,7 +24,6 @@ Alpha-ID Smart Capture — 智能采集层
 import hashlib
 import json
 import logging
-import os
 import subprocess
 import time
 from dataclasses import asdict, dataclass, field
@@ -142,15 +141,6 @@ class SmartCapture:
 
                 if result.returncode == 0 and result.stdout.strip():
                     commits = result.stdout.strip().split("\n")
-
-                    # 获取 diff 摘要
-                    diff_result = subprocess.run(
-                        ["git", "diff", "HEAD~HEAD", "--stat"],
-                        cwd=str(repo),
-                        capture_output=True,
-                        text=True,
-                        timeout=10,
-                    )
 
                     # 分析：卡住检测（同一文件反复修改）
                     stuck = self._detect_stuck(repo, commits)

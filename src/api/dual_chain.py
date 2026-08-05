@@ -7,7 +7,7 @@ from auth.middleware import require_user
 from core.dual_chain import DualChainManager
 from core.storage import StorageBackend
 
-from .models import DualChainSaveRequest, DualChainQueryRequest, DualChainMigrateRequest
+from .models import DualChainMigrateRequest, DualChainQueryRequest, DualChainSaveRequest
 
 router = APIRouter(prefix="/api/v1/dual-chain", tags=["双链记忆"])
 

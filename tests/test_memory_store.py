@@ -2,10 +2,10 @@
 MemoryStore 单元测试 —— 记忆存储 CRUD、查询、敏感度过滤
 """
 
+
 import pytest
-import json
-import os
-from core.memory_store import MemoryStore, AlphaMemory
+
+from core.memory_store import AlphaMemory, MemoryStore
 from core.storage import JsonStorage
 
 

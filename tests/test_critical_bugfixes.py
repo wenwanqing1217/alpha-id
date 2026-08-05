@@ -4,12 +4,12 @@ Run with:  pytest tests/test_critical_bugfixes.py -v
 """
 
 import asyncio
-import pytest
 from unittest.mock import MagicMock, patch
 
-from core.storage_postgres import PostgresStorage
-from auth.csrf import CSRFMiddleware
+import pytest
 
+from auth.csrf import CSRFMiddleware
+from core.storage_postgres import PostgresStorage
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 1. storage_postgres: JSONB deserialization
@@ -60,16 +60,24 @@ class TestCSRFExemptPaths:
         request.method = "POST"
         request.url.path = "/api/v1/identity/quick-register"
         request.headers = {}
-        result = middleware.dispatch(request, MagicMock())
-        assert result is not None
+
+        async def _call_next(_req):
+            return "passed-through"
+
+        result = asyncio.run(middleware.dispatch(request, _call_next))
+        assert result == "passed-through"
 
     def test_dual_chain_save_exempt(self, middleware):
         request = MagicMock()
         request.method = "POST"
         request.url.path = "/api/v1/dual-chain/save"
         request.headers = {}
-        result = middleware.dispatch(request, MagicMock())
-        assert result is not None
+
+        async def _call_next(_req):
+            return "passed-through"
+
+        result = asyncio.run(middleware.dispatch(request, _call_next))
+        assert result == "passed-through"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -93,9 +101,7 @@ class TestA2AGraphLogic:
         }
 
         with patch("core.agent_graph.get_agent_graph", return_value=mock_graph):
-            result = asyncio.get_event_loop().run_until_complete(
-                a2a_agent_graph(MagicMock())
-            )
+            result = asyncio.run(a2a_agent_graph(MagicMock()))
 
         assert "nodes" in result
         assert "edges" in result
@@ -115,9 +121,7 @@ class TestA2AGraphLogic:
         }
 
         with patch("core.agent_graph.get_agent_graph", return_value=mock_graph):
-            result = asyncio.get_event_loop().run_until_complete(
-                a2a_agent_graph(MagicMock())
-            )
+            result = asyncio.run(a2a_agent_graph(MagicMock()))
 
         assert result["edges"][0]["from"] == "did:ghost:1"
         assert result["edges"][0]["to"] == "did:ghost:2"
@@ -155,9 +159,7 @@ class TestA2AGraphLogic:
             with patch("api.a2a._get_a2a_state", return_value=mock_state):
                 with patch("api.a2a._get_registry", return_value=mock_registry):
                     with patch("api.a2a._get_audit", return_value=mock_audit):
-                        result = asyncio.get_event_loop().run_until_complete(
-                            a2a_agent_graph(mock_request)
-                        )
+                        result = asyncio.run(a2a_agent_graph(mock_request))
 
         assert len(result["nodes"]) == 2
         assert result["nodes"][0]["id"] == "did:ghost:1"

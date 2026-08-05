@@ -3,6 +3,8 @@
 """
 
 import logging
+import os
+import subprocess
 from datetime import date
 
 logger = logging.getLogger("mindflow.agents.tools")
@@ -50,10 +52,6 @@ def web_search(params: dict) -> dict:
     }
 
 
-import subprocess
-import os
-
-
 def code_runner(params: dict) -> dict:
     """
     编程技能：用本地 AI 引擎执行编程任务
@@ -88,6 +86,39 @@ def code_runner(params: dict) -> dict:
         return {"content": "编程任务超时（180秒）", "status": "timeout"}
     except Exception as e:
         return {"content": f"调用失败: {str(e)}", "status": "error"}
+
+
+def codex_agent(params: dict) -> dict:
+    """
+    编程 Agent — 委派本机 Codex CLI（复用 alpha_id.codex_api 封装）
+    接收参数: {"prompt": "编程任务描述"}
+    """
+    prompt = params.get("prompt") or params.get("params", {}).get("prompt", "")
+    if not prompt:
+        return {"content": "缺少 prompt 参数", "status": "error"}
+    try:
+        from alpha_id.codex_api import CodexAPIServer
+        result = CodexAPIServer.ask_once(prompt)
+        return {"content": result, "status": "success"}
+    except Exception as e:
+        return {"content": f"codex 调用失败: {e}", "status": "error"}
+
+
+def llm_chat(params: dict) -> dict:
+    """
+    通用对话 Agent — 走 TwinBrain（复用现有大脑通道）
+    接收参数: {"prompt": "用户消息"}
+    """
+    prompt = params.get("prompt") or params.get("params", {}).get("prompt", "")
+    if not prompt:
+        return {"content": "缺少 prompt 参数", "status": "error"}
+    try:
+        from alpha_id.brain import TwinBrain
+        brain = TwinBrain()
+        reply = brain.chat(alpha_id="mindflow", user_text=prompt)
+        return {"content": reply, "status": "success"}
+    except Exception as e:
+        return {"content": f"对话服务不可用: {e}", "status": "error"}
 
 
 def register_tools(engine):

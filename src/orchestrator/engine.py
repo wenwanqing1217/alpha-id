@@ -36,10 +36,10 @@ import time
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 
-from core.event_bus import EventBus, EventType, get_event_bus
-from core.twin_brain import TwinBrain, BrainSettings
 from core.agent import AgentLoop
+from core.event_bus import EventBus, EventType, get_event_bus
 from core.settings import settings
+from core.twin_brain import BrainSettings, TwinBrain
 
 logger = logging.getLogger(__name__)
 

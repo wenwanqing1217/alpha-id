@@ -22,13 +22,12 @@ Alpha-ID Codex API — Codex CLI HTTP 接口
 """
 
 import json
+import logging
 import os
 import re
 import subprocess
-import logging
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -97,8 +96,8 @@ class CodexAPIServer:
         handler = self._make_handler()
         self._server = ThreadedHTTPServer((self._host, self._port), handler)
         print(f"Codex API → http://{self._host}:{self._port}")
-        print(f"  POST /ask   {{\"prompt\":\"...\"}}")
-        print(f"  GET  /health")
+        print("  POST /ask   {\"prompt\":\"...\"}")
+        print("  GET  /health")
         self._server.serve_forever()
 
     def stop(self):

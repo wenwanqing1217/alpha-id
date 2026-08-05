@@ -11,7 +11,7 @@ NURO 语音 — Whisper STT + Coqui TTS
 import logging
 import threading
 import time
-from typing import Optional, Callable
+from typing import Callable, Optional
 
 from core.settings import settings
 

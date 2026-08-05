@@ -27,14 +27,14 @@ Alpha-ID 异常层次结构
 """
 
 from __future__ import annotations
-from typing import Optional
 
+from typing import Optional
 
 # ── 基类 ────────────────────────────────────────────────────────
 
 class AlphaIDError(Exception):
     """Alpha-ID 异常基类"""
-    
+
     def __init__(self, message: str, details: Optional[dict] = None):
         super().__init__(message)
         self.message = message
@@ -50,7 +50,7 @@ class TransientError(AlphaIDError):
 
 class NetworkError(TransientError):
     """网络相关异常（超时、连接断开、DNS 失败）"""
-    
+
     def __init__(self, message: str, url: str = "", status_code: int = 0):
         super().__init__(message, {"url": url, "status_code": status_code})
         self.url = url
@@ -59,7 +59,7 @@ class NetworkError(TransientError):
 
 class RateLimitError(TransientError):
     """API 限流"""
-    
+
     def __init__(self, message: str = "Rate limit exceeded", retry_after: float = 1.0):
         super().__init__(message, {"retry_after": retry_after})
         self.retry_after = retry_after
@@ -67,7 +67,7 @@ class RateLimitError(TransientError):
 
 class ResourceBusyError(TransientError):
     """资源暂时不可用"""
-    
+
     def __init__(self, resource_type: str = "", resource_id: str = ""):
         super().__init__(
             f"Resource busy: {resource_type}/{resource_id}",
@@ -84,7 +84,7 @@ class PermanentError(AlphaIDError):
 
 class ConfigurationError(PermanentError):
     """配置错误"""
-    
+
     def __init__(self, message: str, field: str = ""):
         super().__init__(message, {"field": field})
         self.field = field
@@ -92,7 +92,7 @@ class ConfigurationError(PermanentError):
 
 class ValidationError(PermanentError):
     """数据校验失败"""
-    
+
     def __init__(self, message: str, field: str = "", value: str = ""):
         super().__init__(message, {"field": field, "value": value})
         self.field = field
@@ -100,7 +100,7 @@ class ValidationError(PermanentError):
 
 class ResourceExhaustedError(PermanentError):
     """资源耗尽（GPU OOM、磁盘满等）"""
-    
+
     def __init__(self, resource_type: str = "", required: int = 0, available: int = 0):
         super().__init__(
             f"Resource exhausted: {resource_type} (required={required}, available={available})",
@@ -120,7 +120,7 @@ class SchedulerError(AlphaIDError):
 
 class InsufficientGPUError(SchedulerError):
     """GPU 资源不足"""
-    
+
     def __init__(self, required: int = 0, available: int = 0):
         super().__init__(
             f"Insufficient GPU: required={required}, available={available}",
@@ -132,7 +132,7 @@ class InsufficientGPUError(SchedulerError):
 
 class JobNotFoundError(SchedulerError):
     """任务不存在"""
-    
+
     def __init__(self, job_id: str = ""):
         super().__init__(f"Job not found: {job_id}", {"job_id": job_id})
         self.job_id = job_id
@@ -140,7 +140,7 @@ class JobNotFoundError(SchedulerError):
 
 class TenantQuotaExceededError(SchedulerError):
     """租户配额超限"""
-    
+
     def __init__(self, tenant_id: str = "", quota: int = 0, current: int = 0, requested: int = 0):
         super().__init__(
             f"Tenant {tenant_id} quota exceeded: {current}/{quota}, requested {requested}",

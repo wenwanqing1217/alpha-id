@@ -5,15 +5,13 @@
 与示例测试不同，hypothesis 自动生成大量随机输入来发现边界 bug。
 """
 
-import hashlib
 import os
 import sys
-import tempfile
-from unittest.mock import patch
 
 import pytest
-from hypothesis import given, settings, strategies as st
-from hypothesis.strategies import text, integers, lists, floats
+from hypothesis import given, settings
+from hypothesis import strategies as st
+from hypothesis.strategies import integers, lists, text
 
 # 确保测试环境
 os.environ.setdefault("AUTH_MASTER_KEY", "test-master-key-for-pytest-0123456789abcdef")
@@ -21,14 +19,15 @@ os.environ.setdefault("AUTH_MASTER_KEY", "test-master-key-for-pytest-0123456789a
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from core.dual_chain import (
+    PRIVACY_THRESHOLD,
     DualChainManager,
+    _decrypt,
     _derive_key,
     _encrypt,
-    _decrypt,
-    PRIVACY_THRESHOLD,
 )
-from core.secrets import encrypt as secret_encrypt, decrypt as secret_decrypt, decrypt_if_needed
-
+from core.secrets import decrypt as secret_decrypt
+from core.secrets import decrypt_if_needed
+from core.secrets import encrypt as secret_encrypt
 
 # ── 密钥派生属性测试 ──
 

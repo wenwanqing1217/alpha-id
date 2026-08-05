@@ -1,8 +1,10 @@
 """Memory Graph 模块测试"""
 
-import os, tempfile, json
+import os
+import tempfile
 
-from memory_graph import build_graph, render_html, graph_stats_text, generate_graph_html
+from memory_graph import build_graph, generate_graph_html, graph_stats_text, render_html
+
 from core.memory_store import MemoryStore
 from core.storage import JsonStorage
 

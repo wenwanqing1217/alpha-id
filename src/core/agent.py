@@ -452,9 +452,9 @@ def _make_tools(alpha_id: str, backends: Optional[AgentContainer] = None, signer
 
     def navigate_to(destination: str, mode: str = "driving") -> str:
         """生成地图导航链接，用户可在手机上点击直接打开地图 App 导航。
-        
+
         mode: driving(驾车), walking(步行), bicycling(骑行), transit(公交)
-        
+
         返回格式化的导航链接文本，不要打开浏览器——服务器端打开无用。
         """
         import urllib.parse

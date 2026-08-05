@@ -5,7 +5,7 @@ TwinBrain × ReputationEngine 集成测试
 """
 
 from core.storage import JsonStorage
-from core.twin_brain import TwinBrain, BrainSettings, BrainState
+from core.twin_brain import BrainSettings, TwinBrain
 
 
 def test_compute_reputation_in_status(tmp_path):

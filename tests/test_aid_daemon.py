@@ -3,9 +3,10 @@
 注意：AidNuro 类依赖大量 GUI/硬件模块，测试时需要全面 mock。
 """
 
-import pytest
 import sys
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 @pytest.fixture

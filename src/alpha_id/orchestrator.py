@@ -13,16 +13,14 @@ NOTE: 实际实现已迁移到 orchestrator.engine.OrchestratorEngine。
 from __future__ import annotations
 
 import logging
-import threading
-import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from core.event_bus import EventBus, EventType, get_event_bus
+from orchestrator.engine import OrchestratorEngine
 
-from .exceptions import TransientError, PermanentError, ResourceBusyError
-from orchestrator.engine import OrchestratorEngine, ChannelAdapter, LoopPhase
+from .exceptions import TransientError
 
 logger = logging.getLogger(__name__)
 
@@ -395,6 +393,7 @@ class MasterOrchestrator:
         """
         try:
             import httpx
+
             from core.settings import settings
             gateway_url = settings.gateway_url.rstrip("/")
             target_alpha = alpha_id or self._engine._brain.alpha_id if self._engine._brain else "default"

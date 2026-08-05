@@ -21,9 +21,7 @@ Alpha-ID Agent Feed — 资讯采集模块
   - RSS 技术博客
 """
 
-import json
 import logging
-import os
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
@@ -274,8 +272,9 @@ class AgentFeed:
 
     def _fetch_rss(self, url: str) -> List[FeedItem]:
         """获取 RSS 订阅"""
-        import httpx
         import xml.etree.ElementTree as ET
+
+        import httpx
 
         items = []
         try:

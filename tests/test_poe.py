@@ -2,10 +2,10 @@
 PoE（Proof of Execution）单元测试
 """
 
-import json, os
 import hashlib
-import pytest
-from alpha_id import AIDSigner, ProofOfExecution, PoEStore, PoEClient
+import json
+
+from alpha_id import AIDSigner, PoEClient, PoEStore, ProofOfExecution
 
 
 class TestProofOfExecution:
@@ -167,7 +167,6 @@ class TestPoEClient:
         assert poe.poe_id
         assert poe.signature
         assert poe.verify(signer.public_key)
-        import hashlib
 
         assert poe.output_hash == hashlib.sha256(b"hello World").hexdigest()
 
@@ -358,8 +357,8 @@ class TestPoEIntegration:
 
     def test_runtime_generates_poe(self, tmp_path):
         """SkillRuntime.execute() 通过 PoEClient 生成执行证明"""
-        from alpha_id.skill_signer import SkillRegistry, SkillRuntime, sign_skill, SkillPackage
-        from alpha_id.poe import PoEStore, PoEClient
+        from alpha_id.poe import PoEClient, PoEStore
+        from alpha_id.skill_signer import SkillRegistry, SkillRuntime, sign_skill
 
         signer = AIDSigner()
         signer.generate()
@@ -398,14 +397,13 @@ class TestPoEIntegration:
 
     def test_runtime_poe_with_attribution(self, tmp_path):
         """PoE 与归因共存"""
+        from alpha_id.poe import PoEClient, PoEStore
         from alpha_id.skill_signer import (
+            SkillAttributionTracker,
             SkillRegistry,
             SkillRuntime,
-            SkillAttributionTracker,
             sign_skill,
-            SkillPackage,
         )
-        from alpha_id.poe import PoEStore, PoEClient
 
         signer = AIDSigner()
         signer.generate()
@@ -441,7 +439,7 @@ class TestPoEIntegration:
 
     def test_poe_failure_does_not_block(self, tmp_path):
         """PoE 生成失败不阻塞技能执行"""
-        from alpha_id.skill_signer import SkillRegistry, SkillRuntime, sign_skill, SkillPackage
+        from alpha_id.skill_signer import SkillRegistry, SkillRuntime, sign_skill
 
         # 用无身份的 signer 模拟 PoEClient 失败场景
         signer = AIDSigner()
@@ -454,7 +452,6 @@ class TestPoEIntegration:
 
         # 故意构造一个会失败的 PoEClient（signer 无身份）
         bad_signer = AIDSigner()
-        from alpha_id.poe import PoEClient
         # bad_signer 没有 generate()，所以 PoEClient 没有 signer
 
         runtime = SkillRuntime(registry)

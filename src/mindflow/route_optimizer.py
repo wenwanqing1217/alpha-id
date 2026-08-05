@@ -128,7 +128,7 @@ def optimize_route_order(
 ) -> List[str]:
     """
     计算最优访问顺序
-    
+
     策略：
       1. 有时间窗口约束的按时间排序
       2. 剩余地点用最近邻算法
@@ -199,7 +199,7 @@ def build_multi_stop_navigation(
 ) -> Dict:
     """
     生成百度地图多点导航链接
-    
+
     支持：
       - Deep Link（baidumap:// 协议，手机直接跳 App）
       - Web Link（浏览器打开）
@@ -249,14 +249,14 @@ def plan_multi_stop_route(
 ) -> Dict:
     """
     完整的多目的地路线规划流程
-    
+
     参数：
       places: 目的地列表，如 ["家", "公司", "医院"]
       start_place: 起点（可选）
       time_windows: 时间约束，如 {"医院": "14:00"}
       city: 城市
       mode: 出行方式 driving/walking/transit
-    
+
     返回完整规划结果
     """
     if not places:
@@ -264,7 +264,7 @@ def plan_multi_stop_route(
 
     # 去重
     unique_places = list(dict.fromkeys(places))
-    
+
     if len(unique_places) == 1:
         return {
             "ordered_places": unique_places,

@@ -13,12 +13,10 @@ Alpha-ID Obsidian Bridge — Obsidian 双向同步
   用户在笔记上改的每一个字，都是对 Alpha-ID 的反馈。
 """
 
-import hashlib
 import json
 import logging
 import re
-import time
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional

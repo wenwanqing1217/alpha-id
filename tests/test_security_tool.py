@@ -1,8 +1,6 @@
 """安全工具模块测试"""
 
-import hashlib
 import re
-from datetime import datetime
 
 from src.tools.security_tool import (
     _safe_str,

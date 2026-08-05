@@ -1,16 +1,17 @@
 """JWT 认证模块单元测试 — 基于 PyJWT"""
 
-import time
-import json
 import base64
+import json
+import time
+
 import pytest
 
 from auth.jwt import (
+    ALGORITHM,
     create_access_token,
     create_refresh_token,
     decode_token,
     verify_token,
-    ALGORITHM,
 )
 from core.settings import settings
 
@@ -26,6 +27,7 @@ def _b64url_decode(data: str) -> bytes:
 
 def _encode(payload: dict) -> str:
     import jwt as pyjwt
+
     from auth.jwt import _get_signing_key
     return pyjwt.encode(payload, _get_signing_key(), algorithm=ALGORITHM)
 
@@ -197,8 +199,10 @@ class TestAuthVerifyEndpoint:
 
     @pytest.fixture(autouse=True)
     def setup(self):
+        import os
+        import tempfile
+
         from alpha_id.container import Container
-        import tempfile, os
 
         self.tmp_dir = tempfile.mkdtemp(prefix="aid_verify_test_")
         os.environ["COZE_WORKSPACE_PATH"] = self.tmp_dir
@@ -227,6 +231,7 @@ class TestAuthVerifyEndpoint:
 
     def test_verify_valid_access_token(self):
         from fastapi.testclient import TestClient
+
         from src.main import app
 
         client = TestClient(app)
@@ -239,6 +244,7 @@ class TestAuthVerifyEndpoint:
 
     def test_verify_valid_refresh_token(self):
         from fastapi.testclient import TestClient
+
         from src.main import app
 
         client = TestClient(app)
@@ -251,6 +257,7 @@ class TestAuthVerifyEndpoint:
 
     def test_verify_invalid_token(self):
         from fastapi.testclient import TestClient
+
         from src.main import app
 
         client = TestClient(app)
@@ -262,6 +269,7 @@ class TestAuthVerifyEndpoint:
 
     def test_verify_expired_token(self):
         from fastapi.testclient import TestClient
+
         from src.main import app
 
         expired = _encode({
@@ -279,6 +287,7 @@ class TestAuthVerifyEndpoint:
 
     def test_verify_missing_token_field(self):
         from fastapi.testclient import TestClient
+
         from src.main import app
 
         client = TestClient(app)

@@ -13,9 +13,9 @@ OCR 工具 —— TwinBrain 的"眼睛之瞳"
 
 import os
 import sys
+from typing import Any, Dict
 
 from core.settings import settings
-from typing import Any, Dict
 
 # 兼容本地运行
 

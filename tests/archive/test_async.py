@@ -2,10 +2,8 @@
 异步存储和 LLM 客户端测试
 """
 
-import asyncio
 import os
 import sys
-import tempfile
 
 import pytest
 

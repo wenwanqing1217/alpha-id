@@ -1,17 +1,19 @@
 import pytest
+
 pytestmark = pytest.mark.skip(reason="deleted module: tools.shortdrama_tool")
 """Tests for shortdrama automation tool and API routes."""
 
-import json
-import os
-import tempfile
 from unittest.mock import MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
 
 try:
-    from tools.shortdrama_tool import AIContentScanner, ReviewQueue, ShortDramaTool, ShortDramaBrowserAutomation
+    from tools.shortdrama_tool import (
+        AIContentScanner,
+        ReviewQueue,
+        ShortDramaBrowserAutomation,
+        ShortDramaTool,
+    )
 except ImportError:
     pass
 

@@ -7,14 +7,14 @@
 
 import logging
 import sqlite3
-from typing import Callable, Optional, Type, Tuple
+from typing import Callable, Optional, Tuple, Type
 
 from tenacity import (
+    before_sleep_log,
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
-    before_sleep_log,
 )
 
 logger = logging.getLogger(__name__)

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 import logging
-import sys
+import os
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional
 
@@ -109,7 +109,7 @@ def _local_parse_intent(prompt: str) -> ParsedIntent:
         params["skill"] = skill_m.group(1)
 
     # 中文 key=value 参数抽取：商品=XX 卖点=XX 价格=XX 成色=XX 主题=XX 标题=XX 内容=XX
-    _KEY_MAP = {
+    _KEY_MAP = {  # noqa: N806
         "商品": "product", "产品": "product",
         "卖点": "description", "描述": "description",
         "价格": "price",
@@ -679,7 +679,7 @@ def diy_repl(
         if result.get("error"):
             typer.echo(f"   ❌ {result['error']}")
         else:
-            typer.echo(f"   ✅ done")
+            typer.echo("   ✅ done")
             data = result.get("data")
             if data and isinstance(data, dict):
                 # 只打印关键字段

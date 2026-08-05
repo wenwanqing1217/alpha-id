@@ -45,20 +45,31 @@ import sys
 import threading
 import time
 import traceback
-from datetime import datetime
 from typing import Optional
 
 # ── 子模块导入 ──
 # 注意：功能标志通过模块引用（而非 from import），使单元测试可以 monkeypatch
 from entrypoints import feature_flags
 from entrypoints.acrylic import apply_acrylic
+from entrypoints.cli import _safe_print
 from entrypoints.daily_summary import compute_next_summary_delay_ms
 from entrypoints.feature_flags import (  # noqa: F401 — 保持向后兼容的 re-export
     AID_VERSION,
     NURO_VERSION,
+    FairyBrain,  # noqa: F401 — NURO 桌面精灵兼容别名
+    FairyCharacter,
+    FairyDaily,
+    FairyIdentity,
+    FairyMemory,
+    FairyObserver,
+    FairyPopup,
+    FairyState,
+    FairyVoice,
+    capture_full_screen,
+    get_mouse_position,
+    list_application_windows,
 )
 from entrypoints.palette import Palette
-from entrypoints.cli import _safe_print
 
 # ── 便捷别名（保持向后兼容） ──
 # 新代码应直接使用 feature_flags._HAS_*
@@ -311,7 +322,6 @@ class AidNuro:
 
     def _center_ball(self):
         """定位角色窗口（左下角，可拖拽移动）"""
-        sw = self.ball.winfo_screenwidth()
         sh = self.ball.winfo_screenheight()
         x = 30
         y = sh - self.BALL_SIZE - 60  # 底部偏上，避开任务栏
@@ -866,8 +876,9 @@ class AidNuro:
             if not self._voice or not self._voice.has_stt:
                 return
             try:
-                import sounddevice as sd
                 import tempfile
+
+                import sounddevice as sd
                 import soundfile as sf
             except ImportError:
                 return
@@ -896,7 +907,7 @@ class AidNuro:
                                 self._safe_call(self._on_wakeup)
                     except OSError:
                         time.sleep(3)
-                    except Exception as e:
+                    except Exception:
                         if self._debug:
                             traceback.print_exc()
                         time.sleep(1)

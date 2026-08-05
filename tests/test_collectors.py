@@ -3,14 +3,9 @@ Alpha-ID 采集器测试 — Browser 内部函数测试（trae 依赖真实目�
 """
 
 import json
-from pathlib import Path
-
-import pytest
 
 # 测试 Browser 采集器的内部函数（它们接受 path 参数）
-from alpha_id.collectors.browser import _read_bookmarks
-from alpha_id.collectors.browser import _read_history
-
+from alpha_id.collectors.browser import _read_bookmarks, _read_history
 
 # ── Browser 书签采集器测试 ──
 

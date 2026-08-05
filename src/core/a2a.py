@@ -16,20 +16,22 @@ Security:
   - Proof of Execution (PoE) for every execution
   - Optional TLS encryption
 """
+import asyncio
 import json
 import logging
 import time
 import uuid
-import asyncio
-from core.http_client import request
 from dataclasses import asdict, dataclass, field
-from typing import Any, Callable, Dict, List, Optional
 from datetime import datetime, timezone
+from typing import Any, Callable, Dict, List, Optional
+
+# TERM: SqliteAuditStore — A2A 审计日志持久化后端（core/audit_store.py）
+from core.audit_store import SqliteAuditStore
 
 try:
     from fastapi import HTTPException
 except ImportError:  # pragma: no cover
-    class HTTPException(Exception):  # type: ignore[no-redef]
+    class HTTPException(Exception):  # type: ignore[no-redef]  # noqa: N818
         def __init__(self, status_code: int = 500, detail: str = "") -> None:
             super().__init__(detail)
             self.status_code = status_code
@@ -239,7 +241,7 @@ class A2AAuditLog:
     def __init__(
         self,
         max_size: int = 10000,
-        store: Optional["SqliteAuditStore"] = None,
+        store: Optional[SqliteAuditStore] = None,
     ) -> None:
         self._records: List[Dict[str, Any]] = []
         self._max_size = max_size
@@ -301,7 +303,7 @@ class A2AAuditLog:
         return len(self._records)
 
 
-class A2APermissionDenied(Exception):
+class A2APermissionDenied(Exception):  # noqa: N818
     """Raised when caller is not allowed to invoke the requested skill."""
 
 
@@ -381,7 +383,7 @@ class A2ASigner:
 
     def sign(self, data: bytes) -> str:
         """Sign data with Ed25519, return hex signature.
-        
+
         Raises:
             RuntimeError: If no signer is available (PyNaCl not installed).
         """
@@ -394,12 +396,12 @@ class A2ASigner:
 
     def verify(self, data: bytes, signature_hex: str, public_key_hex: str = "") -> bool:
         """Verify Ed25519 signature.
-        
+
         Args:
             data: Original signed data
             signature_hex: Hex-encoded Ed25519 signature
             public_key_hex: Sender's public key (overrides instance key)
-            
+
         Returns:
             True if signature is valid
         """
@@ -418,13 +420,14 @@ class A2ASigner:
     @staticmethod
     def generate_keypair() -> tuple:
         """Generate Ed25519 keypair, return (private_key_hex, public_key_hex).
-        
+
         Raises:
             ImportError: If PyNaCl is not installed.
         """
         try:
-            from nacl.signing import SigningKey
             import os
+
+            from nacl.signing import SigningKey
             sk = SigningKey(os.urandom(32))
             return sk.encode().hex(), sk.verify_key.encode().hex()
         except ImportError:

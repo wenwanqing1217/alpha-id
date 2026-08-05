@@ -25,7 +25,6 @@ import sys
 from typing import Optional
 
 import typer
-
 from mcp.server import FastMCP
 
 # ── 路径安全：防止目录遍历攻击 ──

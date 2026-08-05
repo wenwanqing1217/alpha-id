@@ -40,7 +40,6 @@ import os
 import signal
 import sys
 import time
-from typing import Optional
 
 # ── 日志配置 ──
 
