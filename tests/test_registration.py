@@ -9,6 +9,9 @@ import os
 
 # 在导入任何模块前设置测试密钥
 os.environ.setdefault("AUTH_MASTER_KEY", "test-master-key-256bit-secret-for-unit-tests-only")
+# 显式启用支付宝演示模式：settings 默认 alipay_demo_mode=false（安全设计，防止认证绕过），
+# 测试无真实密钥，必须开启 demo 模式才能验证流程（返回 demo=True 而非 503）
+os.environ.setdefault("ALIPAY_DEMO_MODE", "true")
 
 import pytest
 
