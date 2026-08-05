@@ -292,6 +292,9 @@ class EventBus:
                     for message_id, fields in messages:
                         self._process_remote_event(event_type, message_id, fields)
 
+            except redis.exceptions.TimeoutError:
+                # XREADGROUP 阻塞读的空闲超时（无新消息）是正常现象，静默继续等待
+                continue
             except Exception as e:
                 logger.error("EventBus 消费循环异常: %s", e)
                 time.sleep(1)

@@ -318,7 +318,7 @@ class OrchestratorEngine:
             (LoopPhase.OPS, self._ops_interval, self._ops_loop),
             (LoopPhase.SOCIAL, self._ops_interval, self._social_loop),
             # 基建层最优自替换
-            ("OPTIMAL_SWAP", self._optimal_swap_interval, self._optimal_swap_loop),
+            (LoopPhase.OPTIMAL_SWAP, self._optimal_swap_interval, self._optimal_swap_loop),
         ]
 
         for phase, interval, func in loops:
@@ -549,6 +549,7 @@ class LoopPhase(Enum):
     MEMORY = "memory"
     OPS = "ops"
     SOCIAL = "social"
+    OPTIMAL_SWAP = "optimal_swap"
 
 
 # ── 全局单例 ──

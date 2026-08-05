@@ -121,9 +121,90 @@ class Tool:
             return f"[工具错误] {e}"
 
 
+class _InMemoryBackends(AgentContainer):
+    """轻量内存后端 — alpha_id 包不可用（如 orchestrator 独立容器）时保证 AgentLoop 可用。"""
+
+    def __init__(self):
+        self._friends: Dict[str, list] = {}
+        self._messages: Dict[str, list] = {}
+
+    @property
+    def identity(self):
+        return self
+
+    def get_user_profile(self, alpha_id: str) -> Optional[Dict[str, Any]]:
+        return {"alpha_id": alpha_id, "name": alpha_id}
+
+    @property
+    def social(self):
+        return self
+
+    def get_friends(self, alpha_id: str) -> List[Dict[str, Any]]:
+        return list(self._friends.get(alpha_id, []))
+
+    def get_messages(self, alpha_id: str, unread_only: bool = False) -> List[Dict[str, Any]]:
+        return self._messages.get(alpha_id, [])
+
+    def send_message(self, from_alpha_id: str, to_alpha_id: str, content: str) -> Dict[str, Any]:
+        self._messages.setdefault(to_alpha_id, []).append(
+            {"from": from_alpha_id, "content": content, "read": False}
+        )
+        return {"ok": True, "to": to_alpha_id}
+
+    def send_friend_request(self, from_alpha_id: str, to_alpha_id: str, message: str = "") -> Dict[str, Any]:
+        self._friends.setdefault(to_alpha_id, []).append({"from": from_alpha_id, "message": message})
+        return {"ok": True, "to": to_alpha_id}
+
+    @property
+    def risk(self):
+        return self
+
+    @property
+    def memory(self):
+        return self
+
+    @property
+    def actions(self):
+        return self
+
+    @property
+    def skill_registry(self):
+        return None
+
+    @property
+    def skill_tracker(self):
+        return self
+
+    def record(self, skill_name: str, alpha_id: str, **kwargs: Any) -> None:
+        pass
+
+    @property
+    def skill_runtime(self):
+        return self
+
+    def execute(self, name: str, params: Dict[str, Any], executor_did: str) -> str:
+        return f"[内存后端] 技能 {name} 未安装"
+
+    @property
+    def poe_store(self):
+        return self
+
+    def save(self, execution: Dict[str, Any]) -> None:
+        pass
+
+    def get(self, execution_id: str) -> Optional[Dict[str, Any]]:
+        return None
+
+
 def _default_backends() -> AgentContainer:
-    """Create default backends from alpha_id container."""
-    from alpha_id.container import Container
+    """Create default backends from alpha_id container (with graceful fallback)."""
+    try:
+        from alpha_id.container import Container
+    except ImportError as exc:
+        # 容器/轻量部署（如 orchestrator 独立容器）无 alpha_id 包时，
+        # 降级为内存后端，保证 AgentLoop 仍可对话（持久化能力降级）。
+        logger.warning("alpha_id container 不可用（%s）— AgentLoop 使用内存后端", exc)
+        return _InMemoryBackends()
 
     container = Container.instance()
 
