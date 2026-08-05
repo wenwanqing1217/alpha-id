@@ -25,7 +25,8 @@ import sys
 from typing import Optional
 
 import typer
-from mcp.server import FastMCP
+# mcp.server.FastMCP 顶层导出需 mcp>=1.9；fastmcp 子模块路径全版本可用
+from mcp.server.fastmcp import FastMCP
 
 # ── 路径安全：防止目录遍历攻击 ──
 # 允许操作的基础目录（默认当前工作目录，可通过环境变量覆盖）
