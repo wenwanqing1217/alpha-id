@@ -25,10 +25,16 @@ class TestAlphaSocialManager:
     """AlphaSocialManager 核心功能测试"""
 
     def test_init_creates_empty_db(self, manager):
-        """初始化后数据库文件存在且为空"""
+        """初始化后数据库文件存在且为空（含飞书社交新增的 2 个集合）"""
         assert os.path.exists(manager._storage.db_path)
         data = json.load(open(manager._storage.db_path, encoding="utf-8"))
-        assert data == {"friends": {}, "friend_requests": {}, "messages": {}}
+        assert data == {
+            "friends": {},
+            "friend_requests": {},
+            "messages": {},
+            "user_bindings": {},
+            "feishu_contacts": {},
+        }
 
     def test_send_friend_request_success(self, manager):
         """发送好友请求成功"""

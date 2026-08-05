@@ -77,10 +77,54 @@ class TestCSRFExemptPaths:
 # ─────────────────────────────────────────────────────────────────────────────
 
 class TestA2AGraphLogic:
-    """to_payload() returns {'agents': list} — graph must iterate list."""
+    """a2a_agent_graph: 优先 AgentGraph 拓扑（主路径），回退 registry + audit 现算。"""
 
-    def test_graph_nodes_from_list_payload(self):
-        """Nodes are built from list-based agents payload."""
+    def test_graph_nodes_from_agentgraph_topology(self):
+        """Nodes come from AgentGraph topology (primary path)."""
+        from api.a2a import a2a_agent_graph
+
+        mock_graph = MagicMock()
+        mock_graph.get_topology.return_value = {
+            "nodes": [
+                {"id": "did:ghost:1", "label": "Agent-A", "skills": ["ping"]},
+                {"id": "did:ghost:2", "label": "Agent-B", "skills": ["echo"]},
+            ],
+            "edges": [],
+        }
+
+        with patch("core.agent_graph.get_agent_graph", return_value=mock_graph):
+            result = asyncio.get_event_loop().run_until_complete(
+                a2a_agent_graph(MagicMock())
+            )
+
+        assert "nodes" in result
+        assert "edges" in result
+        assert len(result["nodes"]) == 2
+        assert result["nodes"][0]["id"] == "did:ghost:1"
+        assert result["nodes"][0]["label"] == "Agent-A"
+        assert result["nodes"][1]["id"] == "did:ghost:2"
+
+    def test_graph_edges_from_agentgraph_uses_source_target(self):
+        """AgentGraph 主路径的 source/target 需映射为 from/to 兼容旧格式。"""
+        from api.a2a import a2a_agent_graph
+
+        mock_graph = MagicMock()
+        mock_graph.get_topology.return_value = {
+            "nodes": [],
+            "edges": [{"source": "did:ghost:1", "target": "did:ghost:2", "skill": "ping"}],
+        }
+
+        with patch("core.agent_graph.get_agent_graph", return_value=mock_graph):
+            result = asyncio.get_event_loop().run_until_complete(
+                a2a_agent_graph(MagicMock())
+            )
+
+        assert result["edges"][0]["from"] == "did:ghost:1"
+        assert result["edges"][0]["to"] == "did:ghost:2"
+        assert result["edges"][0]["skill"] == "ping"
+
+    def test_graph_falls_back_to_registry_and_audit(self):
+        """AgentGraph 不可用时回退到 registry + audit log 现算（原逻辑保留）。"""
         from api.a2a import a2a_agent_graph
 
         mock_registry = MagicMock()
@@ -90,33 +134,6 @@ class TestA2AGraphLogic:
                 {"did": "did:ghost:2", "alpha_id": "Agent-B", "skill_list": ["echo"]},
             ]
         }
-        mock_audit = MagicMock()
-        mock_audit.list_records.return_value = []
-
-        mock_state = {"registry": mock_registry, "audit": mock_audit}
-        mock_request = MagicMock()
-        mock_request.app.state.a2a_state = mock_state
-
-        with patch("api.a2a._get_a2a_state", return_value=mock_state):
-            with patch("api.a2a._get_registry", return_value=mock_registry):
-                with patch("api.a2a._get_audit", return_value=mock_audit):
-                    result = asyncio.get_event_loop().run_until_complete(
-                        a2a_agent_graph(mock_request)
-                    )
-
-        assert "nodes" in result
-        assert "edges" in result
-        assert len(result["nodes"]) == 2
-        assert result["nodes"][0]["id"] == "did:ghost:1"
-        assert result["nodes"][0]["label"] == "Agent-A"
-        assert result["nodes"][1]["id"] == "did:ghost:2"
-
-    def test_graph_edges_from_audit_records(self):
-        """Edges are derived from audit log A2A call records."""
-        from api.a2a import a2a_agent_graph
-
-        mock_registry = MagicMock()
-        mock_registry.to_payload.return_value = {"agents": []}
         mock_audit = MagicMock()
         mock_audit.list_records.return_value = [
             {
@@ -131,13 +148,20 @@ class TestA2AGraphLogic:
         mock_request = MagicMock()
         mock_request.app.state.a2a_state = mock_state
 
-        with patch("api.a2a._get_a2a_state", return_value=mock_state):
-            with patch("api.a2a._get_registry", return_value=mock_registry):
-                with patch("api.a2a._get_audit", return_value=mock_audit):
-                    result = asyncio.get_event_loop().run_until_complete(
-                        a2a_agent_graph(mock_request)
-                    )
+        def _boom(*args, **kwargs):
+            raise RuntimeError("graph unavailable")
 
+        with patch("core.agent_graph.get_agent_graph", side_effect=_boom):
+            with patch("api.a2a._get_a2a_state", return_value=mock_state):
+                with patch("api.a2a._get_registry", return_value=mock_registry):
+                    with patch("api.a2a._get_audit", return_value=mock_audit):
+                        result = asyncio.get_event_loop().run_until_complete(
+                            a2a_agent_graph(mock_request)
+                        )
+
+        assert len(result["nodes"]) == 2
+        assert result["nodes"][0]["id"] == "did:ghost:1"
+        assert result["nodes"][0]["label"] == "Agent-A"
         assert len(result["edges"]) == 1
         assert result["edges"][0]["from"] == "did:ghost:1"
         assert result["edges"][0]["to"] == "did:ghost:2"
