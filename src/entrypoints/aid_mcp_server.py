@@ -25,6 +25,7 @@ import sys
 from typing import Optional
 
 import typer
+
 # mcp.server.FastMCP 顶层导出需 mcp>=1.9；fastmcp 子模块路径全版本可用
 from mcp.server.fastmcp import FastMCP
 
